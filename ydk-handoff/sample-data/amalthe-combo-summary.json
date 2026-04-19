@@ -1,0 +1,29 @@
+{
+  "_note": "Extracted April 19, 2026 using YDK Extension v1.0. 81 steps captured correctly. Note: draw actions have card names in 'detail' but not in 'cards' array (minor parsing bug). Opening hand is empty because this Solo Mode replay started with a mulligan (5 returns) that the parser didn't handle.",
+  "comboName": "DoomZ V Five - Amalthe",
+  "replayUrl": "https://www.duelingbook.com/replay?id=1345419-80595527",
+  "comboCategory": "Amalthe + Discard",
+  "totalSteps": 81,
+  "rawLogLineCount": 187,
+  "endboardActual": [
+    "Jupiter the Power Patron of Destruction (R10, Xyz on top stack)",
+    "Gigantic \"Champion\" Sargas (Rank 4 Extra Monster Zone)",
+    "Therion \"King\" Regulus (monster field)",
+    "Null Power Patron Realm - Vidria (Field Spell)",
+    "DoomZ Destruction (back in hand for next turn, from the Change-Destruction recovery loop)"
+  ],
+  "endboardExtractorNaive": [
+    "_note: the extractor's deriveEndboard() includes all summoned cards, not tracking Xyz materials properly. Fix in ROADMAP.md P0 item 1.",
+    "DoomZ XII Zero - Drastea (actually Xyz material under Drastrius → then under Jupiter)",
+    "DoomZ XII End - Drastrius (actually Xyz material under Jupiter)",
+    "DoomZ VII Seven - Elara (actually sent to GY as Xyz material)",
+    "DoomZ Command \"D.O.O.M.D.U.R.G.\" (set)",
+    "DoomZ V Five - Amalthe (actually sent to GY as Xyz material)",
+    "Springans Merrymaker (actually Xyz material under Sargas)",
+    "Gigantic \"Champion\" Sargas",
+    "Therion \"King\" Regulus",
+    "Power Patron Shadow Machine Zegredo (actually Xyz material detached from Jupiter)",
+    "Jupiter the Power Patron of Destruction"
+  ],
+  "notes": "This is a full Zegredo → Jupiter line with the Vidrium + Vidria Power Patron engine. Final move is DoomZ Change + Destruction GY chain to recover Destruction for next-turn board protection."
+}

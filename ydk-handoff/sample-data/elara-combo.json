@@ -1,0 +1,736 @@
+{
+  "comboName": "DoomZ VII Seven - Elara",
+  "endboard": [
+    "DoomZ VII Seven - Elara",
+    "DoomZ Break - Diactorus",
+    "DoomZ V Five - Amalthe",
+    "Springans Merrymaker",
+    "Gigantic \"Champion\" Sargas",
+    "Therion \"King\" Regulus",
+    "DoomZ XII Zero - Drastea",
+    "DoomZ XII End - Drastrius",
+    "Power Patron Shadow Machine Zegredo",
+    "Varudras, the Final Bringer of the End Times"
+  ],
+  "extractedAt": "2026-04-19T18:34:36.055Z",
+  "openingHand": [
+    "DoomZ VII Seven - Elara",
+    "Power Patron Shadow Machine Zegredo",
+    "DoomZ VII Seven - Elara",
+    "Dimension Shifter",
+    "DoomZ XII Zero - Drastea"
+  ],
+  "playerCards": [
+    "Dimension Shifter",
+    "DoomZ Break - Diactorus",
+    "DoomZ Change",
+    "DoomZ Command \"A.D.R.A.S.T.E.I.A.\"",
+    "DoomZ Command \"D.O.O.M.D.U.R.G.\"",
+    "DoomZ Destruction",
+    "DoomZ Raiders",
+    "DoomZ V Five - Amalthe",
+    "DoomZ VII Seven - Elara",
+    "DoomZ XII End - Drastrius",
+    "DoomZ XII Zero - Drastea",
+    "DoomZ XIII Over - Graflario",
+    "Gigantic \"Champion\" Sargas",
+    "Null Power Patron Realm - Vidria",
+    "Power Patron DoomZ",
+    "Power Patron Shadow Machine Zegredo",
+    "Springans Merrymaker",
+    "Therion \"King\" Regulus",
+    "Unleashed Power Patron Portal - Terminus",
+    "Varudras, the Final Bringer of the End Times",
+    "Vidrium the Power Patron of Chaos Extermination"
+  ],
+  "rawLogLineCount": 169,
+  "replayId": "1345419-80595939",
+  "replayUrl": "https://www.duelingbook.com/replay?id=1345419-80595939",
+  "steps": [
+    {
+      "action": "Draw",
+      "cards": [
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Drew DoomZ VII Seven - Elara",
+      "n": 1,
+      "timestamp": "0:00"
+    },
+    {
+      "action": "Draw",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Drew Power Patron Shadow Machine Zegredo",
+      "n": 2,
+      "timestamp": "0:00"
+    },
+    {
+      "action": "Draw",
+      "cards": [
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Drew DoomZ VII Seven - Elara",
+      "n": 3,
+      "timestamp": "0:00"
+    },
+    {
+      "action": "Draw",
+      "cards": [
+        "Dimension Shifter"
+      ],
+      "detail": "Drew Dimension Shifter",
+      "n": 4,
+      "timestamp": "0:00"
+    },
+    {
+      "action": "Draw",
+      "cards": [
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Drew DoomZ XII Zero - Drastea",
+      "n": 5,
+      "timestamp": "0:00"
+    },
+    {
+      "action": "Return",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Returned Power Patron Shadow Machine Zegredo from hand (2/5) to top of deck",
+      "n": 6,
+      "timestamp": "0:05"
+    },
+    {
+      "action": "Return",
+      "cards": [
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Returned DoomZ VII Seven - Elara from hand (2/4) to top of deck",
+      "n": 7,
+      "timestamp": "0:07"
+    },
+    {
+      "action": "Return",
+      "cards": [
+        "Dimension Shifter"
+      ],
+      "detail": "Returned Dimension Shifter from hand (2/3) to top of deck",
+      "n": 8,
+      "timestamp": "0:08"
+    },
+    {
+      "action": "Return",
+      "cards": [
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Returned DoomZ XII Zero - Drastea from hand (2/2) to top of deck",
+      "n": 9,
+      "timestamp": "0:09"
+    },
+    {
+      "action": "Normal Summon",
+      "cards": [
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Normal Summoned DoomZ VII Seven - Elara from hand (1/1) to M-3",
+      "n": 10,
+      "timestamp": "0:15"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Declared effect of DoomZ VII Seven - Elara in M-3",
+      "n": 11,
+      "timestamp": "0:15"
+    },
+    {
+      "action": "Set",
+      "cards": [
+        "DoomZ Command \"A.D.R.A.S.T.E.I.A.\""
+      ],
+      "detail": "Set DoomZ Command \"A.D.R.A.S.T.E.I.A.\" in S-3",
+      "n": 12,
+      "timestamp": "0:21"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Command \"A.D.R.A.S.T.E.I.A.\""
+      ],
+      "detail": "Activated Set DoomZ Command \"A.D.R.A.S.T.E.I.A.\" in S-3",
+      "n": 13,
+      "timestamp": "0:22"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Declared effect of DoomZ VII Seven - Elara in M-3",
+      "n": 14,
+      "timestamp": "0:25"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "DoomZ Break - Diactorus",
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Special Summoned DoomZ Break - Diactorus from Extra Deck onto DoomZ VII Seven - Elara in M-3 (ATK)",
+      "n": 15,
+      "timestamp": "0:30"
+    },
+    {
+      "action": "Banish",
+      "cards": [
+        "DoomZ Command \"A.D.R.A.S.T.E.I.A.\""
+      ],
+      "detail": "Banished DoomZ Command \"A.D.R.A.S.T.E.I.A.\" from S-3",
+      "n": 16,
+      "timestamp": "0:33"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "DoomZ XIII Over - Graflario",
+        "DoomZ Break - Diactorus"
+      ],
+      "detail": "Special Summoned DoomZ XIII Over - Graflario from Extra Deck onto DoomZ Break - Diactorus in M-3 (ATK)",
+      "n": 17,
+      "timestamp": "0:38"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ XIII Over - Graflario"
+      ],
+      "detail": "Declared effect of DoomZ XIII Over - Graflario in M-3",
+      "n": 18,
+      "timestamp": "0:40"
+    },
+    {
+      "action": "Detach",
+      "cards": [
+        "DoomZ Command \"A.D.R.A.S.T.E.I.A.\"",
+        "DoomZ XIII Over - Graflario"
+      ],
+      "detail": "Detached Xyz Material DoomZ Command \"A.D.R.A.S.T.E.I.A.\" from DoomZ XIII Over - Graflario in M-3",
+      "n": 19,
+      "timestamp": "0:41"
+    },
+    {
+      "action": "Search",
+      "cards": [
+        "DoomZ Raiders"
+      ],
+      "detail": "Added DoomZ Raiders from Deck to hand",
+      "n": 20,
+      "timestamp": "0:50"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Raiders"
+      ],
+      "detail": "Activated DoomZ Raiders from hand (1/1) to S-3",
+      "n": 21,
+      "timestamp": "1:45"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Raiders"
+      ],
+      "detail": "Declared effect of DoomZ Raiders in S-3",
+      "n": 22,
+      "timestamp": "1:46"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "DoomZ XIII Over - Graflario"
+      ],
+      "detail": "Sent DoomZ XIII Over - Graflario from M-3 to GY",
+      "n": 23,
+      "timestamp": "1:47"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "DoomZ V Five - Amalthe"
+      ],
+      "detail": "Special Summoned DoomZ V Five - Amalthe from Deck to M-1 (DEF)",
+      "n": 24,
+      "timestamp": "1:53"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ XIII Over - Graflario"
+      ],
+      "detail": "Declared effect of DoomZ XIII Over - Graflario from GY",
+      "n": 25,
+      "timestamp": "1:58"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ V Five - Amalthe"
+      ],
+      "detail": "Declared effect of DoomZ V Five - Amalthe in M-1",
+      "n": 26,
+      "timestamp": "1:59"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "Power Patron DoomZ"
+      ],
+      "detail": "Special Summoned Power Patron DoomZ from Deck to M-5 (DEF)",
+      "n": 27,
+      "timestamp": "2:08"
+    },
+    {
+      "action": "Search",
+      "cards": [
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Added DoomZ XII Zero - Drastea from Deck to hand",
+      "n": 28,
+      "timestamp": "2:11"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Command \"A.D.R.A.S.T.E.I.A.\""
+      ],
+      "detail": "Declared effect of DoomZ Command \"A.D.R.A.S.T.E.I.A.\" from GY",
+      "n": 29,
+      "timestamp": "2:18"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Command \"A.D.R.A.S.T.E.I.A.\""
+      ],
+      "detail": "Declared effect of DoomZ Command \"A.D.R.A.S.T.E.I.A.\" in S-4",
+      "n": 30,
+      "timestamp": "2:23"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "Power Patron DoomZ"
+      ],
+      "detail": "Sent Power Patron DoomZ from M-5 to GY",
+      "n": 31,
+      "timestamp": "2:24"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "DoomZ Command \"A.D.R.A.S.T.E.I.A.\""
+      ],
+      "detail": "Sent DoomZ Command \"A.D.R.A.S.T.E.I.A.\" from S-4 to GY",
+      "n": 32,
+      "timestamp": "2:27"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Special Summoned DoomZ VII Seven - Elara from Deck to M-2 (DEF)",
+      "n": 33,
+      "timestamp": "2:34"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Power Patron DoomZ"
+      ],
+      "detail": "Declared effect of Power Patron DoomZ from GY",
+      "n": 34,
+      "timestamp": "2:36"
+    },
+    {
+      "action": "Search",
+      "cards": [
+        "DoomZ Change"
+      ],
+      "detail": "Added DoomZ Change from Deck to hand",
+      "n": 35,
+      "timestamp": "2:40"
+    },
+    {
+      "action": "Overlay",
+      "cards": [
+        "DoomZ VII Seven - Elara",
+        "DoomZ V Five - Amalthe"
+      ],
+      "detail": "Overlayed DoomZ VII Seven - Elara in M-2 onto DoomZ V Five - Amalthe in M-1",
+      "n": 36,
+      "timestamp": "2:43"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "Springans Merrymaker",
+        "DoomZ VII Seven - Elara"
+      ],
+      "detail": "Special Summoned Springans Merrymaker from Extra Deck onto DoomZ VII Seven - Elara in M-1 (DEF)",
+      "n": 37,
+      "timestamp": "2:50"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "Gigantic \"Champion\" Sargas",
+        "Springans Merrymaker"
+      ],
+      "detail": "Special Summoned Gigantic \"Champion\" Sargas from Extra Deck onto Springans Merrymaker in M-1 (ATK)",
+      "n": 38,
+      "timestamp": "2:51"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Gigantic \"Champion\" Sargas"
+      ],
+      "detail": "Declared effect of Gigantic \"Champion\" Sargas in Left Extra Monster Zone",
+      "n": 39,
+      "timestamp": "2:56"
+    },
+    {
+      "action": "Search",
+      "cards": [
+        "Therion \"King\" Regulus"
+      ],
+      "detail": "Added Therion \"King\" Regulus from Deck to hand",
+      "n": 40,
+      "timestamp": "3:01"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Therion \"King\" Regulus"
+      ],
+      "detail": "Declared effect of Therion \"King\" Regulus in hand (1/3)",
+      "n": 41,
+      "timestamp": "3:09"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "Therion \"King\" Regulus"
+      ],
+      "detail": "Special Summoned Therion \"King\" Regulus from hand (1/3) to M-1 (ATK)",
+      "n": 42,
+      "timestamp": "3:10"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Declared effect of DoomZ XII Zero - Drastea in hand (1/2)",
+      "n": 43,
+      "timestamp": "3:19"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "DoomZ Raiders"
+      ],
+      "detail": "Sent DoomZ Raiders from S-3 to GY",
+      "n": 44,
+      "timestamp": "3:19"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Special Summoned DoomZ XII Zero - Drastea from hand (1/2) to M-3 (ATK)",
+      "n": 45,
+      "timestamp": "3:21"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Change"
+      ],
+      "detail": "Activated DoomZ Change from hand (1/1) to S-4",
+      "n": 46,
+      "timestamp": "3:34"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Change"
+      ],
+      "detail": "Declared effect of DoomZ Change in S-4",
+      "n": 47,
+      "timestamp": "3:36"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Declared effect of DoomZ XII Zero - Drastea in M-3",
+      "n": 48,
+      "timestamp": "3:37"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "DoomZ Change"
+      ],
+      "detail": "Sent DoomZ Change from S-4 to GY",
+      "n": 49,
+      "timestamp": "3:39"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "DoomZ Destruction"
+      ],
+      "detail": "Sent DoomZ Destruction from Deck to GY",
+      "n": 50,
+      "timestamp": "3:43"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Destruction"
+      ],
+      "detail": "Declared effect of DoomZ Destruction from GY",
+      "n": 51,
+      "timestamp": "3:45"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ Change"
+      ],
+      "detail": "Declared effect of DoomZ Change from GY",
+      "n": 52,
+      "timestamp": "3:46"
+    },
+    {
+      "action": "Return",
+      "cards": [
+        "DoomZ Destruction"
+      ],
+      "detail": "Returned DoomZ Destruction from GY to hand",
+      "n": 53,
+      "timestamp": "3:57"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Declared effect of DoomZ XII Zero - Drastea in M-3",
+      "n": 54,
+      "timestamp": "4:02"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "DoomZ XII End - Drastrius",
+        "DoomZ XII Zero - Drastea"
+      ],
+      "detail": "Special Summoned DoomZ XII End - Drastrius from Extra Deck onto DoomZ XII Zero - Drastea in M-3 (ATK)",
+      "n": 55,
+      "timestamp": "4:07"
+    },
+    {
+      "action": "Banish",
+      "cards": [
+        "DoomZ Command \"D.O.O.M.D.U.R.G.\""
+      ],
+      "detail": "Banished DoomZ Command \"D.O.O.M.D.U.R.G.\" from S-3",
+      "n": 56,
+      "timestamp": "4:08"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "DoomZ XII End - Drastrius"
+      ],
+      "detail": "Declared effect of DoomZ XII End - Drastrius in M-3",
+      "n": 57,
+      "timestamp": "4:41"
+    },
+    {
+      "action": "Return",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Returned Power Patron Shadow Machine Zegredo from S-1 to Extra Deck",
+      "n": 58,
+      "timestamp": "4:44"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Declared effect of Power Patron Shadow Machine Zegredo from Extra Deck",
+      "n": 59,
+      "timestamp": "4:49"
+    },
+    {
+      "action": "Search",
+      "cards": [
+        "Unleashed Power Patron Portal - Terminus"
+      ],
+      "detail": "Added Unleashed Power Patron Portal - Terminus from Deck to hand",
+      "n": 60,
+      "timestamp": "4:54"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Unleashed Power Patron Portal - Terminus"
+      ],
+      "detail": "Activated Unleashed Power Patron Portal - Terminus from hand (2/2) to S-3",
+      "n": 61,
+      "timestamp": "4:59"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Unleashed Power Patron Portal - Terminus"
+      ],
+      "detail": "Declared effect of Unleashed Power Patron Portal - Terminus in S-3",
+      "n": 62,
+      "timestamp": "5:01"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Sent Power Patron Shadow Machine Zegredo from Extra Deck to GY",
+      "n": 63,
+      "timestamp": "5:05"
+    },
+    {
+      "action": "Search",
+      "cards": [
+        "Vidrium the Power Patron of Chaos Extermination"
+      ],
+      "detail": "Added Vidrium the Power Patron of Chaos Extermination from Deck to hand",
+      "n": 64,
+      "timestamp": "5:10"
+    },
+    {
+      "action": "Send to GY",
+      "cards": [
+        "Unleashed Power Patron Portal - Terminus"
+      ],
+      "detail": "Sent Unleashed Power Patron Portal - Terminus from S-3 to GY",
+      "n": 65,
+      "timestamp": "5:11"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Vidrium the Power Patron of Chaos Extermination"
+      ],
+      "detail": "Declared effect of Vidrium the Power Patron of Chaos Extermination in S-1",
+      "n": 66,
+      "timestamp": "5:14"
+    },
+    {
+      "action": "Return",
+      "cards": [
+        "Vidrium the Power Patron of Chaos Extermination"
+      ],
+      "detail": "Returned Vidrium the Power Patron of Chaos Extermination from S-1 to Extra Deck",
+      "n": 67,
+      "timestamp": "5:15"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Special Summoned Power Patron Shadow Machine Zegredo from GY to M-4 (DEF)",
+      "n": 68,
+      "timestamp": "5:24"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Vidrium the Power Patron of Chaos Extermination"
+      ],
+      "detail": "Declared effect of Vidrium the Power Patron of Chaos Extermination from Extra Deck",
+      "n": 69,
+      "timestamp": "5:28"
+    },
+    {
+      "action": "Search",
+      "cards": [
+        "Null Power Patron Realm - Vidria"
+      ],
+      "detail": "Added Null Power Patron Realm - Vidria from Deck to hand",
+      "n": 70,
+      "timestamp": "5:37"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Null Power Patron Realm - Vidria"
+      ],
+      "detail": "Activated Field Spell Null Power Patron Realm - Vidria from hand (1/2)",
+      "n": 71,
+      "timestamp": "5:43"
+    },
+    {
+      "action": "Activate",
+      "cards": [
+        "Null Power Patron Realm - Vidria"
+      ],
+      "detail": "Declared effect of Null Power Patron Realm - Vidria in Field Spell Zone",
+      "n": 72,
+      "timestamp": "5:45"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Special Summoned Power Patron Shadow Machine Zegredo from Deck to M-5 (DEF)",
+      "n": 73,
+      "timestamp": "5:52"
+    },
+    {
+      "action": "Overlay",
+      "cards": [
+        "Power Patron Shadow Machine Zegredo",
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Overlayed Power Patron Shadow Machine Zegredo in M-4 onto Power Patron Shadow Machine Zegredo in M-5",
+      "n": 74,
+      "timestamp": "6:00"
+    },
+    {
+      "action": "Special Summon",
+      "cards": [
+        "Varudras, the Final Bringer of the End Times",
+        "Power Patron Shadow Machine Zegredo"
+      ],
+      "detail": "Special Summoned Varudras, the Final Bringer of the End Times from Extra Deck onto Power Patron Shadow Machine Zegredo in M-5 (DEF)",
+      "n": 75,
+      "timestamp": "6:03"
+    }
+  ],
+  "version": 1
+}

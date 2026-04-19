@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YDK Decoder — DoomZ / Power Patron</title>
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --bg-elevated: #131318;
+    --bg-hover: #1c1c22;
+    --bg-card: #17171c;
+    --border: #26262e;
+    --border-strong: #3a3a44;
+    --text: #e8e8ea;
+    --text-dim: #8a8a94;
+    --text-faint: #55555e;
+    --accent: #e55b3c;
+    --accent-dim: rgba(229,91,60,0.12);
+    --warning: #e5a93c;
+
+    --role-starter:      #d89f4a;
+    --role-extender:     #7da86e;
+    --role-searcher:     #5fa8c4;
+    --role-handtrap:     #c45f7a;
+    --role-combo:        #8a7dc4;
+    --role-boss:         #d86a4a;
+    --role-boardbreaker: #c49a5f;
+    --role-floodgate:    #8c4a4a;
+    --role-tech:         #6a7d8a;
+    --role-equip:        #a87dc4;
+    --role-engine:       #5fc49a;
+    --role-stopper:      #c45f5f;
+    --role-pendulum:     #c4a85f;
+    --role-finisher:     #d84a6a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    font-size: 14px; line-height: 1.5;
+    min-height: 100vh;
+    padding: 32px 24px 80px;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px; margin-bottom: 24px;
+    display: flex; align-items: baseline;
+    justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  h1 { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+  h1 .accent { color: var(--accent); }
+  .subtitle { color: var(--text-dim); font-size: 13px; }
+
+  /* Setup banner */
+  .setup-banner {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .setup-banner strong { color: var(--text); font-weight: 500; }
+  .setup-banner code {
+    background: var(--bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", Menlo, monospace;
+    color: var(--accent);
+    font-size: 11px;
+  }
+
+  .tabs {
+    display: flex; gap: 2px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .tab {
+    background: none; border: none; color: var(--text-dim);
+    padding: 10px 18px; cursor: pointer; font-family: inherit; font-size: 13px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .upload-zone {
+    border: 1px dashed var(--border-strong);
+    border-radius: 8px; padding: 32px 24px;
+    text-align: center; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 16px;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: var(--bg-elevated); }
+  .upload-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
+  .upload-zone input { display: none; }
+  .upload-zone p { color: var(--text-dim); font-size: 13px; }
+  .upload-zone .filename { color: var(--text); margin-top: 8px; font-size: 12px; font-family: "SF Mono", Menlo, monospace; }
+
+  #status { font-size: 12px; color: var(--text-dim); margin-bottom: 16px; min-height: 18px; }
+  #status.error { color: var(--role-stopper); }
+  #status.success { color: var(--role-engine); }
+  #status .hint { color: var(--text-faint); font-size: 11px; display: block; margin-top: 4px; }
+
+  /* Uniform filter pills */
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 6px;
+    margin-bottom: 24px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-btn {
+    background: var(--bg-elevated);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .filter-btn:hover { color: var(--text); border-color: var(--border-strong); }
+  .filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .filter-btn .role-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-right: 8px; display: inline-block; flex-shrink: 0;
+  }
+  .filter-btn .label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .filter-btn .count {
+    color: var(--text-faint);
+    margin-left: 6px;
+    font-size: 10px;
+    font-family: "SF Mono", Menlo, monospace;
+    flex-shrink: 0;
+  }
+  .filter-btn.active .count { color: var(--bg); opacity: 0.6; }
+
+  .section { margin-bottom: 40px; }
+  .section-header {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-faint); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-header .count {
+    background: var(--bg-elevated); padding: 2px 8px;
+    border-radius: 10px; font-size: 10px; letter-spacing: 0.05em;
+  }
+
+  .type-group { margin-bottom: 24px; }
+  .type-label { font-size: 11px; color: var(--text-faint); margin-bottom: 8px; font-weight: 500; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 8px;
+  }
+
+  .card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative; display: flex; gap: 12px;
+  }
+  .card:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+
+  /* Image thumbnail */
+  .card-img-wrap {
+    flex-shrink: 0;
+    width: 80px; height: 117px;
+    border-radius: 4px;
+    background: var(--bg-card);
+    position: relative;
+    overflow: visible;
+  }
+  .card-thumb {
+    width: 100%; height: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+  .card-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .card-thumb .placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 4px;
+    text-align: center;
+    font-size: 9px;
+    color: var(--text-faint);
+    line-height: 1.3;
+  }
+
+  /* Hover preview - shows image + full effect text */
+  .card-preview {
+    display: none;
+    position: absolute;
+    left: calc(100% + 8px); top: -20px;
+    width: 420px;
+    z-index: 1000;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+    padding: 12px;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .card-preview.show {
+    display: flex;
+  }
+  .card-preview .preview-img {
+    width: 160px; height: 234px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .card-preview .preview-img img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .card-preview .preview-text {
+    flex: 1;
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--text);
+    max-height: 234px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .card-preview .preview-text::-webkit-scrollbar { width: 4px; }
+  .card-preview .preview-text::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  .card-preview .preview-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .card-preview .preview-meta {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .card-preview .preview-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+  }
+
+  .card-body { flex: 1; min-width: 0; }
+
+  .card-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 8px; margin-bottom: 4px;
+  }
+  .card-name {
+    font-size: 13px; font-weight: 500; line-height: 1.3; flex: 1;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card-name .verify-flag {
+    font-size: 9px;
+    background: var(--warning);
+    color: var(--bg);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .card-qty {
+    font-size: 10px; color: var(--text-faint);
+    background: var(--bg); padding: 2px 6px;
+    border-radius: 3px; font-family: "SF Mono", Menlo, monospace;
+    flex-shrink: 0;
+  }
+
+  .card-meta {
+    font-size: 10px; color: var(--text-dim);
+    margin-bottom: 6px; font-family: "SF Mono", Menlo, monospace;
+  }
+
+  .roles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+  .role {
+    font-size: 10px; padding: 2px 7px; border-radius: 3px;
+    font-weight: 500; letter-spacing: 0.02em;
+    background: rgba(255,255,255,0.04); border: 1px solid;
+  }
+
+  .stripped { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+  .stripped ul { list-style: none; padding: 0; }
+  .stripped li { padding-left: 12px; position: relative; margin-bottom: 2px; }
+  .stripped li::before { content: "→"; position: absolute; left: 0; color: var(--text-faint); }
+
+  .note {
+    margin-top: 6px; font-size: 10px; color: var(--role-boardbreaker);
+    padding-top: 6px; border-top: 1px dashed var(--border);
+  }
+  .note .opt { color: var(--text-faint); }
+
+  .hidden { display: none !important; }
+
+  /* Combos */
+  .combo-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 6px;
+    margin-bottom: 24px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .combo {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 24px; margin-bottom: 24px;
+  }
+  .combo-head {
+    display: flex; justify-content: space-between;
+    align-items: baseline; flex-wrap: wrap;
+    gap: 12px; margin-bottom: 6px;
+  }
+  .combo-title { font-size: 15px; font-weight: 600; letter-spacing: -0.005em; }
+  .combo-tag {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-faint); padding: 3px 8px;
+    background: var(--bg); border-radius: 3px; border: 1px solid var(--border);
+  }
+  .combo-req {
+    font-size: 12px; color: var(--text-dim);
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .combo-req strong { color: var(--text); font-weight: 500; }
+
+  .step {
+    display: grid; grid-template-columns: 28px 1fr;
+    gap: 16px; padding: 16px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-size: 11px; color: var(--text-faint);
+    font-family: "SF Mono", Menlo, monospace; padding-top: 4px;
+  }
+  .step-content { display: flex; flex-direction: column; gap: 10px; }
+
+  .step-flow {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .step-card {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 10px; background: var(--bg-card);
+    border: 1px solid var(--border-strong); border-radius: 5px;
+    font-size: 12px; font-weight: 500; position: relative;
+    cursor: pointer;
+  }
+  .step-card .mini-thumb {
+    width: 28px; height: 40px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .step-card .mini-thumb img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+
+  .arrow { color: var(--text-faint); font-size: 13px; user-select: none; }
+  .result {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    background: rgba(229,91,60,0.08);
+    border: 1px solid rgba(229,91,60,0.3);
+    border-radius: 5px; font-size: 12px;
+    color: var(--accent); font-weight: 500;
+  }
+
+  .step-detail {
+    font-size: 11px; color: var(--text-dim);
+    line-height: 1.55; padding-left: 2px;
+  }
+  .step-detail .chain {
+    color: var(--role-combo);
+    font-family: "SF Mono", Menlo, monospace; font-size: 10px;
+  }
+  .step-detail strong { color: var(--text); font-weight: 500; }
+
+  .endboard {
+    margin-top: 20px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .endboard-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-faint); margin-bottom: 12px;
+  }
+  .endboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px;
+  }
+  .endboard-piece {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 5px; padding: 10px 12px;
+  }
+  .endboard-piece-name { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+  .endboard-piece-role {
+    font-size: 10px; color: var(--accent); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .endboard-piece-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>YDK <span class="accent">Decoder</span></h1>
+      <p class="subtitle">Strip cards to function. Learn decks faster.</p>
+    </div>
+    <div class="subtitle" id="deck-summary"></div>
+  </header>
+
+  <div class="setup-banner">
+    <strong>For full features (API + images):</strong> save this file, then in its folder run
+    <code>python3 -m http.server 8000</code> (or <code>py -m http.server 8000</code> on Windows).
+    Open <code>http://localhost:8000/ydk_decoder.html</code>. Without localhost, images/API may be blocked by browser CORS — inline cache still works.
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="cards">Cards</button>
+    <button class="tab" data-tab="combos">Combo Lines</button>
+  </div>
+
+  <div id="tab-cards">
+    <label class="upload-zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".ydk,.txt">
+      <p>Drop .ydk file or click to upload</p>
+      <p class="filename" id="filename"></p>
+    </label>
+
+    <div id="status"></div>
+    <div class="filters hidden" id="filters"></div>
+    <div id="output"></div>
+  </div>
+
+  <div id="tab-combos" class="hidden">
+    <div class="combo-picker" id="combo-picker"></div>
+    <div id="combos-output"></div>
+  </div>
+</div>
+
+<!-- Hover preview - reused across all cards -->
+<div class="card-preview" id="hover-preview">
+  <div class="preview-img"><img id="preview-img-el" alt=""></div>
+  <div class="preview-text">
+    <div class="preview-name" id="preview-name"></div>
+    <div class="preview-meta" id="preview-meta"></div>
+    <div class="preview-desc" id="preview-desc"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// INLINE CARD DATA — confirmed from research
+// ============================================================
+const INLINE_CACHE = {
+  // === DoomZ archetype (confirmed) ===
+  97556336: { name: "Medius the Pure", type: "Effect Monster", frameType: "effect", attribute: "DARK", race: "Dragon", atk: 1500, def: 1500, level: 4,
+    desc: "If this card is Normal or Special Summoned: You can Special Summon 1 \"Power Patron\" monster from your Deck. If this card is in your GY: You can shuffle 1 monster from your hand or face-up field into the Deck; Special Summon this card, but banish it when it leaves the field. You can only use each effect of \"Medius the Pure\" once per turn." },
+  81650695: { name: "Power Patron DoomZ", type: "Effect Monster", frameType: "effect", attribute: "WIND", race: "Machine", atk: 0, def: 0, level: 1,
+    desc: "You cannot Special Summon from the Extra Deck, except Xyz Monsters. You can target 1 other Effect Monster you control; Special Summon from your Extra Deck, 1 \"DoomZ\" Xyz Monster or \"Jupiter the Power Patron of Destruction\" with the same Rank as the Level of that monster, by using that monster as material, and if you do, equip this card to it as an Equip Spell. If this card is destroyed: You can add 1 \"DoomZ\" card from your Deck to your hand. You can only use each effect once per turn." },
+  92472273: { name: "DoomZ XII Zero - Drastea", type: "Effect Monster", frameType: "effect", attribute: "DARK", race: "Dragon", atk: 2800, def: 2400, level: 8,
+    desc: "You can target 1 \"DoomZ\" card you control; destroy it, and if you do, Special Summon this card from your hand, then you can equip 1 Equip Spell from your Deck to it. While this card is equipped with an Equip card (Quick Effect): You can Special Summon 1 WIND Machine Xyz Monster whose Rank equals this card's Level from the Extra Deck, using this card and equipped cards as materials. Each effect HOPT." },
+  28877382: { name: "DoomZ V Five - Amalthe", type: "Effect Monster", frameType: "effect", attribute: "DARK", race: "Dragon", atk: 1600, def: 1200, level: 4,
+    desc: "If this card is Normal or Special Summoned, or destroyed by an effect: You can add 1 \"DoomZ\" monster from your Deck to your hand, except \"DoomZ V Five - Amalthe\". While this card is equipped with an Equip card (Quick Effect): You can Special Summon 1 WIND Machine Xyz Monster whose Rank equals this card's Level, using this card and equipped cards as materials. Each effect HOPT." },
+  54265980: { name: "DoomZ VII Seven - Elara", type: "Effect Monster", frameType: "effect", attribute: "DARK", race: "Dragon", atk: 1400, def: 1200, level: 4,
+    desc: "If this card is Normal or Special Summoned, or destroyed by an effect: You can Set 1 \"DoomZ\" Spell/Trap directly from your Deck. While this card is equipped with an Equip card (Quick Effect): You can Special Summon 1 WIND Machine Xyz Monster whose Rank equals this card's Level, using this card and equipped cards as materials. Each effect HOPT." },
+
+  32442017: { name: "DoomZ Raiders", type: "Spell Card", frameType: "spell", race: "Continuous",
+    desc: "During your Main Phase: You can destroy 1 other \"DoomZ\" card in your hand or face-up field, then take 1 \"DoomZ\" monster from your Deck and either add it to your hand or Special Summon it, also you cannot Special Summon monsters from the Extra Deck for the rest of the turn, except Xyz monsters. If this card is destroyed by an effect: You can target 1 face-up monster; destroy it. 1 of 2 effects per turn." },
+  68831625: { name: 'DoomZ Command "D.O.O.M.D.U.R.G."', type: "Spell Card", frameType: "spell", race: "Equip",
+    desc: "During each Standby Phase: The equipped monster's controller takes 500 damage. A \"DoomZ\" or WIND Machine Xyz monster equipped with this card gains: untargetable by opponent effects; Once per turn (Quick): destroy 1 other face-up card you control, this turn this card gains ATK equal to its Level/Rank×100, can attack directly, destroyed end of damage step." },
+  80320877: { name: "DoomZ Destruction", type: "Trap Card", frameType: "trap", race: "Normal",
+    desc: "Target 1 \"DoomZ\" Xyz Monster you control; equip this card to it with: cards cannot be added from the Main Deck to your opponent's hand except by drawing. If this card is destroyed by an effect: Target 1 face-up monster you control; equip 1 \"DoomZ\" monster from your Deck to it as an Equip Spell. Each effect HOPT." },
+
+  // === DoomZ Extra Deck (confirmed) ===
+  31010081: { name: "DoomZ Break - Diactorus", type: "XYZ Monster", frameType: "xyz", attribute: "WIND", race: "Machine", atk: 2300, def: 1500, rank: 4,
+    desc: "2 Level 4 monsters. If this card is Special Summoned: You can destroy 1 \"DoomZ\" card in your hand or face-up field, then you can destroy 1 monster on the field. If this card is destroyed by card effect while it had a \"DoomZ\" monster or \"Medius the Pure\" as material: You can take 1 Equip Spell from your Deck and either add it to your hand or send it to the GY. Each effect HOPT." },
+  95626382: { name: "DoomZ XII End - Drastrius", type: "XYZ Monster", frameType: "xyz", attribute: "WIND", race: "Machine", atk: 3000, def: 2500, rank: 8,
+    desc: "3 Level 8 monsters. If this card is Xyz Summoned: You can equip 1 other face-up monster to this card as an Equip Spell. Once per turn, if this card would be destroyed by battle or effect, it is not destroyed. When your opponent activates a monster effect on the field or in the GY (Quick Effect): You can detach 1 material; negate that effect, then you can equip 1 face-up monster your opponent controls to this card as an Equip Spell. Effects 1 & 3 HOPT." },
+
+  // Graflario - CONFIRMED R5 from research
+  55555555: { name: "DoomZ XIII Over - Graflario", type: "XYZ Monster", frameType: "xyz", attribute: "WIND", race: "Machine", atk: 2400, def: 1500, rank: 5,
+    desc: "3 Level 5 monsters. Once per turn, you can also Xyz Summon \"DoomZ XIII Over - Graflario\" by using 1 \"DoomZ\" Xyz Monster you control (transfer its materials). You can detach 1 material; add 1 \"DoomZ\" Spell/Trap from your Deck to your hand, then you can destroy 1 card on the field. If this card is destroyed by card effect: You can Special Summon 1 non-Xyz \"DoomZ\" monster from your Deck or GY. Each effect HOPT." },
+
+  68231287: { name: "Jupiter the Power Patron of Destruction", type: "XYZ Monster", frameType: "xyz", attribute: "WIND", race: "Machine", atk: 3500, def: 2500, rank: 10,
+    desc: "3 Level 10 monsters. Once per turn, you can also Xyz Summon this by using 1 monster equipped with 3+ Equip Spells as material (transfer materials). If Xyz Summoned: equip any # of appropriate Equip Spells from GY. Gains 3000 ATK while it has an Xyz monster as material. Once per turn: detach 1 material; Special Summon 1 \"DoomZ\" monster from your GY, then you can destroy 1 card on the field." },
+
+  // === Handtraps / Staples (confirmed) ===
+  14558127: { name: "Ash Blossom & Joyous Spring", type: "Effect Monster", frameType: "effect", attribute: "FIRE", race: "Zombie", atk: 0, def: 1800, level: 3,
+    desc: "When a card or effect is activated that: adds a card from the Deck to the hand; Special Summons from the Deck; sends a card from the Deck to the GY: You can discard this card; negate the effect. HOPT." },
+  42141493: { name: "Mulcharmy Fuwalos", type: "Effect Monster", frameType: "effect", attribute: "WIND", race: "Winged Beast", atk: 800, def: 1000, level: 3,
+    desc: "If you have no cards in hand and your opponent Special Summons 2+ monsters on their turn: You can reveal this card; draw cards until you have 5 in hand. For the rest of the turn, effects of monsters that were previously in your hand are locked out. HOPT." },
+  84192580: { name: "Mulcharmy Purulia", type: "Effect Monster", frameType: "effect", attribute: "WATER", race: "Aqua", atk: 500, def: 600, level: 2,
+    desc: "If your opponent adds 2+ cards from Main Deck to hand (except by drawing) on their turn: You can reveal this card; draw with special rules (hand = opp hand + 1, capped). HOPT." },
+  73642296: { name: "Ghost Belle & Haunted Mansion", type: "Effect Monster", frameType: "effect", attribute: "FIRE", race: "Zombie", atk: 0, def: 1800, level: 3,
+    desc: "When an effect activates that targets a card(s) in the GY, or banishes cards from the GY or field: You can discard this card; negate the effect. HOPT." },
+  10045474: { name: "Infinite Impermanence", type: "Trap Card", frameType: "trap", race: "Normal",
+    desc: "Target 1 face-up monster your opponent controls; negate its effects until End of Turn. If this is Set, you can also activate it by discarding, and if you do, during the rest of this turn, other Spell/Trap effects in that monster's column cannot be activated. HOPT." },
+
+  // === Side deck staples ===
+  24224830: { name: "Called by the Grave", type: "Spell Card", frameType: "spell", race: "Quick-Play",
+    desc: "Target 1 monster in your opponent's GY; banish it, and if you do, until the end of the next turn, its effects are negated, as well as the activated effects and effects on the field of monsters with the same original name. HOPT." },
+  41420027: { name: "Solemn Judgment", type: "Trap Card", frameType: "trap", race: "Counter",
+    desc: "When a monster would be Summoned, OR a Spell/Trap Card is activated: Pay half your LP; negate the Summon or activation, and if you do, destroy it." },
+  94145021: { name: "Droll & Lock Bird", type: "Effect Monster", frameType: "effect", attribute: "WIND", race: "Spellcaster", atk: 0, def: 0, level: 1,
+    desc: "If a card(s) is added from the Main Deck to your opponent's hand, except during the Draw Phase of their normal draw (Quick Effect): You can discard this card; neither player can add cards from their Main Deck to their hand for the rest of this turn. HOPT." },
+  59438930: { name: "Ghost Ogre & Snow Rabbit", type: "Effect Monster", frameType: "effect", attribute: "LIGHT", race: "Zombie", atk: 0, def: 1800, level: 3,
+    desc: "When a face-up card on the field activates its effect: You can send this card from the hand or field to the GY; destroy that card. HOPT." },
+  18144506: { name: "Harpie's Feather Duster", type: "Spell Card", frameType: "spell", race: "Normal",
+    desc: "Destroy all Spells and Traps your opponent controls." },
+  84749824: { name: "Triple Tactics Talent", type: "Spell Card", frameType: "spell", race: "Normal",
+    desc: "If your opponent activated a monster effect during your turn, apply one: draw 2; take control of 1 face-up opponent monster until End Phase; look at opponent's hand, and you can add 1 to your hand. HOPT." },
+  25311006: { name: "Solemn Warning", type: "Trap Card", frameType: "trap", race: "Counter",
+    desc: "When a monster would be Summoned, OR a Spell/Trap/monster effect is activated that includes a Summon: Pay 2000 LP; negate and destroy." },
+
+  // === BLZD NEW CARDS (partially confirmed from research) ===
+  // Zegredo - CONFIRMED Lv10 DARK Machine Pendulum
+  77777777: { name: "Power Patron Shadow Machine Zegredo", type: "Pendulum Effect Monster", frameType: "pendulum", attribute: "DARK", race: "Machine", atk: 300, def: 200, level: 10, scale: 1,
+    desc: "[Pendulum Effect] Main Phase: destroy this card and 1 \"Power Patron\" or \"DoomZ\" monster in your hand or face-up field, then you can destroy 1 card on the field. HOPT.\n[Monster Effect] (Always treated as \"DoomZ\".) You can banish top 3 cards of your Deck face-down; destroy this card, Special Summon 1 \"Jupiter the Power Patron of Destruction\" from Extra Deck, then attach 1 card from hand to it. If added to Extra Deck face-up: add 1 \"Power Patron\" or \"DoomZ\" Spell/Trap from Deck. Each effect HOPT." },
+
+  // A.D.R.A.S.T.E.I.A. - CONFIRMED Equip Spell from BLZD
+  88888888: { name: 'DoomZ Command "A.D.R.A.S.T.E.I.A."', type: "Spell Card", frameType: "spell", race: "Equip",
+    desc: "The first time the equipped monster would be destroyed by battle each turn, it is not destroyed. Main Phase: You can destroy the equipped monster, and if you do, Special Summon 1 other \"DoomZ\" monster from your hand, GY, or banishment in Defense Position. If in GY: target 1 face-up monster you control; equip this card to it, then take damage equal to its Level/Rank × 100. Effects 2 & 3 HOPT." },
+
+  // DoomZ Change - partially verified (destruction recovery Normal Spell)
+  66666666: { name: "DoomZ Change", type: "Spell Card", frameType: "spell", race: "Normal",
+    desc: "Destroy 1 \"DoomZ\" card in your hand, Deck, or face-up field, except \"DoomZ Change\". If this card is destroyed by card effect: You can add 1 \"DoomZ\" card from your GY to your hand, except \"DoomZ Change\", then you can Special Summon 1 \"DoomZ\" monster from your hand. Each effect HOPT." },
+
+  // === Unknown cards - show real API data if fetched, placeholder otherwise ===
+};
+
+// ============================================================
+// NAME-BASED OVERRIDES (for cards in the decklist transcribed from image)
+// These are the cards we know by name but need real passcode from API
+// ============================================================
+const NAME_OVERRIDES = {
+  // DoomZ core
+  "Medius the Pure":                                     { pc: 97556336 },
+  "Power Patron DoomZ":                                  { pc: 81650695 },
+  "DoomZ XII Zero - Drastea":                            { pc: 92472273 },
+  "DoomZ V Five - Amalthe":                              { pc: 28877382 },
+  "DoomZ VII Seven - Elara":                             { pc: 54265980 },
+  "DoomZ Raiders":                                       { pc: 32442017 },
+  'DoomZ Command "D.O.O.M.D.U.R.G."':                    { pc: 68831625 },
+  "DoomZ Destruction":                                   { pc: 80320877 },
+  "DoomZ Break - Diactorus":                             { pc: 31010081 },
+  "DoomZ XII End - Drastrius":                           { pc: 95626382 },
+  "Jupiter the Power Patron of Destruction":             { pc: 68231287 },
+  "DoomZ XIII Over - Graflario":                         { pc: 55555555 }, // placeholder pc
+  "DoomZ Change":                                        { pc: 66666666 }, // placeholder pc
+  'DoomZ Command "A.D.R.A.S.T.E.I.A."':                  { pc: 88888888 }, // placeholder pc
+  "Power Patron Shadow Machine Zegredo":                 { pc: 77777777 }, // placeholder pc
+  // Handtraps + staples
+  "Ash Blossom & Joyous Spring":                         { pc: 14558127 },
+  "Mulcharmy Fuwalos":                                   { pc: 42141493 },
+  "Mulcharmy Purulia":                                   { pc: 84192580 },
+  "Ghost Belle & Haunted Mansion":                       { pc: 73642296 },
+  "Infinite Impermanence":                               { pc: 10045474 },
+  "Called by the Grave":                                 { pc: 24224830 },
+  "Solemn Judgment":                                     { pc: 41420027 },
+  "Droll & Lock Bird":                                   { pc: 94145021 },
+  "Ghost Ogre & Snow Rabbit":                            { pc: 59438930 },
+  "Harpie's Feather Duster":                             { pc: 18144506 },
+  "Triple Tactics Talent":                               { pc: 84749824 },
+  "Solemn Warning":                                      { pc: 25311006 },
+};
+
+// ============================================================
+// CARD TAGS — redone properly per your feedback
+// ============================================================
+const CARD_OVERRIDES = {
+  97556336: { roles: ["Starter","Searcher"], stripped: [
+    "Summon → SS 1 Power Patron from deck",
+    "In GY: shuffle 1 monster from hand/field into deck → SS self (banish when leaves)"
+  ], note: "Best 1-card starter. Opens full combo.", opt: "Each effect HOPT" },
+
+  81650695: { roles: ["Engine","Combo piece"], stripped: [
+    "[Lock] Xyz-only from Extra Deck this turn",
+    "Target other Effect monster → SS DoomZ/Jupiter Xyz of same Rank as its Level → equip self to it",
+    "If destroyed: add 1 DoomZ card from deck"
+  ], note: "The bridge card. HARD lock — no Fusion/Synchro/Link all turn.", opt: "Effects 2 & 3 HOPT" },
+
+  92472273: { roles: ["Extender","Combo piece"], stripped: [
+    "Target 1 DoomZ → destroy it → SS self from hand → equip 1 Equip Spell from deck",
+    "While equipped (Quick): SS WIND Machine Xyz of same Rank using this + equipped cards"
+  ], note: "Level 8 body. Needs DoomZ target to come out.", opt: "Each effect HOPT" },
+
+  28877382: { roles: ["Starter","Searcher","Extender"], stripped: [
+    "N/SS or destroyed by effect: add 1 DoomZ monster from deck (not self)",
+    "While equipped (Quick): SS WIND Machine Xyz of same Rank using this + equipped cards"
+  ], note: "1-card starter via Normal Summon → search. Extends via destruction triggers.", opt: "Each effect HOPT" },
+
+  54265980: { roles: ["Starter","Searcher","Extender"], stripped: [
+    "N/SS or destroyed by effect: Set 1 DoomZ Spell/Trap directly from deck",
+    "While equipped (Quick): SS WIND Machine Xyz of same Rank using this + equipped cards"
+  ], note: "1-card starter via Normal Summon → set Raiders/DOOMDURG/Destruction. Set = can activate same turn (Traps still wait 1 turn).", opt: "Each effect HOPT" },
+
+  32442017: { roles: ["Engine","Searcher","Starter"], stripped: [
+    "Main: destroy 1 other DoomZ (hand/field) → add OR SS 1 DoomZ from deck → Xyz-only lock",
+    "If destroyed by effect: target 1 face-up monster → destroy it"
+  ], note: "1-card starter if opened with any DoomZ monster. Destruction engine.", opt: "1 of 2 effects per turn" },
+
+  68831625: { roles: ["Equip","Combo piece","Finisher"], stripped: [
+    "Standby: 500 burn to equipped monster's controller",
+    "Equipped DoomZ/WIND Machine Xyz: untargetable by opp effects",
+    "Once/turn (Quick): destroy 1 other face-up card → ATK + Lv/Rank×100, direct attack, destroyed EoDS"
+  ], note: "The OTK button. Self-destroy = fuel for Amalthe/Elara/Drastea triggers.", opt: "Quick effect 1/turn on equipped" },
+
+  80320877: { roles: ["Tech","Floodgate","Equip"], stripped: [
+    "Target 1 DoomZ Xyz → equip self → opp can't add from Main Deck except by drawing",
+    "If destroyed: target face-up monster → equip 1 DoomZ from deck as Equip Spell"
+  ], note: "Soft search-floodgate. Adds equip count for Jupiter.", opt: "Each effect HOPT" },
+
+  95626382: { roles: ["Boss","Stopper"], stripped: [
+    "Xyz Summoned: equip 1 other face-up monster to this",
+    "Once/turn: not destroyed by battle/effect",
+    "Opp activates monster effect on field/GY (Quick): detach 1 → negate → equip that monster to this"
+  ], note: "R8 negate boss. Steals via equip.", opt: "Effects 1 & 3 HOPT" },
+
+  31010081: { roles: ["Boss","Board breaker"], stripped: [
+    "If SS: destroy 1 DoomZ (hand/field) → destroy 1 opp monster",
+    "If destroyed with DoomZ/Medius material: add OR GY 1 Equip Spell from deck"
+  ], note: "R4 removal + equip tutor on destruction.", opt: "Each effect HOPT" },
+
+  55555555: { roles: ["Boss","Searcher","Board breaker"], stripped: [
+    "Can Xyz Summon by using 1 DoomZ Xyz you control (transfer materials)",
+    "Detach 1 → add 1 DoomZ Spell/Trap from deck → destroy 1 card on field",
+    "If destroyed by effect: SS 1 non-Xyz DoomZ from deck OR GY"
+  ], note: "R5 upgrade path. Search + removal + destruction-recovery.", opt: "Each effect HOPT" },
+
+  68231287: { roles: ["Boss","Extender","Board breaker","Finisher"], stripped: [
+    "Alt summon: use 1 monster equipped with 3+ Equip Spells (transfer materials)",
+    "Xyz Summoned: equip any # of appropriate Equip Spells from GY",
+    "+3000 ATK while has Xyz material",
+    "Detach 1: SS DoomZ from GY → destroy 1 card on field"
+  ], note: "R10 finisher. Detach = SS (Extender) + pop (Board breaker).", opt: "Alt summon + detach 1/turn each" },
+
+  // BLZD — Zegredo
+  77777777: { roles: ["Starter","Combo piece","Pendulum","Searcher"], stripped: [
+    "[Pendulum] Main: destroy self + 1 Power Patron/DoomZ (hand/field) → destroy 1 card on field",
+    "[Monster] Treated as DoomZ. Banish top 3 of deck face-down → destroy self → SS Jupiter from Extra Deck → attach 1 from hand",
+    "If added to Extra Deck face-up: add 1 Power Patron/DoomZ Spell/Trap from deck"
+  ], note: "1-card-to-Jupiter via mill. Pendulum scale 1. Extra Deck face-up = free search.", opt: "Each effect HOPT" },
+
+  // BLZD — A.D.R.A.S.T.E.I.A.
+  88888888: { roles: ["Equip","Extender","Combo piece"], stripped: [
+    "Battle protection: first destruction per turn, not destroyed",
+    "Main: destroy equipped monster → SS 1 other DoomZ from hand/GY/banished (Defense)",
+    "If in GY: target face-up monster → equip self, take damage = its Lv/Rank×100"
+  ], note: "Equip Extender. Self-destroy = SS from GY/banish = big recovery.", opt: "Effects 2 & 3 HOPT" },
+
+  // BLZD — DoomZ Change
+  66666666: { roles: ["Tech","Searcher","Engine"], stripped: [
+    "Destroy 1 DoomZ card in hand/deck/face-up field (not self)",
+    "If destroyed by effect: add 1 DoomZ card from GY (not self) → SS 1 DoomZ from hand"
+  ], note: "Trigger card. Destroys from DECK — massive flexibility.", opt: "Each effect HOPT" },
+
+  // Handtraps
+  14558127: { roles: ["Handtrap"], stripped: [
+    "Discard: negate + banish 1 card that searches, SS from deck, or sends from deck to GY"
+  ], note: "The #1 handtrap.", opt: "HOPT" },
+  42141493: { roles: ["Handtrap"], stripped: [
+    "Empty hand + opp SS 2+ monsters on their turn: reveal → draw to 5",
+    "EoT: other hand effects locked out"
+  ], note: "Going 2nd vs combo. Brutal when it lands.", opt: "HOPT" },
+  84192580: { roles: ["Handtrap"], stripped: [
+    "Opp adds 2+ from Main Deck to hand (not draws) on their turn: reveal → draw to opp hand + 1"
+  ], note: "Punishes search-heavy decks.", opt: "HOPT" },
+  73642296: { roles: ["Handtrap"], stripped: [
+    "Discard: negate 1 effect that targets GY or banishes from GY/field"
+  ], note: "Stops Called by the Grave + GY plays.", opt: "HOPT" },
+  10045474: { roles: ["Handtrap","Tech"], stripped: [
+    "Hand: target face-up opp monster → negate effects till EoT",
+    "Set from hand, activate next turn (column-locks)"
+  ], note: "Set version zone-locks same column.", opt: "HOPT" },
+  24224830: { roles: ["Tech","Stopper"], stripped: [
+    "Target monster in either GY → banish it → same-name effects negated until next standby"
+  ], note: "Anti-handtrap tech.", opt: "HOPT" },
+  41420027: { roles: ["Stopper","Tech"], stripped: [
+    "Pay half LP: negate Summon OR Spell/Trap activation + destroy it"
+  ], note: "Hardest negate.", opt: "No OPT" },
+  94145021: { roles: ["Handtrap","Floodgate"], stripped: [
+    "Opp added from deck to hand → discard: neither player can add from deck to hand this turn"
+  ], note: "Shuts search-heavy decks.", opt: "HOPT" },
+  59438930: { roles: ["Handtrap","Board breaker"], stripped: [
+    "When face-up card on field activates effect: send from hand/field → destroy that card"
+  ], note: "Hits Pendulum scales, Field spells, continuous effects.", opt: "HOPT" },
+  18144506: { roles: ["Board breaker"], stripped: [
+    "Destroy all Spells/Traps opp controls"
+  ], note: "Best generic backrow nuke. Going 2nd.", opt: "—" },
+  84749824: { roles: ["Tech"], stripped: [
+    "Opp activated monster effect during your turn: pick 1 — draw 2, take control of monster, or peek + steal from hand"
+  ], note: "Baits out handtraps for value.", opt: "HOPT" },
+  25311006: { roles: ["Stopper","Tech"], stripped: [
+    "Pay 2000 LP: negate Summon OR Spell/Trap/monster effect that includes a Summon + destroy"
+  ], note: "Secondary hard negate.", opt: "—" },
+};
+
+const KEYWORD_RULES = [
+  { match: /during.*opponent.*turn.*Quick Effect/i, role: "Handtrap" },
+  { match: /cannot be destroyed|cannot be targeted|negate.*effect/i, role: "Boss" },
+  { match: /add.*from.*deck.*to.*hand|search/i, role: "Searcher" },
+  { match: /special summon.*from.*deck/i, role: "Extender" },
+  { match: /special summon.*from.*graveyard|from.*gy/i, role: "Extender" },
+  { match: /destroy.*all|destroy.*your opponent.*controls/i, role: "Board breaker" },
+  { match: /cannot.*special summon|skip.*phase/i, role: "Floodgate" },
+];
+
+const ROLE_COLORS = {
+  "Starter":"var(--role-starter)","Extender":"var(--role-extender)",
+  "Searcher":"var(--role-searcher)","Handtrap":"var(--role-handtrap)",
+  "Combo piece":"var(--role-combo)","Boss":"var(--role-boss)",
+  "Board breaker":"var(--role-boardbreaker)","Floodgate":"var(--role-floodgate)",
+  "Tech":"var(--role-tech)","Equip":"var(--role-equip)",
+  "Engine":"var(--role-engine)","Stopper":"var(--role-stopper)",
+  "Pendulum":"var(--role-pendulum)","Finisher":"var(--role-finisher)"
+};
+
+// ============================================================
+// PARSING & FETCH
+// ============================================================
+function parseYdk(text) {
+  const lines = text.split(/\r?\n/);
+  const sections = { main: [], extra: [], side: [] };
+  let cur = null;
+  for (const line of lines) {
+    const t = line.trim();
+    if (t.startsWith("#main")) { cur = "main"; continue; }
+    if (t.startsWith("#extra")) { cur = "extra"; continue; }
+    if (t.startsWith("!side")) { cur = "side"; continue; }
+    if (!t || t.startsWith("#")) continue;
+    if (/^\d+$/.test(t) && cur) sections[cur].push(parseInt(t, 10));
+  }
+  return sections;
+}
+
+async function fetchCards(ids) {
+  const unique = [...new Set(ids)];
+  const map = {};
+  for (const id of unique) {
+    if (INLINE_CACHE[id]) map[id] = { id, ...INLINE_CACHE[id] };
+  }
+  let apiError = null;
+  // Filter out placeholder IDs (won't be in the real API)
+  const realIds = unique.filter(id => id < 99999999 && id > 99999); // real passcodes are 8 digits
+  try {
+    const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${realIds.join(",")}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const j = await resp.json();
+      for (const c of j.data) map[c.id] = c;
+    } else {
+      apiError = `HTTP ${resp.status}`;
+    }
+  } catch (e) {
+    apiError = e.message;
+  }
+  return { map, apiError };
+}
+
+// Image URL generator with fallback chain
+function getImageUrls(id) {
+  // Placeholder IDs (BLZD cards) don't have real images available online yet
+  if (id >= 99999999 || id < 99999) return [];
+  return [
+    `https://images.ygoprodeck.com/images/cards/${id}.jpg`,
+    `https://images.ygoprodeck.com/images/cards_small/${id}.jpg`,
+    `https://storage.googleapis.com/ygoprodeck.com/pics/${id}.jpg`,
+  ];
+}
+
+function createImage(id, cardName, onFail) {
+  const urls = getImageUrls(id);
+  if (urls.length === 0) {
+    if (onFail) onFail();
+    return null;
+  }
+  const img = document.createElement("img");
+  let idx = 0;
+  img.src = urls[0];
+  img.alt = cardName;
+  img.onerror = () => {
+    idx++;
+    if (idx < urls.length) {
+      img.src = urls[idx];
+    } else {
+      img.style.display = "none";
+      if (onFail) onFail();
+    }
+  };
+  return img;
+}
+
+function classify(card) {
+  const override = CARD_OVERRIDES[card.id];
+  if (override) return override;
+  const roles = new Set();
+  const text = (card.desc || "") + " " + (card.name || "");
+  for (const rule of KEYWORD_RULES) if (rule.match.test(text)) roles.add(rule.role);
+  if (card.type && card.type.includes("Xyz")) roles.add("Boss");
+  if (card.type && card.type.includes("Link")) roles.add("Boss");
+  if (card.frameType === "spell" && roles.size === 0) roles.add("Tech");
+  if (card.frameType === "trap" && roles.size === 0) roles.add("Tech");
+  if (roles.size === 0) roles.add("Tech");
+  return {
+    roles: [...roles],
+    stripped: [stripDesc(card.desc || "(hover for full text)")],
+    note: null, opt: null, unverified: true
+  };
+}
+
+function stripDesc(desc) {
+  if (!desc) return "(no effect text)";
+  return desc
+    .replace(/\([^)]*once per turn[^)]*\)/gi, "")
+    .replace(/\(this is treated as[^)]*\)/gi, "")
+    .replace(/\s+/g, " ").trim()
+    .slice(0, 220) + (desc.length > 220 ? "…" : "");
+}
+
+// ============================================================
+// HOVER PREVIEW SYSTEM
+// ============================================================
+const preview = document.getElementById("hover-preview");
+const previewImgEl = document.getElementById("preview-img-el");
+const previewName = document.getElementById("preview-name");
+const previewMeta = document.getElementById("preview-meta");
+const previewDesc = document.getElementById("preview-desc");
+
+function showPreview(el, card) {
+  const rect = el.getBoundingClientRect();
+  const scrollY = window.scrollY;
+
+  const meta = [];
+  if (card.level) meta.push(`Lv${card.level}`);
+  if (card.rank) meta.push(`R${card.rank}`);
+  if (card.linkval) meta.push(`LINK-${card.linkval}`);
+  if (card.scale !== undefined) meta.push(`Scale ${card.scale}`);
+  if (card.attribute) meta.push(card.attribute);
+  if (card.race) meta.push(card.race);
+  if (card.atk !== undefined && card.atk !== null) meta.push(`${card.atk}/${card.def === -1 ? "?" : card.def}`);
+
+  previewName.textContent = card.name;
+  previewMeta.textContent = meta.join(" · ");
+  previewDesc.textContent = card.desc || "(no effect text available — may be a very new card)";
+
+  const urls = getImageUrls(card.id);
+  if (urls.length > 0) {
+    previewImgEl.src = urls[0];
+    previewImgEl.style.display = "block";
+    previewImgEl.onerror = () => {
+      previewImgEl.style.display = "none";
+    };
+  } else {
+    previewImgEl.style.display = "none";
+  }
+
+  // Position - try right side first, flip to left if off-screen
+  let left = rect.right + 8;
+  let top = rect.top + scrollY - 20;
+
+  if (left + 420 > window.innerWidth) {
+    left = rect.left - 420 - 8;
+  }
+  if (left < 10) left = 10;
+
+  if (top + 260 > window.innerHeight + scrollY) {
+    top = window.innerHeight + scrollY - 270;
+  }
+  if (top < scrollY + 10) top = scrollY + 10;
+
+  preview.style.left = left + "px";
+  preview.style.top = top + "px";
+  preview.classList.add("show");
+}
+
+function hidePreview() {
+  preview.classList.remove("show");
+}
+
+// ============================================================
+// RENDER CARDS
+// ============================================================
+function countCopies(ids) {
+  const counts = {};
+  for (const id of ids) counts[id] = (counts[id] || 0) + 1;
+  return counts;
+}
+
+function groupByFrame(counts, cardData) {
+  const groups = { "Monsters": [], "Spells": [], "Traps": [] };
+  for (const id of Object.keys(counts)) {
+    const c = cardData[id]; if (!c) continue;
+    let g = "Monsters";
+    if (c.frameType === "spell") g = "Spells";
+    else if (c.frameType === "trap") g = "Traps";
+    groups[g].push({ id: parseInt(id), card: c, qty: counts[id] });
+  }
+  for (const k of Object.keys(groups))
+    groups[k].sort((a,b) => b.qty - a.qty || a.card.name.localeCompare(b.card.name));
+  return groups;
+}
+
+function groupExtraByType(counts, cardData) {
+  const groups = { "Xyz": [], "Link": [], "Synchro": [], "Fusion": [], "Pendulum": [] };
+  for (const id of Object.keys(counts)) {
+    const c = cardData[id]; if (!c) continue;
+    const t = c.type || "";
+    if (t.includes("Xyz") || c.frameType === "xyz") groups["Xyz"].push({id: parseInt(id), card: c, qty: counts[id]});
+    else if (t.includes("Link") || c.frameType === "link") groups["Link"].push({id: parseInt(id), card: c, qty: counts[id]});
+    else if (t.includes("Synchro") || c.frameType === "synchro") groups["Synchro"].push({id: parseInt(id), card: c, qty: counts[id]});
+    else if (t.includes("Fusion") || c.frameType === "fusion") groups["Fusion"].push({id: parseInt(id), card: c, qty: counts[id]});
+    else groups["Xyz"].push({id: parseInt(id), card: c, qty: counts[id]});
+  }
+  for (const k of Object.keys(groups))
+    groups[k].sort((a,b) => b.qty - a.qty || a.card.name.localeCompare(b.card.name));
+  return groups;
+}
+
+function renderCard({id, card, qty}) {
+  const cls = classify({...card, id});
+  const div = document.createElement("div");
+  div.className = "card";
+  div.dataset.roles = cls.roles.join(",");
+
+  // Image
+  const imgWrap = document.createElement("div");
+  imgWrap.className = "card-img-wrap";
+  const thumb = document.createElement("div");
+  thumb.className = "card-thumb";
+  const placeholder = document.createElement("div");
+  placeholder.className = "placeholder";
+  placeholder.textContent = card.name;
+  thumb.appendChild(placeholder);
+
+  const img = createImage(id, card.name, () => {
+    // onFail: placeholder already visible
+  });
+  if (img) {
+    img.onload = () => {
+      placeholder.style.display = "none";
+    };
+    thumb.appendChild(img);
+  }
+  imgWrap.appendChild(thumb);
+
+  // Hover preview trigger
+  thumb.addEventListener("mouseenter", () => showPreview(thumb, {...card, id}));
+  thumb.addEventListener("mouseleave", hidePreview);
+
+  div.appendChild(imgWrap);
+
+  // Body
+  const body = document.createElement("div");
+  body.className = "card-body";
+
+  const roleTags = cls.roles.map(r => {
+    const color = ROLE_COLORS[r] || "var(--text-dim)";
+    return `<span class="role" style="color:${color};border-color:${color}">${r}</span>`;
+  }).join("");
+
+  const meta = [];
+  if (card.level) meta.push(`Lv${card.level}`);
+  if (card.rank) meta.push(`R${card.rank}`);
+  if (card.linkval) meta.push(`LINK-${card.linkval}`);
+  if (card.scale !== undefined) meta.push(`Scale ${card.scale}`);
+  if (card.attribute) meta.push(card.attribute);
+  if (card.race) meta.push(card.race);
+  if (card.atk !== undefined && card.atk !== null) meta.push(`${card.atk}/${card.def === -1 ? "?" : card.def}`);
+
+  const stripped = Array.isArray(cls.stripped) ? cls.stripped : [cls.stripped];
+  const verifyFlag = cls.unverified ? `<span class="verify-flag">VERIFY</span>` : "";
+
+  body.innerHTML = `
+    <div class="card-top">
+      <div class="card-name">${card.name} ${verifyFlag}</div>
+      <div class="card-qty">×${qty}</div>
+    </div>
+    <div class="card-meta">${meta.join(" · ")}</div>
+    <div class="roles">${roleTags}</div>
+    <div class="stripped"><ul>${stripped.map(s => `<li>${s}</li>`).join("")}</ul></div>
+    ${(cls.note || cls.opt) ? `<div class="note">${cls.note || ""}${cls.opt ? `<span class="opt"> · ${cls.opt}</span>` : ""}</div>` : ""}
+  `;
+  div.appendChild(body);
+  return div;
+}
+
+function renderSection(title, count, groups, container) {
+  const sect = document.createElement("div");
+  sect.className = "section";
+  sect.innerHTML = `<div class="section-header">${title}<span class="count">${count}</span></div>`;
+  for (const [label, cards] of Object.entries(groups)) {
+    if (cards.length === 0) continue;
+    const grp = document.createElement("div");
+    grp.className = "type-group";
+    grp.innerHTML = `<div class="type-label">${label} · ${cards.reduce((s,x)=>s+x.qty,0)}</div>`;
+    const grid = document.createElement("div");
+    grid.className = "cards";
+    for (const c of cards) grid.appendChild(renderCard(c));
+    grp.appendChild(grid);
+    sect.appendChild(grp);
+  }
+  container.appendChild(sect);
+}
+
+function renderFilters() {
+  const roleCounts = {};
+  document.querySelectorAll(".card[data-roles]").forEach(el => {
+    el.dataset.roles.split(",").forEach(r => {
+      if (!r) return;
+      roleCounts[r] = (roleCounts[r] || 0) + 1;
+    });
+  });
+  const f = document.getElementById("filters");
+  f.innerHTML = ""; f.classList.remove("hidden");
+
+  const totalCount = document.querySelectorAll(".card").length;
+  const allBtn = document.createElement("button");
+  allBtn.className = "filter-btn active";
+  allBtn.innerHTML = `<span class="label">All</span><span class="count">${totalCount}</span>`;
+  allBtn.onclick = () => filterBy(null, allBtn);
+  f.appendChild(allBtn);
+
+  Object.keys(roleCounts).sort().forEach(role => {
+    const btn = document.createElement("button");
+    btn.className = "filter-btn";
+    const color = ROLE_COLORS[role] || "var(--text-dim)";
+    btn.innerHTML = `<span class="role-dot" style="background:${color}"></span><span class="label">${role}</span><span class="count">${roleCounts[role]}</span>`;
+    btn.onclick = () => filterBy(role, btn);
+    f.appendChild(btn);
+  });
+}
+
+function filterBy(role, btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  document.querySelectorAll(".card").forEach(el => {
+    if (!role) { el.classList.remove("hidden"); return; }
+    const roles = el.dataset.roles.split(",");
+    el.classList.toggle("hidden", !roles.includes(role));
+  });
+  document.querySelectorAll(".type-group").forEach(g => {
+    g.classList.toggle("hidden", g.querySelectorAll(".card:not(.hidden)").length === 0);
+  });
+  document.querySelectorAll(".section").forEach(s => {
+    s.classList.toggle("hidden", s.querySelectorAll(".card:not(.hidden)").length === 0);
+  });
+}
+
+// ============================================================
+// COMBOS
+// ============================================================
+const COMBOS = [
+  {
+    title: "1-Card: Medius → Rank 4 Diactorus",
+    tag: "Starter",
+    req: "<strong>1× Medius the Pure</strong>",
+    steps: [
+      { flow: [{c:97556336,n:"Medius"},"→",{r:"Normal Summon"}],
+        detail: "Normal Summon Medius. On-summon trigger activates." },
+      { flow: [{c:97556336,n:"Medius effect"},"→",{c:81650695,n:"Power Patron DoomZ"}],
+        detail: "Medius SS Power Patron DoomZ from deck. <span class=\"chain\">CL1: Medius on-summon</span>" },
+      { flow: [{c:81650695,n:"Power Patron"},"targets",{c:97556336,n:"Medius (Lv4)"},"→",{r:"Xyz Diactorus (R4)"}],
+        detail: "Power Patron targets Medius → SS Diactorus (R4) using Medius. Power Patron equips itself to Diactorus." },
+      { flow: [{c:31010081,n:"Diactorus SS"},"→","destroy DoomZ","→",{r:"pop opp monster"}],
+        detail: "Diactorus trigger: destroy 1 DoomZ in hand/field, then destroy 1 opp monster. Destroying Amalthe/Elara = extra value." }
+    ],
+    endboard: [
+      { name: "Diactorus (2300)", role: "Boss", desc: "Has Power Patron equipped. If destroyed by effect → tutors any Equip Spell." },
+    ]
+  },
+  {
+    title: "1-Card: Amalthe + free discard → R4 + search",
+    tag: "Starter",
+    req: "<strong>1× DoomZ V Five - Amalthe</strong> + any hand discard (for destruction trigger)",
+    steps: [
+      { flow: [{c:28877382,n:"Amalthe"},"→",{r:"Normal Summon"}],
+        detail: "Normal Summon Amalthe." },
+      { flow: [{c:28877382,n:"Amalthe on-summon"},"→",{r:"search any DoomZ"}],
+        detail: "Amalthe search: add 1 DoomZ monster from deck (not itself). Grab Drastea for R8, or Elara for another body." },
+      { flow: [{c:32442017,n:"Raiders (if in hand)"},"OR",{c:66666666,n:"DoomZ Change"},"→","destroy DoomZ","→",{r:"trigger Amalthe again"}],
+        detail: "If you drew Raiders/Change/Destruction alongside, destroy Amalthe or the searched card → Amalthe triggers AGAIN on destruction → +2 search. Alternative: if only Amalthe, just Xyz it." },
+      { flow: [{c:81650695,n:"Power Patron (searched)"},"targets",{c:28877382,n:"Amalthe"},"→",{r:"Xyz Diactorus"}],
+        detail: "With Power Patron searched, bridge Amalthe into Diactorus. Or skip Power Patron and Xyz with 2 Lv4s if you extended." }
+    ],
+    endboard: [
+      { name: "Diactorus + search", role: "Boss + fuel", desc: "Rank 4 body + you've searched 1-2 DoomZ cards for follow-up turns." },
+    ]
+  },
+  {
+    title: "1-Card: Elara → R4 via Raiders chain",
+    tag: "Starter",
+    req: "<strong>1× DoomZ VII Seven - Elara</strong>",
+    steps: [
+      { flow: [{c:54265980,n:"Elara"},"→",{r:"Normal Summon"}],
+        detail: "Normal Summon Elara." },
+      { flow: [{c:54265980,n:"Elara on-summon"},"→",{c:32442017,n:"Set Raiders directly from deck"}],
+        detail: "Elara effect: Set DoomZ Spell/Trap directly from deck. Raiders can activate the same turn (it's a Spell)." },
+      { flow: [{c:32442017,n:"Raiders"},"→","destroy Elara","→",{r:"search + SS DoomZ"}],
+        detail: "Activate Raiders → destroy Elara → take 1 DoomZ monster from deck, add or SS. Grab Amalthe and SS (or search Drastea for R8)." },
+      { flow: [{c:54265980,n:"Elara (destroyed)"},"→",{r:"Set another DoomZ S/T"}],
+        detail: "Elara's destruction trigger fires: Set another DoomZ S/T (DOOMDURG for equip, or Destruction for the trap)." },
+      { flow: [{c:28877382,n:"Amalthe (SS'd)"},"→",{r:"search another DoomZ"}],
+        detail: "If you SS'd Amalthe via Raiders, it triggers on summon: search another DoomZ (Power Patron)." },
+      { flow: [{c:81650695,n:"Power Patron"},"→",{c:31010081,n:"Diactorus (R4)"}],
+        detail: "Bridge into Diactorus using Amalthe. Huge 1-card board." }
+    ],
+    endboard: [
+      { name: "Diactorus + set DoomZ S/T", role: "Boss + backrow", desc: "Rank 4 + DOOMDURG equipped (from Elara's set) or a set Destruction trap." },
+    ]
+  },
+  {
+    title: "1-Card: Zegredo → Jupiter R10 direct",
+    tag: "Win condition",
+    req: "<strong>1× Power Patron Shadow Machine Zegredo</strong>",
+    steps: [
+      { flow: [{c:77777777,n:"Zegredo"},"→",{r:"Place in Pendulum Zone or summon"}],
+        detail: "Can be played as Pendulum scale 1, or just activated as monster in hand. Either way, trigger its SS-Jupiter effect." },
+      { flow: [{c:77777777,n:"Zegredo effect"},"→","banish top 3 of deck","→",{r:"destroy self"}],
+        detail: "Zegredo effect: banish 3 from top of deck face-down → destroy self." },
+      { flow: [{r:"SS Jupiter (R10) from Extra"},"→","attach 1 from hand"],
+        detail: "<strong>Jupiter comes out with 1 attached from hand as material.</strong> This is treated as Xyz Summon — Jupiter's on-summon triggers fire." },
+      { flow: [{c:68231287,n:"Jupiter Xyz summoned"},"→",{r:"equip Equip Spells from GY"}],
+        detail: "Jupiter on-summon: equip any # of Equip Spells from GY. If Zegredo banished a DoomZ Equip in the mill, grab it." },
+      { flow: [{c:68231287,n:"Jupiter (3500 base)"},"+ Xyz mat","→",{r:"6500 ATK + removal"}],
+        detail: "Jupiter has Xyz material (from hand) → <strong>+3000 ATK = 6500</strong>. Detach 1: SS DoomZ from GY + destroy 1 card on field. Massive 1-card board." }
+    ],
+    endboard: [
+      { name: "Jupiter (6500 with mat)", role: "Finisher", desc: "Detach for SS from GY + removal. If the 3-mill banished DoomZ monsters, you have recovery fuel." },
+    ]
+  },
+  {
+    title: "2-Card: Medius + Drastea → R8 Drastrius",
+    tag: "Main combo",
+    req: "<strong>Medius</strong> + <strong>Drastea</strong> (Lv8)",
+    steps: [
+      { flow: [{c:97556336,n:"Medius"},"→",{c:81650695,n:"Power Patron"}],
+        detail: "Normal Medius → SS Power Patron." },
+      { flow: [{c:92472273,n:"Drastea"},"targets",{c:97556336,n:"Medius"},"→",{r:"destroy Medius, SS Drastea"}],
+        detail: "Drastea: target Medius → destroy it → SS Drastea from hand → equip 1 Equip Spell from deck (DOOMDURG)." },
+      { flow: [{c:81650695,n:"Power Patron"},"targets",{c:92472273,n:"Drastea (Lv8)"},"→",{c:95626382,n:"Drastrius (R8)"}],
+        detail: "Power Patron targets Drastea → SS Drastrius using Drastea. Power Patron + DOOMDURG transfer as materials." },
+      { flow: [{c:95626382,n:"Drastrius on-Xyz"},"→","equip monster",",→",{r:"3+ equips stacked"}],
+        detail: "Drastrius equips another face-up monster. With Power Patron + DOOMDURG + 1 monster attached, you're 3 equips deep — sets up Jupiter if extended." }
+    ],
+    endboard: [
+      { name: "Drastrius (3000)", role: "Negate boss", desc: "Detach → negate opp monster effect, steal via equip. Destruction immune 1/turn." },
+      { name: "DOOMDURG equipped", role: "Protection + OTK", desc: "Untargetable. Self-destroy for direct attack." },
+    ]
+  },
+  {
+    title: "Medius + Amalthe → Diactorus + Power Patron + search",
+    tag: "Extended",
+    req: "<strong>Medius</strong> + <strong>Amalthe</strong>",
+    steps: [
+      { flow: [{c:97556336,n:"Medius"},"→",{c:81650695,n:"Power Patron"}],
+        detail: "Normal Medius → SS Power Patron." },
+      { flow: [{c:28877382,n:"Amalthe"},"hand",{r:"(hold for now)"}],
+        detail: "Don't summon Amalthe yet. Needs Power Patron to be targeted first for the Xyz." },
+      { flow: [{c:81650695,n:"Power Patron"},"targets",{c:97556336,n:"Medius"},"→",{c:31010081,n:"Diactorus (R4)"}],
+        detail: "Xyz Diactorus using Medius. Power Patron equips to it." },
+      { flow: [{c:31010081,n:"Diactorus SS"},"→","destroy Amalthe (hand)","→",{r:"pop opp + search"}],
+        detail: "Diactorus on-SS: destroy Amalthe from hand → destroy opp monster → <strong>Amalthe destruction trigger</strong>: search another DoomZ. Triple value." },
+      { flow: [{c:97556336,n:"Medius (GY)"},"→","shuffle monster","→",{r:"SS Medius back"}],
+        detail: "Medius GY effect: shuffle 1 monster from hand/field into deck → SS Medius back (banish when leaves). Use it for another Rank 4 or as material." }
+    ],
+    endboard: [
+      { name: "Diactorus + Medius + search", role: "Board + grind", desc: "R4 boss + Medius recovered + extra DoomZ in hand." },
+    ]
+  },
+  {
+    title: "Raiders opener: DoomZ monster + Raiders → full combo",
+    tag: "Alt starter",
+    req: "<strong>Raiders</strong> + <strong>any DoomZ monster</strong> (no Medius)",
+    steps: [
+      { flow: [{c:32442017,n:"Activate Raiders"},"→","destroy the DoomZ in hand","→",{r:"SS 1 DoomZ from deck"}],
+        detail: "Raiders: destroy the DoomZ from hand → SS 1 DoomZ from deck (SS = better than add)." },
+      { flow: [{c:28877382,n:"DoomZ destroyed"},"→",{r:"trigger search/set"}],
+        detail: "If Amalthe destroyed: search another DoomZ. If Elara destroyed: Set another DoomZ S/T. Drastea: no GY trigger but body goes to GY." },
+      { flow: [{r:"SS'd DoomZ monster"},"+","another DoomZ in hand","→",{c:81650695,n:"Power Patron via search/SS chain"}],
+        detail: "Build toward Power Patron → bridge to Diactorus. If you SS'd Amalthe, its extra search grabs Power Patron." }
+    ],
+    endboard: [
+      { name: "Diactorus or R4 body", role: "Boss", desc: "Similar endboard to Medius start but consumed more resources." }
+    ]
+  },
+  {
+    title: "3-Card: Medius + Drastea + DoomZ → Jupiter R10 OTK",
+    tag: "Max OTK",
+    req: "<strong>Medius</strong> + <strong>Drastea</strong> + <strong>any DoomZ</strong>",
+    steps: [
+      { flow: [{c:97556336,n:"Medius"},"→",{c:81650695,n:"Power Patron"}],
+        detail: "Normal Medius → SS Power Patron." },
+      { flow: [{c:92472273,n:"Drastea"},"destroys",{c:97556336,n:"Medius"},"→",{r:"equip DOOMDURG"}],
+        detail: "Drastea → destroy Medius → SS Drastea + equip DOOMDURG from deck." },
+      { flow: [{c:28877382,n:"Amalthe (3rd card)"},"→","Normal Summon / SS"],
+        detail: "Activate Amalthe (if you can — may need extra summon). Amalthe search: Elara or another useful DoomZ." },
+      { flow: [{c:81650695,n:"Power Patron"},"→",{c:31010081,n:"Diactorus"}],
+        detail: "Bridge Amalthe into Diactorus. Power Patron equips." },
+      { flow: [{c:31010081,n:"Diactorus"},"destroys DoomZ","→",{r:"chain pops"}],
+        detail: "Chain destruction triggers (Elara from deck set trap, etc.) for maximum value." },
+      { flow: [{c:92472273,n:"Drastea Quick"},"equipped","→",{c:95626382,n:"Drastrius (R8)"}],
+        detail: "Drastea's Quick effect: SS Drastrius using Drastea + equips. Stack materials." },
+      { flow: [{c:95626382,n:"Drastrius"},"equips","Diactorus","→",{r:"3+ equips on Drastrius"}],
+        detail: "Drastrius equips Diactorus. Now Drastrius has Drastea + Power Patron + DOOMDURG + Diactorus = 4 equips." },
+      { flow: ["Alt summon","→",{c:68231287,n:"Jupiter R10"},"→",{r:"6500 ATK + removal"}],
+        detail: "Jupiter alt-summon: use Drastrius (3+ equips) as material → transfer materials. 3500 + 3000 = <strong>6500 ATK</strong>. Detach: SS DoomZ from GY + pop." }
+    ],
+    endboard: [
+      { name: "Jupiter (6500)", role: "Finisher", desc: "Detach for SS + removal. Game-ending." },
+      { name: "Loaded GY", role: "Recovery", desc: "Medius + DoomZ monsters + equips in GY for next turn." }
+    ]
+  }
+];
+
+function renderCombos() {
+  const picker = document.getElementById("combo-picker");
+  picker.innerHTML = "";
+  const out = document.getElementById("combos-output");
+  out.innerHTML = "";
+
+  const allBtn = document.createElement("button");
+  allBtn.className = "filter-btn active";
+  allBtn.innerHTML = `<span class="label">All combos</span><span class="count">${COMBOS.length}</span>`;
+  allBtn.onclick = () => showCombos(null, allBtn);
+  picker.appendChild(allBtn);
+
+  COMBOS.forEach((c, i) => {
+    const btn = document.createElement("button");
+    btn.className = "filter-btn";
+    const short = c.title.split(":")[0].trim();
+    btn.innerHTML = `<span class="label">${short}</span>`;
+    btn.onclick = () => showCombos(i, btn);
+    picker.appendChild(btn);
+  });
+  showCombos(null, allBtn);
+}
+
+function showCombos(idx, btn) {
+  document.querySelectorAll("#combo-picker .filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const out = document.getElementById("combos-output");
+  out.innerHTML = "";
+  const list = idx === null ? COMBOS : [COMBOS[idx]];
+  list.forEach(c => out.appendChild(renderCombo(c)));
+}
+
+function renderCombo(c) {
+  const div = document.createElement("div");
+  div.className = "combo";
+
+  const head = document.createElement("div");
+  head.className = "combo-head";
+  head.innerHTML = `<div class="combo-title">${c.title}</div><div class="combo-tag">${c.tag}</div>`;
+  div.appendChild(head);
+
+  const req = document.createElement("div");
+  req.className = "combo-req";
+  req.innerHTML = `Requires: ${c.req}`;
+  div.appendChild(req);
+
+  c.steps.forEach((s, i) => {
+    const step = document.createElement("div");
+    step.className = "step";
+    const num = document.createElement("div");
+    num.className = "step-num";
+    num.textContent = String(i+1).padStart(2,'0');
+    step.appendChild(num);
+
+    const content = document.createElement("div");
+    content.className = "step-content";
+    const flow = document.createElement("div");
+    flow.className = "step-flow";
+    s.flow.forEach(item => {
+      if (typeof item === "string") {
+        const span = document.createElement("span");
+        span.className = "arrow";
+        span.textContent = item;
+        flow.appendChild(span);
+      } else if (item.r) {
+        const span = document.createElement("span");
+        span.className = "result";
+        span.textContent = item.r;
+        flow.appendChild(span);
+      } else if (item.c) {
+        flow.appendChild(renderStepCard(item.c, item.n));
+      }
+    });
+    content.appendChild(flow);
+
+    const detail = document.createElement("div");
+    detail.className = "step-detail";
+    detail.innerHTML = s.detail;
+    content.appendChild(detail);
+
+    step.appendChild(content);
+    div.appendChild(step);
+  });
+
+  const end = document.createElement("div");
+  end.className = "endboard";
+  end.innerHTML = `<div class="endboard-title">End board</div>`;
+  const grid = document.createElement("div");
+  grid.className = "endboard-grid";
+  c.endboard.forEach(p => {
+    const piece = document.createElement("div");
+    piece.className = "endboard-piece";
+    piece.innerHTML = `<div class="endboard-piece-name">${p.name}</div><div class="endboard-piece-role">${p.role}</div><div class="endboard-piece-desc">${p.desc}</div>`;
+    grid.appendChild(piece);
+  });
+  end.appendChild(grid);
+  div.appendChild(end);
+
+  return div;
+}
+
+function renderStepCard(cardId, name) {
+  const span = document.createElement("span");
+  span.className = "step-card";
+
+  const thumb = document.createElement("span");
+  thumb.className = "mini-thumb";
+  const img = createImage(cardId, name, null);
+  if (img) thumb.appendChild(img);
+  span.appendChild(thumb);
+
+  const text = document.createElement("span");
+  text.textContent = name;
+  span.appendChild(text);
+
+  // Hover shows full preview
+  span.addEventListener("mouseenter", () => {
+    const cardInfo = INLINE_CACHE[cardId] || { name, id: cardId };
+    showPreview(span, { ...cardInfo, id: cardId });
+  });
+  span.addEventListener("mouseleave", hidePreview);
+
+  return span;
+}
+
+// ============================================================
+// MAIN
+// ============================================================
+async function handleFile(file) {
+  document.getElementById("filename").textContent = file.name;
+  setStatus("Parsing .ydk…");
+  const text = await file.text();
+  const sections = parseYdk(text);
+
+  const allIds = [...sections.main, ...sections.extra, ...sections.side];
+  const uniqueCount = new Set(allIds).size;
+  setStatus(`Fetching ${uniqueCount} unique cards…`);
+
+  const { map: cardData, apiError } = await fetchCards(allIds);
+  const resolvedCount = Object.keys(cardData).length;
+
+  if (apiError) {
+    setStatus(
+      `API unreachable (${apiError}) — ${resolvedCount}/${uniqueCount} cards from inline cache. See setup banner above for localhost fix.`,
+      "error"
+    );
+  } else {
+    setStatus(`✓ ${resolvedCount}/${uniqueCount} cards loaded.`, "success");
+  }
+
+  document.getElementById("deck-summary").textContent =
+    `Main ${sections.main.length} · Extra ${sections.extra.length} · Side ${sections.side.length}`;
+
+  for (const id of allIds) {
+    if (!cardData[id]) cardData[id] = { id, name: `Unknown (${id})`, type: "Effect Monster", frameType: "effect", desc: "" };
+  }
+
+  const out = document.getElementById("output");
+  out.innerHTML = "";
+  renderSection("Main Deck", sections.main.length, groupByFrame(countCopies(sections.main), cardData), out);
+  renderSection("Extra Deck", sections.extra.length, groupExtraByType(countCopies(sections.extra), cardData), out);
+  renderSection("Side Deck", sections.side.length, groupByFrame(countCopies(sections.side), cardData), out);
+
+  renderFilters();
+}
+
+function setStatus(msg, variant) {
+  const s = document.getElementById("status");
+  s.textContent = msg;
+  s.classList.remove("error", "success");
+  if (variant) s.classList.add(variant);
+}
+
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("tab-cards").classList.toggle("hidden", t.dataset.tab !== "cards");
+    document.getElementById("tab-combos").classList.toggle("hidden", t.dataset.tab !== "combos");
+  });
+});
+
+const drop = document.getElementById("drop-zone");
+const input = document.getElementById("file-input");
+drop.addEventListener("click", () => input.click());
+input.addEventListener("change", e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("drag"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+drop.addEventListener("drop", e => {
+  e.preventDefault(); drop.classList.remove("drag");
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+renderCombos();
+</script>
+</body>
+</html>

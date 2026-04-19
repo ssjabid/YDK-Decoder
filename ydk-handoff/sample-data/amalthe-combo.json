@@ -1,0 +1,46 @@
+{
+  "comboName": "DoomZ V Five - Amalthe",
+  "replayUrl": "https://www.duelingbook.com/replay?id=1345419-80595527",
+  "replayId": "1345419-80595527",
+  "extractedAt": "2026-04-19T18:23:55.313Z",
+  "rawLogLineCount": 187,
+  "openingHand": [],
+  "playerCards": [
+    "DoomZ Change", "DoomZ Command \"A.D.R.A.S.T.E.I.A.\"", "DoomZ Command \"D.O.O.M.D.U.R.G.\"",
+    "DoomZ Destruction", "DoomZ Raiders", "DoomZ V Five - Amalthe", "DoomZ VII Seven - Elara",
+    "DoomZ XII End - Drastrius", "DoomZ XII Zero - Drastea", "DoomZ XIII Over - Graflario",
+    "Gigantic \"Champion\" Sargas", "Jupiter the Power Patron of Destruction",
+    "Null Power Patron Realm - Vidria", "Power Patron DoomZ", "Power Patron Shadow Machine Zegredo",
+    "Springans Merrymaker", "Therion \"King\" Regulus", "Unleashed Power Patron Portal - Terminus",
+    "Vidrium the Power Patron of Chaos Extermination"
+  ],
+  "endboardFromExtractor": [
+    "DoomZ XII Zero - Drastea", "DoomZ XII End - Drastrius", "DoomZ VII Seven - Elara",
+    "DoomZ Command \"D.O.O.M.D.U.R.G.\" (set)", "DoomZ V Five - Amalthe",
+    "Springans Merrymaker", "Gigantic \"Champion\" Sargas", "Therion \"King\" Regulus",
+    "Power Patron Shadow Machine Zegredo", "Jupiter the Power Patron of Destruction"
+  ],
+  "steps": [
+    { "n": 1, "action": "Draw", "cards": null, "detail": "Drew \"DoomZ Destruction\"", "timestamp": "0:00" },
+    { "n": 2, "action": "Draw", "cards": null, "detail": "Drew \"Power Patron Shadow Machine Zegredo\"", "timestamp": "0:00" },
+    { "n": 3, "action": "Draw", "cards": null, "detail": "Drew \"The Fallen & The Virtuous\"", "timestamp": "0:00" },
+    { "n": 4, "action": "Draw", "cards": null, "detail": "Drew \"Unleashed Power Patron Portal - Terminus\"", "timestamp": "0:00" },
+    { "n": 5, "action": "Draw", "cards": null, "detail": "Drew \"DoomZ XII Zero - Drastea\"", "timestamp": "0:00" },
+    { "n": 6, "action": "Return", "cards": null, "detail": "Returned \"DoomZ Destruction\" from hand (1/5) to bottom of deck", "timestamp": "0:04" },
+    { "n": 7, "action": "Return", "cards": null, "detail": "Returned \"Power Patron Shadow Machine Zegredo\" from hand (1/4) to top of deck", "timestamp": "0:06" },
+    { "n": 8, "action": "Return", "cards": null, "detail": "Returned \"The Fallen & The Virtuous\" from hand (1/3) to top of deck", "timestamp": "0:07" },
+    { "n": 9, "action": "Return", "cards": null, "detail": "Returned \"Unleashed Power Patron Portal - Terminus\" from hand (1/2) to top of deck", "timestamp": "0:08" },
+    { "n": 10, "action": "Return", "cards": null, "detail": "Returned \"DoomZ XII Zero - Drastea\" from hand (1/1) to top of deck", "timestamp": "0:10" },
+    { "n": 11, "action": "Search", "cards": null, "detail": "Added \"DoomZ V Five - Amalthe\" from Deck to hand", "timestamp": "0:13" },
+    { "n": 12, "action": "Normal Summon", "cards": ["DoomZ V Five - Amalthe"], "detail": "Normal Summoned DoomZ V Five - Amalthe from hand (1/1) to M-3", "timestamp": "0:19" },
+    { "n": 13, "action": "Activate", "cards": ["DoomZ V Five - Amalthe"], "detail": "Declared effect of DoomZ V Five - Amalthe in M-3", "timestamp": "0:20" },
+    { "n": 14, "action": "Search", "cards": ["DoomZ XII Zero - Drastea"], "detail": "Added DoomZ XII Zero - Drastea from Deck to hand", "timestamp": "0:25" },
+    { "n": 15, "action": "Activate", "cards": ["DoomZ XII Zero - Drastea"], "detail": "Declared effect of DoomZ XII Zero - Drastea in hand (1/1)", "timestamp": "0:29" },
+    { "n": 16, "action": "Send to GY", "cards": ["DoomZ V Five - Amalthe"], "detail": "Sent DoomZ V Five - Amalthe from M-3 to GY", "timestamp": "0:30" },
+    { "n": 17, "action": "Special Summon", "cards": ["DoomZ XII Zero - Drastea"], "detail": "Special Summoned DoomZ XII Zero - Drastea from hand (1/1) to M-3 (ATK)", "timestamp": "0:32" },
+    { "n": 18, "action": "Activate", "cards": ["DoomZ XII Zero - Drastea"], "detail": "Declared effect of DoomZ XII Zero - Drastea in M-3", "timestamp": "0:39" },
+    { "n": 19, "action": "Special Summon", "cards": ["DoomZ XII End - Drastrius", "DoomZ XII Zero - Drastea"], "detail": "Special Summoned DoomZ XII End - Drastrius from Extra Deck onto DoomZ XII Zero - Drastea in M-3 (ATK)", "timestamp": "0:42" },
+    { "n": 20, "action": "Send to GY", "cards": ["DoomZ Command \"A.D.R.A.S.T.E.I.A.\""], "detail": "Sent DoomZ Command \"A.D.R.A.S.T.E.I.A.\" from S-4 to GY", "timestamp": "0:42" },
+    { "_truncated": "Steps 21-81 omitted for brevity. Full extraction available; see chat history." }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "_note": "Extracted April 19, 2026 using YDK Extension v1.0. 75 steps captured correctly. Opening hand captured this time (5 cards). Draw actions have card names in cards array this time. Cleaner extraction than Amalthe sample — the bugs we saw before were replay-specific, not extractor bugs.",
+  "comboName": "DoomZ VII Seven - Elara",
+  "replayUrl": "https://www.duelingbook.com/replay?id=1345419-80595939",
+  "comboCategory": "Elara + Discard",
+  "totalSteps": 75,
+  "rawLogLineCount": 169,
+  "openingHandCaptured": [
+    "DoomZ VII Seven - Elara",
+    "Power Patron Shadow Machine Zegredo",
+    "DoomZ VII Seven - Elara",
+    "Dimension Shifter",
+    "DoomZ XII Zero - Drastea"
+  ],
+  "endboardActual": [
+    "Varudras, the Final Bringer of the End Times (R12, win condition)",
+    "Gigantic \"Champion\" Sargas (Rank 4, Extra Monster Zone)",
+    "Therion \"King\" Regulus (main monster zone)",
+    "DoomZ XII End - Drastrius (R8, still on field)",
+    "Null Power Patron Realm - Vidria (Field Spell)"
+  ],
+  "endboardExtractorNaive": [
+    "_note: extractor includes cards that became Xyz materials (under Sargas, under Varudras, etc.). Same P0 bug as Amalthe extraction — fix in ROADMAP.md.",
+    "DoomZ VII Seven - Elara (actually under Diactorus → under Graflario → GY)",
+    "DoomZ Break - Diactorus (actually under Graflario → GY)",
+    "DoomZ V Five - Amalthe (actually under Merrymaker → under Sargas)",
+    "Springans Merrymaker (actually under Sargas)",
+    "Gigantic \"Champion\" Sargas",
+    "Therion \"King\" Regulus",
+    "DoomZ XII Zero - Drastea (actually under Drastrius)",
+    "DoomZ XII End - Drastrius",
+    "Power Patron Shadow Machine Zegredo (actually under Varudras, TWO Zegredos as Xyz material)",
+    "Varudras, the Final Bringer of the End Times"
+  ],
+  "notes": "This is the peak-power DoomZ combo — Elara 1-card combo into Varudras R12 via double-Zegredo Xyz. Dimension Shifter in hand at end = defensive tech for opponent's turn. Shows the complete Branded/Power Patron integration working."
+}

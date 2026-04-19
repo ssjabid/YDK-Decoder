@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python (from localhost server)
+__pycache__/
+*.pyc
+
+# Node (if ever added)
+node_modules/
+package-lock.json
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# Local extraction outputs (you may want to exclude these for privacy)
+# Uncomment if you share the repo publicly:
+# sample-data/*.json
+# !sample-data/*-summary.json
+
+# Chrome extension packaging
+*.crx
+*.pem
