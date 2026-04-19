@@ -27,6 +27,13 @@ build/
 # sample-data/*.json
 # !sample-data/*-summary.json
 
+# Build artifacts
+dist/
+build/
+
+# All zip files — workshop archives, shared context, etc.
+*.zip
+
 # Chrome extension packaging
 *.crx
 *.pem
