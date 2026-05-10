@@ -165,7 +165,9 @@ async function watchReplayWithProgress(logContainer) {
     let allLines = [];
     let liveSteps = [];
     const MAX_WAIT = 300000; // 5 minutes max
-    const STABLE_THRESHOLD = 6; // 6 consecutive polls (12 seconds) with no new lines = done
+    const STABLE_THRESHOLD = 10; // 10 consecutive polls (20 seconds) with no new lines = done.
+                                  // Bumped from 6 — players sometimes pause for ~15s mid-combo or set
+                                  // their backrow at end-of-turn slowly, and we'd miss the final lines.
     const POLL_INTERVAL = 2000;
 
     function finish(reason) {
@@ -247,8 +249,16 @@ async function watchReplayWithProgress(logContainer) {
         stableCount++;
 
         if (stableCount >= STABLE_THRESHOLD) {
-          // 12+ seconds with no new lines — replay is done
-          finish('stable_idle');
+          if (allLines.length === 0) {
+            // Never captured ANY lines — the replay page hasn't streamed
+            // log entries yet. Keep waiting instead of declaring success
+            // with empty data. Reset counter so we don't spam-finish.
+            console.log('DuelMetrics: Idle threshold hit but 0 lines captured — continuing to wait');
+            stableCount = 0;
+          } else {
+            // Captured some lines then went idle → replay is done
+            finish('stable_idle');
+          }
         }
       }
     }
@@ -302,6 +312,16 @@ function buildFinalResult(logContainer, completionReason) {
   // Solo mode detection
   const isSolo = logLines.some(l => l.text.includes('entered Solo Mode'));
 
+  // Bug 3 fix: backfill cardNames for Draw lines that have empty cardNames
+  // (font.card_hover sometimes isn't rendered in time for early draws — extract
+  // the card name from the detail text via regex instead).
+  for (const line of logLines) {
+    if (line.cardNames.length > 0) continue;
+    const t = line.text.replace(/^\[[\d:]+\]\s*/, '');
+    const m = t.match(/^Drew\s+"?(.+?)"?\s*$/);
+    if (m) line.cardNames = [m[1]];
+  }
+
   // Structured log lines for export
   const structuredLogLines = logLines.map(line => ({
     player: line.player,
@@ -310,20 +330,39 @@ function buildFinalResult(logContainer, completionReason) {
     cards: line.cardNames.length > 0 ? line.cardNames : undefined
   }));
 
-  // Opening hand (first 5-6 Drew lines for red player)
-  const openingHand = [];
+  // Bug 2 fix: opening-hand tracker that survives Solo Mode mulligans.
+  // Walks red player's pre-game lines (Draw / Return / Discard / Search) and
+  // maintains the actual hand contents until the first real action (Summon,
+  // Activate, Set, Entered Main). Whatever is in the tracker at that point IS
+  // the hand the player started the combo with.
+  const handTracker = [];
   for (const line of logLines) {
-    if (openingHand.length >= 6) break;
     if (line.player !== 'red') continue;
     const t = line.text.replace(/^\[[\d:]+\]\s*/, '');
-    if (t.includes('Drew ') && line.cardNames.length > 0) {
-      openingHand.push(line.cardNames[0]);
-    }
-    // Stop at first non-draw action
-    if (t.includes('Summoned') || t.includes('Activated') || t.includes('Entered Main')) {
+
+    // Stop at first real combo action
+    if (t.includes('Summoned') ||
+        t.startsWith('Activated ') ||
+        t.startsWith('Declared effect') ||
+        (t.startsWith('Set ') && !t.includes('Set up')) ||
+        t.includes('Entered Main')) {
       break;
     }
+
+    const card = line.cardNames[0];
+    if (!card) continue;
+
+    if (t.startsWith('Drew ')) {
+      handTracker.push(card);
+    } else if (/^Added\b.*to hand/i.test(t)) {
+      // Pre-game search (Solo Mode setup gives you a specific opener)
+      handTracker.push(card);
+    } else if (/^Returned\b.*from hand/i.test(t) || t.startsWith('Discarded')) {
+      const idx = handTracker.indexOf(card);
+      if (idx >= 0) handTracker.splice(idx, 1);
+    }
   }
+  const openingHand = handTracker;
 
   // Get replay ID from URL
   const replayId = new URLSearchParams(window.location.search).get('id');

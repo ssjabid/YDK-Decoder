@@ -9,6 +9,9 @@ desktop.ini
 *.swp
 *.swo
 
+# Claude Code local state (per-machine settings, worktrees, etc.)
+.claude/
+
 # Python (from localhost server)
 __pycache__/
 *.pyc

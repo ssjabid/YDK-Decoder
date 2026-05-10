@@ -1,123 +1,161 @@
 # Known Bugs
 
-Discovered during testing April 19, 2026. Listed in priority order.
+Status as of **2026-04-26**. ✅ = fixed and verified. 🚧 = open / partial.
+"Polish punch list" at the bottom is for small UI niggles to gather and
+batch-fix during the next pass.
 
 ---
 
-## P0
+## ✅ Bug 1 — Endboard over-includes Xyz materials  (FIXED)
 
-### Bug 1: Endboard over-includes Xyz materials
+**Severity (was):** High
+**Location:** `extension/background/service-worker.js` → `deriveEndboard()` + decoder `simulateCombo()`
+**Fixed in:** P0.3 — full field-state simulator in the decoder; service worker now ships a `version: 3` payload with the raw step list, and the decoder computes the endboard locally rather than trusting a flat list of every-card-summoned.
 
-**Severity:** High — makes the endboard list unusable for memorization
-**Location:** `extension/background/service-worker.js` → `deriveEndboard()`
-**Discovered:** Both Amalthe and Elara extractions show this
-
-**Example from Elara extraction:**
-```json
-"endboard": [
-  "DoomZ VII Seven - Elara",        // ← WRONG: under Diactorus → Graflario → GY
-  "DoomZ Break - Diactorus",         // ← WRONG: under Graflario → GY
-  "DoomZ V Five - Amalthe",          // ← WRONG: under Merrymaker → Sargas
-  "Springans Merrymaker",            // ← WRONG: under Sargas
-  "Gigantic \"Champion\" Sargas",    // ✓ correct
-  "Therion \"King\" Regulus",        // ✓ correct
-  "DoomZ XII Zero - Drastea",        // ← WRONG: under Drastrius
-  "DoomZ XII End - Drastrius",       // ✓ correct
-  "Power Patron Shadow Machine Zegredo",  // ← WRONG: under Varudras (also appeared TWICE)
-  "Varudras, the Final Bringer of the End Times"  // ✓ correct
-]
-```
-
-**Correct endboard:**
-```
-Varudras (R12) with 2× Zegredo material
-Sargas (R4) with Merrymaker + Amalthe+Elara material chain
-Therion "King" Regulus
-Drastrius (R8) with Drastea material
-Null Power Patron Realm - Vidria (Field Spell)
-```
-
-**Fix:** See P0.3 in ROADMAP.md — requires state-machine tracking of field.
+**Verification:** Elara extraction now resolves to: Varudras (with 2× Zegredo material), Sargas (with Merrymaker + Amalthe + Elara material chain), Therion "King" Regulus, Drastrius (with Drastea material), Vidria Field Spell. Materials no longer appear as their own field pieces.
 
 ---
 
-## P1
+## ✅ Bug 2 — Opening hand empty when Solo Mode mulligan used  (FIXED)
 
-### Bug 2: Opening hand empty when Solo Mode mulligan used
+**Severity (was):** Medium
+**Location:** `extension/content/combo-import-helper.js` → `buildFinalResult()`
+**Fixed in:** Targeted edit to `combo-import-helper.js`. After the Return sequence finishes, hand state is snapshotted via a `handTracker` that drops cards confirmed returned and keeps cards still present. `isSolo` flag is also set on the combo so the decoder can show a "Solo Mode" badge.
 
-**Severity:** Medium — cosmetic, missing info
-**Location:** `extension/background/service-worker.js` → `buildComboFromResult()`
-**Discovered:** Amalthe extraction (Solo Mode had "return 5 cards to deck then redraw" setup)
-
-**Symptom:** `"openingHand": []` when it should be the 5 cards in hand after mulligan completes.
-
-**Root cause:** The `buildComboFromResult` pulls `openingHand` from `rawResult.openingHand` which comes from `extension/content/combo-import-helper.js` → `buildFinalResult()`. That function scans first 6 red-player "Drew" lines then stops at first Summon/Activate. But Solo Mode sequence is: Draw 5 → Return 5 → (later) Search/Summon → Actual hand isn't captured.
-
-**Fix:** In `buildFinalResult()`, after the Return sequence finishes, snapshot hand state. Track: for each drawn card, is it still in the hand area when the first action happens? If not, it was returned — exclude from opening hand.
-
-Alternative: skip opening hand detection entirely for Solo Mode replays (when `isSolo === true`), show a "Solo Mode — starting hand manipulated" badge instead.
+**Verification:** Amalthe extraction now reports `openingHand: [...]` with the post-mulligan 5 cards rather than `[]`.
 
 ---
 
-### Bug 3: Draw actions inconsistent — sometimes `cards: null`
+## ✅ Bug 3 — Draw actions inconsistent — `cards: null`  (FIXED)
 
-**Severity:** Low — detail text is still present
+**Severity (was):** Low
 **Location:** `extension/content/combo-import-helper.js`
-**Discovered:** Amalthe extraction had `cards: null`, Elara extraction had them populated
+**Fixed in:** Post-process pass — for any step with `cards: null` and `detail` matching `/^Drew [\"]?(.+?)[\"]?$/`, regex-extract the card name and populate `cards`.
 
-**Symptom:**
-Amalthe: `{ "action": "Draw", "cards": null, "detail": "Drew \"DoomZ Destruction\"" }`
-Elara: `{ "action": "Draw", "cards": ["DoomZ Destruction"], "detail": "Drew DoomZ Destruction" }`
-
-**Root cause:** Likely `font.card_hover` DOM element wasn't rendered in time for first few draws. Probably timing-related — first draws happen before extractor's MutationObserver starts watching.
-
-**Fix:** In `buildFinalResult()`, after parsing all lines, post-process: for any step with `cards: null` but `detail` matching `/^Drew [\"]?(.+?)[\"]?$/`, extract the card name via regex and populate `cards`.
+**Verification:** Amalthe extraction's first 5 draws now have populated `cards` arrays.
 
 ---
 
-## P2
+## ✅ Bug 6 — Many step cards render without thumbnails  (FIXED)
 
-### Bug 4: Decoder shows "VERIFY" flags for placeholder-passcode cards even when localhost API returns real data
+**Severity (was):** Low
+**Location:** `decoder/ydk_decoder.html`
+**Fixed in:** Two-part:
+1. Persistent card cache in `localStorage.ydk_card_cache` — every card fetched via `fetchCards()` is merged in and survives reloads, so combos extracted before the deck was uploaded still get thumbnails after the first deck load.
+2. When loading a combo, the decoder kicks off a prefetch for every name appearing in `playerCards` and re-renders once data arrives.
+
+**Verification:** All 6 combos in `sample-data/` render full thumbnails for Springans Merrymaker, Sargas, Therion Regulus, Zegredo, Varudras, Vidrium, Vidria, Terminus, Diactorus, Drastrius, Graflario after one full session.
+
+---
+
+## ✅ Bug 8 — Endboard misses cards in S/T zones with silent equip transitions  (FIXED, partial — see notes)
+
+**Severity (was):** Medium
+**Location:** `extension/background/service-worker.js` + decoder simulator
+**Fixed in:** Three layers:
+1. **Equip-spell heuristic** — when an Equip Spell name is activated from GY/banished and there's a face-up monster on field, the simulator equips it to the most recent boss and stamps `inferred: true`. The decoder shows a `(inferred)` badge on those slots.
+2. **AttachMaterial event detection** — the SW now matches DB's explicit `Attached banished X to Y` lines, so the manual "attach equipped DoomZ from banish" play resolves correctly without the heuristic.
+3. **Pendulum scale tracking** — `Activated X to S-1/S-5` for any card with a `scale` property is treated as a Pendulum activation; the cell is tagged `zone-p` on the playmat.
+
+**Remaining gap:** Trap-Equip variant (DoomZ Destruction's GY-trigger fires → equips a DoomZ from deck onto an Xyz) is NOT yet handled — the field tracker sees the activation but has no event telling it which deck card got equipped. Will only show up correctly if the DB log explicitly emits the equip event, which it sometimes does and sometimes doesn't.
+
+**Workaround for now:** option 4 from the original bug entry (manual edit pencil per combo) is queued in ROADMAP.md as B3.4.
+
+---
+
+## ✅ cloneState dropped the `zone` property  (FIXED — diagnostic story worth keeping)
+
+**Severity:** High at the time — caused every snapshot in every view mode to render with `zone: undefined`, dumping every card into the orphans pile.
+**Location:** `decoder/ydk_decoder.html` → `cloneState()`
+**Fixed by:** Adding `zone: slot.zone` to the field-slot copy. The simulator was setting zones in `applyStepToState`, but the per-step state snapshot only copied 5 of the 6 properties.
+**How it was found:** runtime inspection via `_lastSim.stateAfter.field` showed every entry's zone as undefined.
+
+---
+
+## ✅ Move detection missing  (FIXED)
+
+**Symptom:** Sargas + Therion both ended up at M-1 because the SW didn't recognize `Moved X from M-1 to M-2`. Fix: added Move detection to `detectAction` and a Move handler to the simulator.
+
+---
+
+## ✅ Set-from-GY left card stuck in GY  (FIXED)
+
+**Symptom:** Graflario showed in both `field` and `gy` after `Placed Graflario from GY to S-2`. The Set handler only popped from hand. Fix: also drains from gy/banished when sourced from there.
+
+---
+
+## ✅ Phase boundaries / "Vidria suddenly in hand" mystery  (FIXED)
+
+**Symptom:** Mid-combo, Vidria appeared in hand with no draw step. Cause: Core filter was hiding `Send-from-Deck-to-GY` (mill) and `Return-from-GY-to-hand` (recovery) lines, so the state line jumped without explanation. Fix: relaxed the core filter to include those, and added a "Hand at end" pile per phase so the user sees the state, not just the action.
+
+---
+
+## ✅ Duplicate Set bullets  (FIXED)
+
+**Symptom:** v3 extraction emits both `Placed X from Deck to S-3` AND `Set X in S-3` for the same card. Fix: `filterPhaseBullets` dedupes consecutive same-action+same-card events.
+
+---
+
+## ✅ Cause annotation never fired  (FIXED)
+
+**Symptom:** `via X's effect` annotation was supposed to stamp outcomes with their trigger. It was missing because `filterPhaseBullets` removed `Declared effect of X` lines BEFORE `renderPhaseBullets` could see them. Fix: do the annotation INSIDE `filterPhaseBullets` and stamp each outcome with `_viaTrigger`.
+
+---
+
+## ✅ Card pill sizing inconsistent across the UI  (FIXED 2026-04-26)
+
+**Severity:** Medium-High — visually jarring across phase bullets, mini playmat, end board, step rows, etc.
+**Location:** `decoder/ydk_decoder.html` (CSS only)
+**Fixed by:** Unified pill-size system in `:root`. Two CSS variable groups (`--pill-*-md` and `--pill-*-sm`) drive every card pill. Every context override (`.field-grid-cell .step-card`, `.field-grid-mini .step-card`, `.phase-bullet-pills .step-card`, `.phase-bullet-compact .step-card`, `.step-state-row .step-card`) now resolves to one of those two sizes — no bespoke pixel values left. The mini playmat is tagged `.is-sm-pills` in JS so its pills inherit the small variant via parent selector.
+
+**Verification:** Every `mini-thumb` width/height in the stylesheet now references `var(--pill-thumb-w-*)` / `var(--pill-thumb-h-*)`. `grep mini-thumb` returns only the unified rules.
+
+---
+
+## 🚧 Bug 4 — Decoder shows "VERIFY" flags for placeholder-passcode cards  (PARTIAL)
 
 **Severity:** Low — aesthetic
 **Location:** `decoder/ydk_decoder.html`
-**Discovered:** Reported by user in earlier chat
+**Status:** Persistent cache (Bug 6 fix) means once YGOPRODeck has the real ID, fetched data overrides. But cards too new for the API still have placeholder IDs (55555555 etc.) and stay flagged. Tracked as ROADMAP B3.3.
 
-**Symptom:** Cards like Graflario have `id: 55555555` (placeholder, since real passcode wasn't known when cache was written). When user runs on localhost, API lookup for 55555555 returns 404. The `classify()` function falls through to defaults and marks as unverified.
-
-**Fix:** When building the card data map, if a card's placeholder ID is in INLINE_CACHE, use the cache's data and clear the unverified flag. Alternatively, replace placeholder IDs with real ones as they get added to YGOPRODeck API.
-
-**Real passcodes needed:** Graflario, DoomZ Change, A.D.R.A.S.T.E.I.A., Zegredo, Vidrium, Vidria, Terminus, The Fallen & The Virtuous, Varudras. Check YGOPRODeck as API updates.
+**Cards still on placeholder IDs:** Graflario, DoomZ Change, A.D.R.A.S.T.E.I.A., Zegredo, Vidrium, Vidria, Terminus, The Fallen & The Virtuous, Varudras. Re-check YGOPRODeck periodically.
 
 ---
 
-### Bug 5: Terminal 404s on favicon and devtools (harmless)
-
-**Location:** Browser console
-**Discovered:** Abid's test run
+## 🚧 Bug 5 — Terminal 404s on favicon and devtools  (HARMLESS, deferred)
 
 ```
-::1 - - [19/Apr/2026 19:21:21] code 404, message File not found
-::1 - - [19/Apr/2026 19:21:21] "GET /favicon.ico HTTP/1.1" 404 -
-::1 - - [19/Apr/2026 19:27:22] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
+::1 - - "GET /favicon.ico HTTP/1.1" 404 -
+::1 - - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
 ```
+**Fix when bored:** add `<link rel="icon" href="data:,">` to suppress favicon. DevTools self-registration 404 is harmless.
 
-**Fix (optional):**
-- Add a `favicon.ico` (or link `<link rel="icon" href="data:,">` in HTML to suppress)
-- Chrome DevTools self-registration 404 is harmless and can be ignored
+---
+
+## 🚧 Bug 7 — Polish punch list (gather during N1 testing)
+
+This is the bucket for small UI niggles found during Abid's end-to-end pass with the real `.ydk` and the 6 reference combos. Each item gets enumerated here as found and crossed off as fixed.
+
+**Already known candidates:**
+- Hover preview position when a combo card is near the right edge (preview can clip off-screen)
+- Action chip color uniformity — currently all accent orange, could color-code by action class (Summon vs Activate vs Set)
+- Step number alignment when n > 99
+- Phase grouping edge cases when DB log has unusually long pauses inside a single play
+
+**Found during N1:** _(empty — fill as testing reveals issues)_
 
 ---
 
 ## Edge cases noticed, not yet bugs
 
 ### Pendulum activation sequence
-
-In Elara extraction, Vidrium was "Activated to S-1" (Pendulum Zone), then "Returned S-1 to Extra Deck". The extension captures this correctly, but the renderer in the decoder may need Pendulum-specific display logic.
+Vidrium "Activated to S-1" then "Returned S-1 to Extra Deck" — captured correctly by the simulator and tagged with `zone-p`.
 
 ### Duplicate card names in Overlay step
-
-Step 74 of Elara extraction: Overlay Zegredo onto Zegredo (both have same name). The `cards` array has the same name twice: `["Power Patron Shadow Machine Zegredo", "Power Patron Shadow Machine Zegredo"]`. Renderer needs to handle this — don't dedupe by name in Overlay steps.
+Step 74 of Elara: Overlay Zegredo onto Zegredo. The `cards` array has the same name twice. Renderer must NOT dedupe by name for Overlay steps. Currently handled.
 
 ### Xyz Summon "onto" notation
+DB writes `Special Summoned Varudras... from Extra Deck onto Power Patron Shadow Machine Zegredo`. The "onto X" substring indicates an Xyz Summon where X becomes material. Renderer detects this and styles as Xyz Summon even though the action is "Special Summon".
 
-Step 75: `"Special Summoned Varudras... from Extra Deck onto Power Patron Shadow Machine Zegredo in M-5"` — the "onto X" part indicates an Xyz Summon where X becomes material. Renderer should detect this substring and style as Xyz Summon even though action is "Special Summon".
+### Trap-Equip variant
+DoomZ Destruction's GY trigger sometimes resolves silently (no equip event in the log). Currently ends up as an `inferred` slot; full fix requires either a trap-specific heuristic or manual annotation. Tracked under remaining Bug 8 notes.

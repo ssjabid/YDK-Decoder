@@ -21,7 +21,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    width: 380px;
+    width: 400px;
     background: var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
@@ -179,6 +179,186 @@
     font-family: "SF Mono", Menlo, monospace;
   }
 
+  /* Section divider — separates the replay flow from the deck flow */
+  .section-divider {
+    margin: 20px 0 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .section-divider::before {
+    content: "";
+    display: inline-block;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* .ydk file dropzone — primary deck import path */
+  .ydk-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 18px 14px;
+    background: var(--bg-elevated);
+    border: 1px dashed var(--border-strong);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    text-align: center;
+  }
+  .ydk-dropzone:hover {
+    border-color: var(--accent);
+    background: var(--bg-hover);
+  }
+  .ydk-dropzone.is-dragover {
+    border-color: var(--accent);
+    border-style: solid;
+    background: rgba(229,91,60,0.08);
+  }
+  .ydk-dropzone-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .ydk-dropzone-hint {
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  /* Local deck library — list of all decks chrome.storage has cached */
+  .deck-library {
+    display: flex; flex-direction: column; gap: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .deck-library::-webkit-scrollbar { width: 4px; }
+  .deck-library::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  .deck-library-empty {
+    padding: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-faint);
+    background: var(--bg-elevated);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+  .deck-library-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .deck-library-row:hover {
+    border-color: var(--border-strong);
+    background: var(--bg-hover);
+  }
+  .deck-library-name {
+    font-size: 12px; font-weight: 500;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .deck-library-counts {
+    font-size: 10px;
+    color: var(--text-faint);
+    font-family: "SF Mono", Menlo, monospace;
+    white-space: nowrap;
+  }
+  .deck-library-action {
+    background: var(--accent); color: white;
+    border: none;
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 4px 8px; border-radius: 3px;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.15s;
+  }
+  .deck-library-action:hover { background: #d54e30; }
+  .deck-library-actions {
+    display: flex; gap: 4px;
+  }
+  .deck-library-action.secondary {
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid var(--border-strong);
+  }
+  .deck-library-action.secondary:hover {
+    color: var(--text); border-color: var(--text-faint);
+    background: transparent;
+  }
+  .deck-library-action.danger:hover {
+    background: var(--error, #c45f5f); color: white;
+    border-color: var(--error, #c45f5f);
+  }
+
+  /* Experimental section — collapsed by default */
+  .ydk-experimental {
+    margin-top: 14px;
+    padding: 8px 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .ydk-experimental summary {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 0;
+  }
+  .ydk-experimental summary:hover { color: var(--text-dim); }
+  .ydk-experimental[open] summary { color: var(--text-dim); }
+  .ydk-experimental-note {
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text-faint);
+    line-height: 1.4;
+  }
+
+  /* Deck-extraction subpanel */
+  .deck-result {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .deck-result.hidden { display: none; }
+  .deck-result-name {
+    font-size: 12px; font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+  .deck-result-counts {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: "SF Mono", Menlo, monospace;
+    margin-bottom: 8px;
+  }
+  .deck-result-counts .pill {
+    display: inline-block;
+    background: var(--bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    border: 1px solid var(--border);
+  }
+
   .help {
     margin-top: 16px;
     padding-top: 12px;
@@ -200,7 +380,7 @@
 <body>
   <header>
     <h1>YDK <span class="accent">Decoder</span></h1>
-    <span class="version">v1.0</span>
+    <span class="version">v1.5</span>
   </header>
 
   <div class="field">
@@ -230,8 +410,57 @@
     </div>
   </div>
 
+  <div class="section-divider">Deck</div>
+
+  <!--
+    Primary deck-import path: drop in a .ydk file (the same file DB's
+    Export Deck produces, or the .ydk you already have on disk). Fast,
+    reliable, no DOM scraping.
+  -->
+  <div class="field">
+    <label class="field-label" for="ydk-file-input">Import deck from .ydk file</label>
+    <label id="ydk-dropzone" class="ydk-dropzone" for="ydk-file-input">
+      <span class="ydk-dropzone-label">Drop a .ydk file here, or click to browse</span>
+      <span class="ydk-dropzone-hint">Tip: in DuelingBook → Export Deck → save the .ydk → drop it here</span>
+      <input type="file" id="ydk-file-input" accept=".ydk,text/plain" hidden>
+    </label>
+  </div>
+
+  <div id="deck-result" class="deck-result hidden">
+    <div class="deck-result-name" id="deck-result-name"></div>
+    <div class="deck-result-counts" id="deck-result-counts"></div>
+    <div class="btn-row">
+      <button id="btn-copy-ydk" class="btn small">Copy .ydk</button>
+      <button id="btn-download-ydk" class="btn small">Download</button>
+    </div>
+    <div class="btn-row">
+      <button id="btn-save-deck" class="btn primary small">Save to YDK Decoder</button>
+    </div>
+  </div>
+
+  <!--
+    Direct DB scan — now powered by the content_script registered in
+    manifest. Open the deck constructor, click Scan, the active deck is
+    pulled from real DOM elements. Scan All Decks walks the dropdown.
+  -->
+  <div class="section-divider" style="margin-top: 14px;">Scan from DuelingBook</div>
+
+  <div class="btn-row">
+    <button id="btn-extract-deck" class="btn">Scan active deck</button>
+    <button id="btn-scan-all-decks" class="btn">Scan all decks</button>
+  </div>
+  <div id="scan-progress" class="ydk-experimental-note hidden" style="margin-top: 6px;"></div>
+
+  <!-- Local library — every deck the extension has scanned, persisted in
+       chrome.storage.local. Survives popup close + browser restart. -->
+  <div class="section-divider" style="margin-top: 14px;">Local deck library</div>
+  <div id="deck-library" class="deck-library">
+    <div class="deck-library-empty">No decks saved yet — scan or import to populate.</div>
+  </div>
+
   <div class="help">
-    <strong>Tip:</strong> Start <code>python3 -m http.server 8000</code> in your YDK Decoder folder first. "Open in YDK Decoder" will open <code>localhost:8000/ydk_decoder.html</code> with the combo pre-loaded.
+    <strong>Tip:</strong> Start <code>python3 -m http.server 8000</code> in your YDK Decoder folder first. "Open in YDK Decoder" opens the combo pre-loaded.<br><br>
+    <strong>Deck:</strong> drop a <code>.ydk</code> file above, then click <em>Save to YDK Decoder</em> to sync it into your local deck library.
   </div>
 
   <script src="popup.js"></script>

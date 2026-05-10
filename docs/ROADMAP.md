@@ -1,175 +1,185 @@
 # ROADMAP
 
-Prioritized. Work top to bottom. Each item has acceptance criteria.
+Status as of **2026-04-26**.
+Read top to bottom. The "Shipped" section is what already works in the
+current build. The "In progress / next" section is the active queue.
+"Backlog" is everything that's been triaged but isn't being worked on yet.
+
+Build markers (use these to verify a fresh load):
+- Decoder: `YDK_BUILD = "2026-04-26-unified-pill-sizing"` (top of `decoder/ydk_decoder.html`, surfaced in the status bar)
+- Service worker: `YDK_SW_BUILD = "sw-build-2026-04-25-v3-AttachMaterial+Placed"` (logged on SW startup)
+- Extension manifest: `version: 1.3.0`
 
 ---
 
-## P0 — Make the extension-to-decoder handoff actually work
+## ✅ Shipped (verified working end-to-end on Elara + Amalthe combos)
 
-### P0.1 — Decoder auto-loads combo from URL param
+### Extension → Decoder handoff
+- **P0.1** — Decoder auto-loads combos from `?combo=<base64>` URL param
+- **P0.4** — Direct `chrome.scripting.executeScript` injection into the decoder tab's `localStorage` (no more 5KB URLs in the address bar). URL-param flow is preserved as a fallback for manual paste / sample data.
+- Saved-combos persistence in `localStorage.ydk_saved_combos`, dedupe by `replayId`
+- Combos tab auto-opens and selects the new combo on inject
 
-**Problem:** Extension builds `http://localhost:8000/decoder/ydk_decoder.html?combo=<base64>` but decoder doesn't detect or render it.
+### Combo extraction (extension)
+- **Service worker** clean rewrite (`extension/background/service-worker.js`)
+- **`detectAction`** recognizes: Drew, Returned, Normal Summoned, Special Summoned, Activated, Set, **Placed** (DB's "from Deck/GY to S-/M-x"), **Attached** (explicit AttachMaterial events including `Attached banished X to Y`), **Moved** (cross-zone repositions), Detached, Overlayed, Banished, Sent to GY, Tributed, Discarded, Searched (Added)
+- **Combo output structure** versioned to `version: 3` with `isSolo`, `endboardGraveyard`, `endboardBanished` arrays so the decoder can reconstruct full state, not just the field
 
-**Fix:**
-1. On decoder page load, check `window.location.search` for `?combo=...`
-2. If present: base64-decode → JSON.parse → render in Combos tab
-3. Switch active tab to Combos automatically
-4. Save combo to `localStorage` under key `ydk_saved_combos` (array of combo objects)
-5. Show toast/banner: "Combo loaded: {comboName}"
+### Field-state simulator (decoder)
+- **P0.3** — `simulateCombo()` replaces the naive endboard. Per-step state tracker producing `{hand, field, gy, banished, zones}` snapshots
+- `extractZone()`, `applyStepToState()`, `cloneState()` — full state machine including Xyz material attachment, Pendulum scale activation, equip handling, Move detection, Set-from-GY, AttachMaterial-from-banish
 
-**Acceptance:** Paste this into the URL bar with server running:
-```
-http://localhost:8000/decoder/ydk_decoder.html?combo=<base64_of_sample-data/amalthe-combo.json>
-```
-→ Combos tab opens with the Amalthe combo rendered.
+### Decoder rendering
+- **P0.2** — Hand-written `COMBOS` array deleted; full extracted-combo renderer with phases, opening hand, step-by-step + state line
+- Card thumbnails everywhere via `INLINE_CACHE` + persistent `localStorage.ydk_card_cache` (Bug 6 fix)
+- Hover preview shows full card image + stripped effect text on every named card pill in combos
+- Per-step **state line** (Hand at end / Field) so the user can see what's resolved
+- Logical **phase clustering** (`groupStepsIntoPhases`) — not "every 3 steps", but actual play boundaries (draws, opener line, climbs, finisher, end-of-turn sets)
+- **Five view modes** via dropdown: Full / Core / Cluster / Compact / Diagram
+- **Per-phase mini playmat** — 5x3 zone grid (Field Spell + EMZ + M1-5 + S1-5) at the end of each cluster
+- **End Board playmat** — full grid identical layout, larger pills
+- **Disruption analysis** — multi-tag (`negate / removal / lock / protection / finisher / engine`); cards appear in every applicable section with a `+N` badge
+- **Combo grouping by hand size** — 1-card / 2-card / 3-card opener sections
+- Pendulum-by-scale detection ("Activate as Pendulum scale" when Vidrium/Zegredo placed in S-1/S-5)
+- Cause annotation — outcomes are stamped with their trigger ("via X's effect")
+- Auto-save dropped `.ydk` to `localStorage.ydk_current_deck`; restored on reload
+- View-mode persistence in `localStorage.ydk_combo_view_mode`
+- Per-combo notes textarea (saved per `replayId`)
+- **Unified card pill sizing** (2026-04-26) — every pill in every context now resolves to one of two sizes (md / sm), driven by CSS custom properties in `:root`. No more 6 different bespoke sizes across phase bullets, mini playmat, step rows, end board, etc.
 
-### P0.2 — Render real extracted combos beautifully
+### Bugs fixed (see BUGS.md for the per-bug detail)
+- ✅ Bug 1 (endboard over-includes Xyz materials) — fixed by P0.3 simulator
+- ✅ Bug 2 (Solo Mode opening hand empty) — handTracker post-mulligan snapshot
+- ✅ Bug 3 (Draw `cards: null`) — regex backfill from detail text
+- ✅ Bug 6 (missing thumbnails) — persistent card cache + ydk-driven cache merge
+- ✅ Bug 8 (silent equip transitions) — equip-spell heuristic + AttachMaterial event detection
+- ✅ Pendulum-by-scale, Set-from-GY, Move detection, cloneState zone copy
+- ✅ Duplicate Set bullets dedupe, "Vidria suddenly in hand" mystery (mill/recovery were getting filtered out)
 
-**Problem:** Decoder's Combos tab has hand-written fake combos. Real data from extractor has different structure (81 steps with timestamps, exact card names, Xyz material stacking).
+---
 
-**Fix:**
-1. Delete the hand-written `COMBOS` array in decoder
-2. Build new combo renderer that takes the extension's output format and renders:
-   - Combo header with name, replay URL link, timestamp, step count
-   - Opening hand with card images (if `openingHand` non-empty)
-   - Steps grouped by "phase" — detect phase breaks by timestamp gaps > 10 seconds OR by major actions (summon, Xyz Summon)
-   - Each step: step number, timestamp, action type chip, card(s) involved with tiny images, cleaned detail text
-   - Endboard section (but see P0.3 — fix endboard first)
-3. Each card reference should hover-preview the full card image + effect text (already works for .ydk cards, extend to combo steps)
+## 🔧 In progress / next
 
-**Acceptance:** Loading the Amalthe sample shows all 81 steps readable, grouped logically, with card images.
+### N1 — Multi-deck + variations system  (IN PROGRESS, phased)
 
-### P0.3 — Fix endboard tracking
+The user runs more than one deck and wants to hold multiple variations of each
+deck side-by-side, with combos organized per deck and inheriting from the
+parent deck for variations. Everything has to survive a browser refresh
+(localStorage), and there must be an export/import path so nothing is ever
+lost. We're building this in three phases so each one is testable end-to-end
+before moving on.
 
-**Problem:** Current `deriveEndboard()` in `service-worker.js` lists every summoned card. Doesn't track:
-- Cards going underneath as Xyz material (should NOT be on endboard)
-- Xyz evolution (Drastrius → Graflario = Drastrius goes to material stack, Graflario is visible)
-- Materials detached (go to GY, remove from field)
-- Destruction/banish (remove from field)
+#### N1.1 — Deck extractor in the extension  (DONE 2026-04-26)
+Manifest 1.4.0. The popup has a "Scan DuelingBook deck page" button that
+injects `extension/content/deck-extractor.js` into the active tab, scans the
+DOM for main/extra/side card images, and produces a `.ydk` string.
+Multi-strategy DOM detection plus a global-image fallback, with a debug
+dump returned alongside the result so failed scans are diagnosable.
 
-**Fix:** Replace `deriveEndboard()` with proper field-state tracker:
+Output offers Copy `.ydk` / Download / Save to YDK Decoder. The Save flow
+goes through the service worker into `localStorage.ydk_decks` (new key),
+upsert by `deckId`, dispatching `ydk:deck-injected` so the decoder can
+re-render its deck library on the fly.
+
+**Schema (deck object stored at `localStorage.ydk_decks`):**
 ```js
-// Pseudo-code
-let field = []; // { card, position, materials: [], isXyz: bool }
-for (step of steps) {
-  switch (step.action) {
-    case 'Normal Summon':
-    case 'Special Summon':
-      if (step.detail.includes('onto')) {
-        // Xyz Summon: find target, push old card into materials
-        const target = findFieldCardByName(step.cards[1]);
-        const newCard = { name: step.cards[0], materials: [target, ...target.materials] };
-        field = field.filter(c => c !== target);
-        field.push(newCard);
-      } else {
-        field.push({ name: step.cards[0], materials: [] });
-      }
-      break;
-    case 'Overlay':
-      // Xyz materials attached
-      ...
-    case 'Destroy':
-    case 'Send to GY':
-    case 'Banish':
-    case 'Tribute':
-      field = field.filter(c => c.name !== step.cards[0]);
-      break;
-    case 'Detach':
-      // Remove material from top card
-      const topCard = field.find(c => c.name === step.cards[1]);
-      if (topCard) topCard.materials = topCard.materials.filter(m => m.name !== step.cards[0]);
-      break;
-    case 'Set':
-      field.push({ name: step.cards[0], isSet: true });
-      break;
-    case 'Return':
-      if (step.detail.includes('to Extra Deck') || step.detail.includes('to hand')) {
-        field = field.filter(c => c.name !== step.cards[0]);
-      }
-      break;
-  }
+{
+  deckId: 'deck_<timestamp>',
+  name: 'DoomZ v2',           // user-editable, defaults to scan-derived name
+  ydkContent: '#created by ...\n#main\n14558127\n...',
+  counts: { main, extra, side, total },
+  main: ['14558127', ...],
+  extra: [...],
+  side: [...],
+  parentDeckId: null,         // or the deckId of the base deck if this is a variation
+  isVariation: false,
+  notes: '',
+  source: 'extension' | 'manual-upload' | 'imported',
+  sourceUrl: 'https://www.duelingbook.com/deck?id=...' | null,
+  createdAt: ISO,
+  updatedAt: ISO,
 }
-return field;
 ```
 
-**Acceptance:** Elara sample endboard returns: Varudras (with 2 Zegredo materials), Sargas (with Merrymaker+Amalthe materials), Therion Regulus, Drastrius (with Drastea material), Vidria Field Spell. NOT: Amalthe, Merrymaker, Drastea (which are all materials now).
+#### N1.2 — Decks tab in the decoder  (NEXT)
+Add a new top-level tab "Decks" alongside Cards / Combos.
+
+UI:
+- **Sidebar** lists all decks; variations indent under their parent.
+- **Main panel** for the selected deck: header (name + counts), full
+  card list (`renderNamedCard` pills as a uniform grid, same look as the
+  Diagram view), notes textarea, action bar (Make Variation / Rename /
+  Delete / Set as Active).
+- **"Active deck"** indicator persists across reloads (`localStorage.ydk_active_deck`).
+  When a deck is active, the existing Cards tab pulls from THAT deck's
+  contents instead of the legacy single-deck flow. Combos extracted from
+  the popup auto-tag with the active `deckId`.
+- **Make Variation**: deep-clones a deck, sets `parentDeckId` to the
+  source, opens it in edit mode so the user can add/remove cards.
+
+#### N1.3 — Combos belong to decks
+Existing `localStorage.ydk_saved_combos` entries each get a `deckId` field.
+- New combos extracted while a deck is active are tagged with that `deckId`.
+- Old combos with no `deckId` show in an "Unassigned" group; user can
+  drag/drop or use a dropdown to assign them.
+- Combos tab gains a deck filter (default = active deck). Variations show
+  their own combos AND inherit combos from `parentDeckId`. A filter pill
+  toggles "show inherited" so the user can opt out.
+
+#### N1.4 — Backup / restore everything
+- "Export all data" button: dump `ydk_decks` + `ydk_saved_combos` +
+  `ydk_card_cache` + `ydk_combo_view_mode` + per-combo notes into one
+  JSON file. Filename `ydk-decoder-backup-YYYY-MM-DD.json`.
+- "Import" button: read a backup JSON and merge it into the current
+  state. Upsert by id everywhere; user gets a summary ("imported 3 decks,
+  18 combos, 67 cached cards").
+- Auto-export prompt every 30 days as a gentle nag if it hasn't been
+  exported recently.
+
+#### N1.5 — End-to-end test on the 6 reference combos
+With the decklist now stored as a proper deck entity, run each of the 6
+test replays through the popup → decoder pipeline and confirm:
+1. All 40+ cards in the active deck resolve thumbnails (no text-only pills)
+2. Each combo extracts cleanly, lands tagged with the right `deckId`
+3. Endboard for each combo is sensible (no orphan materials, no missing equips)
+4. Disruption section shows the right pieces in the right tag groups
+5. Combos list correctly groups under the active deck (and variations roll up)
+
+### N2 — Triage UI issues found during N1.5
+Bug 7 in BUGS.md is a placeholder for "various polish issues, enumerate during the next pass." This is that pass. Each issue found during N1.5 gets a numbered entry in BUGS.md and is fixed before the deep features below.
 
 ---
 
-## P1 — Build the combo library
+## 📋 Backlog (triaged, not started)
 
-### P1.1 — Multiple combos saved, picker UI
+### B1 — Combo library improvements
+- **B1.1** — Combo tagging + filtering. Auto-tag by starting card category (Amalthe / Elara / Change / Raiders / Terminus). Filter bar like the Cards tab. Search by card name in steps.
+- **B1.2** — Export / import all combos as a single JSON file (for backup or sharing).
+- **B1.3** — Combo diff view — pick two combos, highlight where they diverge.
 
-**Problem:** Currently extension overwrites `latestCombo` each extraction. No way to save multiple combos and compare.
+### B2 — Extension polish
+- **B2.1** — Batch import: paste all 6 URLs, extract sequentially, queue UI in the popup.
+- **B2.2** — Wire `extension/content/deck-extractor.js` into the popup as a second button ("Extract Deck from Current Tab" — runs on a DB deck constructor page, outputs `.ydk`). Currently the file exists but is unreachable.
+- **B2.3** — Better "no replay loaded" diagnostics — popup should detect if it's not on a replay URL and show what to do instead of just spinning.
 
-**Fix:**
-1. In decoder, `localStorage.ydk_saved_combos` is array of combo objects (already designed in P0.1)
-2. Combos tab has sidebar listing saved combos (name, replay ID, timestamp)
-3. Click a combo → main panel renders it
-4. Delete button per combo
-5. Export/Import all combos as JSON file
+### B3 — Decoder polish
+- **B3.1** — Mobile / narrow-viewport layout. Current CSS breaks below ~800px.
+- **B3.2** — SVG-based arrow rendering for Diagram view (currently uses text arrows; SVG would let causes/materials/equips show as actual lines on the field grid).
+- **B3.3** — Replace remaining BLZD placeholder passcodes (55555555, 77777777…) once they hit YGOPRODeck. See Bug 4.
+- **B3.4** — Inline edit pencil per saved combo for manual endboard fixups (Bug 8 option 4 — last-resort).
+- **B3.5** — Card-effect database extension. `DISRUPTION_PROFILES` covers the disruption tag system; a fuller stripped-effects DB would let other parts of the UI surface "what does this card do?" without the YGOPRODeck round-trip.
 
-**Acceptance:** User extracts all 6 combos from `DECK_CONTEXT.md`, sees all 6 in sidebar, can click between them.
-
-### P1.2 — Combo tagging + filtering
-
-**Problem:** 6+ combos quickly becomes unwieldy.
-
-**Fix:**
-- Auto-tag combos by category (Amalthe, Elara, Change, Raiders, Terminus) based on starting card
-- Filter bar like the Cards tab
-- Search box (filter by card name in steps)
-
----
-
-## P2 — Decoder polish
-
-### P2.1 — Remove hand-written combos
-Delete `COMBOS` array. All combos come from extension now.
-
-### P2.2 — Clean up BLZD placeholder passcodes
-Card IDs like 55555555, 77777777 were placeholders. When user pastes verified YGOPRODeck URLs or real card data for these, replace in `INLINE_CACHE`.
-
-### P2.3 — Hand-tune card labels based on real combo data
-Looking at the two extractions, update `CARD_OVERRIDES`:
-- Sargas plays a huge role (Rank 4 evolution from Merrymaker, searches Therion) — needs proper role tagging
-- Therion Regulus — hand SS + Beast-focused tech
-- Dimension Shifter (seen in Elara opening hand) — Handtrap role
-- Varudras — add to Extra deck listing with Finisher role
-
-### P2.4 — Image fallback on file://
-Current fallback only shows card name text. Could use base64-encoded tiny placeholder images so file:// mode still looks decent.
+### B4 — Future learning features
+- **B4.1** — Spaced repetition: random combo step shown with the card name hidden, user fills in what comes next; SM2 scheduling.
+- **B4.2** — Multi-deck support: `userPreferences.decks = [{name, ydkPath, combos}, ...]`. Right now only DoomZ is the assumed deck; the decoder shouldn't hardcode any deck-specific naming.
+- **B4.3** — Opponent-turn simulator: given an endboard, walk through what disruption you have vs common threats. "vs Feather Duster — chain Warning? Which?"
 
 ---
 
-## P3 — Extension improvements
+## 🚫 Explicitly out of scope
 
-### P3.1 — Handle Solo Mode mulligan properly
-Amalthe replay had 5 cards drawn then returned (Solo Mode "shuffle hand" feature). Extractor's opening hand detector got confused and returned empty array.
-
-**Fix:** After detecting a sequence of N draws followed by N returns (same cards), snapshot the hand state AFTER returns complete.
-
-### P3.2 — Draw action should populate cards array
-Amalthe extraction had `"Drew \"DoomZ Destruction\""` but `cards: null`. Elara extraction had this fixed (`cards: ["DoomZ Destruction"]`). Investigate why one worked and not the other — probably font.card_hover present in one replay but not other due to replay speed.
-
-### P3.3 — Batch import
-Instead of one URL at a time, paste all 6 URLs → extension extracts sequentially.
-
-### P3.4 — Deck extractor
-`extension/content/deck-extractor.js` is included but not wired into the popup. Add a second button: "Extract Deck from Current Tab" — runs on a DuelingBook deck constructor page, outputs `.ydk`.
-
----
-
-## P4 — Nice-to-have
-
-### P4.1 — Spaced repetition
-Show a random combo's steps in order with card name hidden, user fills in what comes next. Track right/wrong. SM2 algorithm for scheduling.
-
-### P4.2 — Multi-deck support
-Not just DoomZ — let user swap between decks they own. `userPreferences.decks = [{name, ydkPath, combos}, ...]`.
-
-### P4.3 — Opponent-turn simulator
-Given an endboard, walk through what disruption tools you have vs common threats. "vs Feather Duster — chain Warning? Which?" Educational/defensive training.
-
-### P4.4 — Mobile-friendly
-Current CSS breaks below ~800px. Add responsive breakpoints or build mobile-specific view.
+- **No build step.** Vanilla JS, no npm, no bundler. Single-file HTML where possible.
+- **No file:// support.** `py -m http.server 8000` is mandatory; CORS breaks YGOPRODeck on file://.
+- **No analytics, no telemetry.** Personal tool.
+- **No rewrite of `combo-import-helper.js`.** It solves dozens of DB DOM quirks. Targeted edits only.
+- **No external card-text invention.** New BLZD cards stay flagged `VERIFY` until real data lands.
