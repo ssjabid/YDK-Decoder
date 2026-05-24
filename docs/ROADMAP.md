@@ -1,14 +1,14 @@
 # ROADMAP
 
-Status as of **2026-04-26**.
+Status as of **2026-05-17**.
 Read top to bottom. The "Shipped" section is what already works in the
 current build. The "In progress / next" section is the active queue.
 "Backlog" is everything that's been triaged but isn't being worked on yet.
 
 Build markers (use these to verify a fresh load):
-- Decoder: `YDK_BUILD = "2026-04-26-unified-pill-sizing"` (top of `decoder/ydk_decoder.html`, surfaced in the status bar)
-- Service worker: `YDK_SW_BUILD = "sw-build-2026-04-25-v3-AttachMaterial+Placed"` (logged on SW startup)
-- Extension manifest: `version: 1.3.0`
+- Decoder: `YDK_BUILD = "2026-05-17-format-planner-complete+notes-everywhere+matchup-tech-cards"` (top of `decoder/ydk_decoder.html`, surfaced in the status bar)
+- Service worker: `YDK_SW_BUILD = "sw-build-2026-04-26-combo-deckid-stamp"` (logged on SW startup)
+- Extension manifest: `version: 1.5.0`
 
 ---
 
@@ -55,6 +55,76 @@ Build markers (use these to verify a fresh load):
 - ✅ Bug 8 (silent equip transitions) — equip-spell heuristic + AttachMaterial event detection
 - ✅ Pendulum-by-scale, Set-from-GY, Move detection, cloneState zone copy
 - ✅ Duplicate Set bullets dedupe, "Vidria suddenly in hand" mystery (mill/recovery were getting filtered out)
+- ✅ Solo Mode mulligan polluted every view (2026-05-17) — `markMulliganSteps` + universal filter + banner
+- ✅ ADRASTEIA placed-by-effect mis-narrated as "Set" (2026-05-17) — three-tier disambiguation in `describeStep`; structural fallback works even before card cache hydrates
+
+### N2 — UI polish round  (DONE 2026-05-17)
+- ✅ Browser tab title reflects active deck (`{deckName} · YDK Decoder`)
+- ✅ 📝 notes badge on combo tiles when `userNotes` is non-empty (with tooltip preview)
+- ✅ Combo-tile mini-grid of 3 stacked opener thumbnails (replaces comma-separated text), with `+N` overflow chip
+- ✅ Click-to-edit combo title; persists as `combo.userTitle`, propagates via `getComboDisplayTitle()`
+- ✅ Universal drag-to-reorder combos in sidebar; cross-bucket drops re-bucket the combo (`userOpenerSize`) and re-position (`sortIndex`), densified to `100, 200, 300 …` on each drop
+- ✅ Per-step `?` info chip surfacing card's effect text on hover, in Cluster/Core/Compact/Full views; `(via X's effect)` annotation hoverable to show trigger card's text
+- ✅ Sidebar search input — live-filter combos by title / opening hand / step cards / notes; visibility-toggle (not re-render) so input focus + thumbnails survive; persists across re-renders
+
+### N3 — Format planner — ALL PHASES  (DONE 2026-05-17)
+**The big one: deck-+-format-+-matchup planning workbench.** Shipped end-to-end across phases 1–4 in a single round. The user picks a banlist-bounded format, declares which of their decks they're playing, and tracks opponent decks with per-matchup gameplans. Combos in their deck can be linked to specific matchups they solve.
+
+**Phase 1 — Decks foundation** (data model + UI shell)
+- ✅ Schema migration v1 → v2: `migrateDecksToV2()` idempotent, snapshots to `ydk_decks_premigration_backup`.
+- ✅ `migrateCombosToDecklists()` stamps `combo.decklistId` from owning deck.
+- ✅ Top-level Decks tab with role filter (All / Mine / Matchup), deck tile list, + New deck.
+- ✅ Methodology editor — autosaving fields (summary, endboard, howItWins, strengths, weaknesses, keyRatios) + repeating tech-cards list.
+- ✅ Multi-decklist picker — switch / rename / download / delete per deck.
+- ✅ Combos-for-active-build read-only summary.
+
+**Phase 2 — Key cards** (extraction + manual curation)
+- ✅ `extractKeyCardsFromDeck()` runs cards through `classify()` and maps to 6 buckets (Boss / Starter / Extender / Handtrap / Floodgate / Tech).
+- ✅ Per-card annotations: `stopPriority`, `stopWith`, `notes`. User overrides flip `auto: false` and survive re-extract.
+- ✅ Bucket grid with inline editor (priority buttons, stopWith select, category override, notes textarea, remove).
+- ✅ Hover preview wired to every key-card row.
+
+**Phase 3 — Format tab + matchups**
+- ✅ New top-level Format tab. `ydk_formats[]` + `ydk_active_format_id` storage.
+- ✅ Format CRUD: picker, rename, delete, "+ New format (clone matchups)" with auto-stamping `endDate` on the previous format.
+- ✅ Primary deck section with picker + "Edit in Decks ↗" link.
+- ✅ Matchup grid: tier-stripe cards, opponent name, preview snippets, key-target chips synced from opponent's keyCards.
+- ✅ Add matchup flow: paste opponent .ydk to create role:"matchup" deck inline, OR pick existing.
+- ✅ Matchup drill view: gameplan first/second, how-they-win, freeform notes, related combos checkbox list (links combos by `comboKey`), tier dropdown.
+
+**Phase 4 — Cross-linking polish**
+- ✅ "vs Opponent" badge on combo tiles when active format links the combo to a matchup.
+- ✅ Tooltip lists all matchups a combo solves.
+- ✅ Sidebar search includes vs-linkage so "branded" surfaces every combo linked to that matchup.
+- ✅ Card chips throughout Format UI wired to hover-preview.
+
+### N4 — Late-patch completion  (DONE 2026-05-17)
+Triple-check pass + notes audit + the Illusion-Gate-vs-Branded feature.
+
+**Bugs fixed:**
+- ✅ `createMatchupDeck()` — fresh entity creation that bypasses dedup, so an opponent .ydk paste can never flip a primary deck's role to "matchup".
+- ✅ Matchup card switched from `<button>` (invalid: nested button) to `<div role="button">` with Enter/Space keyboard handling.
+- ✅ Keyboard handler guards `e.target !== card` so it doesn't break nested-button activation.
+- ✅ "Edit opponent's deck ↗" forces role filter to "all" so the destination is visible in the sidebar.
+
+**Notes feature — completed across every entity:**
+- ✅ Deck-level free-form notes (new collapsible section in Decks panel).
+- ✅ Per-decklist (build) notes (textarea below each build row).
+- ✅ Format-level notes (textarea between primary deck and matchup grid).
+
+**Per-matchup Tech & Counter cards:**
+- ✅ Schema field `matchup.counterCards: [{ name, side, notes }]`.
+- ✅ Drill view section with side toggle (Good for us / Bad for us — green/red), name input with hover-preview, notes input, delete.
+- ✅ Cloned formats deep-copy counterCards so each format is independent.
+
+### N3-old — Format planner Phase 1  (DONE 2026-05-17 — superseded by full N3)
+Foundation for the new top-level "Format" concept: a banlist-bounded plan that ties your deck to opponents' decks with matchup-specific strategy. Phase 1 ships the deck-side data model + UI; phases 2–4 layer on key-card buckets, format matchups, and cross-linking.
+- ✅ Schema migration v1→v2: `migrateDecksToV2()` runs on init, idempotent, snapshots pre-migration to `ydk_decks_premigration_backup`. Every deck gains `decklists[]`, `primaryDecklistId`, `role`, `methodology`, `keyCards`. Legacy fields preserved & mirrored.
+- ✅ Combos migration: `migrateCombosToDecklists()` stamps `combo.decklistId` from owning deck's `primaryDecklistId`.
+- ✅ New Decks top-level tab between Combos and Practice. Master/detail layout: role-filtered deck list (All / Mine / Matchup) + selected-deck panel.
+- ✅ Methodology editor — collapsible section with autosaving fields: summary, endboard, howItWins, strengths, weaknesses, keyRatios, plus repeating tech-cards `{ name, reason }` rows.
+- ✅ Multi-decklist picker — switch / rename / download / delete builds per deck; setting active mirrors content to legacy deck-level fields so Cards/Combos/Practice keep working.
+- ✅ Combos-for-active-build read-only summary, click → opens combo in Combos tab.
 
 ---
 

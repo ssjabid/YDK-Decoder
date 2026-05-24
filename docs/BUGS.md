@@ -1,6 +1,6 @@
 # Known Bugs
 
-Status as of **2026-04-26**. ✅ = fixed and verified. 🚧 = open / partial.
+Status as of **2026-05-17**. ✅ = fixed and verified. 🚧 = open / partial.
 "Polish punch list" at the bottom is for small UI niggles to gather and
 batch-fix during the next pass.
 
@@ -99,6 +99,32 @@ batch-fix during the next pass.
 ## ✅ Cause annotation never fired  (FIXED)
 
 **Symptom:** `via X's effect` annotation was supposed to stamp outcomes with their trigger. It was missing because `filterPhaseBullets` removed `Declared effect of X` lines BEFORE `renderPhaseBullets` could see them. Fix: do the annotation INSIDE `filterPhaseBullets` and stamp each outcome with `_viaTrigger`.
+
+---
+
+## ✅ Solo Mode mulligan polluted every view  (FIXED 2026-05-17)
+
+**Severity:** High — every solo combo started with 10 noise steps (Drew 5 + Returned 5), making the combo unreadable.
+**Location:** `decoder/ydk_decoder.html` → step filters + `groupStepsIntoPhases`
+**Fixed by:** New `markMulliganSteps()` runs after `simulateCombo`, detects the leading `Draw × N → Return × N (hand → deck)` block and stamps `_mulligan: true` on those steps. `filterCoreSteps`, `filterPhaseBullets`, `groupStepsIntoPhases`, and the Full-view loop all skip mulligan-flagged steps. A single-line banner ("Solo Mode mulligan — drew N, returned N to deck") replaces the noise so the user knows what was hidden.
+
+**Verification:** `abid_doomz_combo2.txt` (Amalthe combo, 10-step mulligan) now opens with the Search Amalthe as the first visible step. Banner shows `drew 5, returned 5`. Pattern-based — no `combo.isSolo` flag dependency.
+
+---
+
+## ✅ ADRASTEIA placed-by-effect mis-narrated as "Set"  (FIXED 2026-05-17)
+
+**Severity:** High — directly confused the user during memorization. Step 18 of `abid_doomz_combo2.txt`: `"action": "Set", "detail": "Placed DoomZ Command \"A.D.R.A.S.T.E.I.A.\" from Deck to S-4"` was rendered as `"Set ADRASTEIA"` instead of `"Equip ADRASTEIA to Drastea from Deck (by effect)"`.
+**Location:** `decoder/ydk_decoder.html` → `describeStep()` Set handler + `applyStepToState()` Set handler
+**Root cause:** The extractor maps both `Set X in S-N` (manual face-down) and `Placed X from <source> to S-N` (effect-driven) to `action: "Set"`. The renderer's Set handler dropped both to `"Set X"`.
+**Fixed by:** Three-tier disambiguation in `describeStep`:
+1. **Tier A** (cached + Equip Spell, `Placed` + `from Deck/GY/banished`): `"Equip X to Y from <source> (by effect)"` with `inferEquipTarget()` picking the most recent monster on the field.
+2. **Tier B** (cached + Continuous Spell/Trap, same shape): `"Place X face-up from <source> (by effect)"`.
+3. **Tier C** (no card data — brand-new combo, cache cold, same shape): `"Place X face-up from <source> (by effect)"`. Structural — DuelingBook never uses `Placed` for manual face-down sets, so the tier-C fallback is provably correct. Late-hydration re-render from `enrichComboCards` upgrades to tier-A precision once YGOPRODeck data arrives.
+
+Simulator's Set handler mirrors the same logic — writes `isSet: false` for effect placements so the playmat doesn't show face-downs where there should be face-up equips.
+
+**Verification:** All 8 `Set` steps in `abid_doomz_combo2.txt` narrate correctly (3× ADRASTEIA equip, DOOMDURG equip, Zegredo Pendulum-scale, Graflario fallback "Set" with end-board `isSet: true` consistent, DoomZ Destruction manual face-down from hand).
 
 ---
 

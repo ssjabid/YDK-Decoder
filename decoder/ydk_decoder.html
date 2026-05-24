@@ -617,6 +617,1000 @@
 
   .hidden { display: none !important; }
 
+  /* ════════════════════════════════════════════════════════════════
+     DECKS TAB — phase 1 of the format planner. Master/detail layout
+     mirroring Combos: deck list on the left, selected deck panel on
+     the right with methodology editor + decklists picker + combos.
+     Visual conventions reuse combo-card-tile shapes so the app stays
+     cohesive across tabs.
+     ════════════════════════════════════════════════════════════════ */
+  .decks-tab-header {
+    padding: 0 0 14px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .decks-tab-header strong { color: var(--text); font-weight: 600; }
+
+  .decks-workspace {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 1100px) {
+    .decks-workspace { grid-template-columns: 1fr; }
+  }
+  .decks-sidebar {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding-right: 4px;
+    display: flex; flex-direction: column;
+    gap: 8px;
+  }
+  .decks-sidebar::-webkit-scrollbar { width: 6px; }
+  .decks-sidebar::-webkit-scrollbar-thumb {
+    background: var(--border-strong); border-radius: 3px;
+  }
+  .decks-sidebar-tools {
+    position: sticky; top: 0; z-index: 4;
+    background: var(--bg);
+    padding-bottom: 4px;
+  }
+  .decks-role-filter {
+    display: flex; gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px;
+  }
+  .decks-role-btn {
+    flex: 1;
+    height: 26px;
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .decks-role-btn:hover { color: var(--text); }
+  .decks-role-btn.active {
+    background: var(--accent);
+    color: white;
+  }
+  .decks-list { display: flex; flex-direction: column; gap: 6px; }
+  .decks-list-empty {
+    padding: 20px 8px;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-style: italic;
+    text-align: center;
+  }
+  .deck-tile {
+    display: flex; align-items: stretch;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    transition: border-color 0.12s, background 0.12s;
+    position: relative;
+  }
+  .deck-tile:hover { border-color: var(--accent); }
+  .deck-tile.active {
+    border-color: var(--accent);
+    background: rgba(229,116,60,0.06);
+  }
+  .deck-tile-role-stripe {
+    width: 3px;
+    flex-shrink: 0;
+    background: var(--role-engine);
+  }
+  .deck-tile.is-matchup .deck-tile-role-stripe { background: var(--role-handtrap, #c45f5f); }
+  .deck-tile-body {
+    padding: 8px 10px;
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    gap: 3px;
+  }
+  .deck-tile-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .deck-tile-meta {
+    font-size: 10px;
+    color: var(--text-faint);
+    display: flex; gap: 6px; align-items: center;
+  }
+  .deck-tile-role-badge {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: rgba(125,168,110,0.16);
+    color: var(--role-engine);
+    border: 1px solid rgba(125,168,110,0.3);
+    font-weight: 700;
+  }
+  .deck-tile.is-matchup .deck-tile-role-badge {
+    background: rgba(196,95,95,0.16);
+    color: var(--role-handtrap, #c45f5f);
+    border-color: rgba(196,95,95,0.3);
+  }
+
+  .decks-add-btn {
+    margin-top: 4px;
+    height: 32px;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: 5px;
+    color: var(--text-faint);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .decks-add-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .decks-content { min-width: 0; }
+  .decks-content-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* Selected-deck panel layout: stacked sections, each with its own header */
+  .deck-panel-header {
+    display: flex; align-items: baseline; gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .deck-panel-title {
+    font-size: 18px; font-weight: 600;
+    color: var(--text);
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: text;
+    border-bottom: 1px dashed transparent;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .deck-panel-title:hover { border-bottom-color: var(--border); color: var(--accent); }
+  .deck-panel-role {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: rgba(125,168,110,0.18);
+    color: var(--role-engine);
+    border: 1px solid rgba(125,168,110,0.3);
+  }
+  .deck-panel-role.is-matchup {
+    background: rgba(196,95,95,0.16);
+    color: var(--role-handtrap, #c45f5f);
+    border-color: rgba(196,95,95,0.3);
+  }
+  .deck-panel-counts {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-family: "SF Mono", Menlo, monospace;
+    flex-shrink: 0;
+  }
+
+  .deck-panel-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .deck-panel-section-header {
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.08);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .deck-panel-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .deck-panel-section-chevron {
+    color: var(--text-faint);
+    font-size: 10px;
+    transition: transform 0.12s;
+  }
+  .deck-panel-section.is-collapsed .deck-panel-section-body { display: none; }
+  .deck-panel-section.is-collapsed .deck-panel-section-chevron { transform: rotate(-90deg); }
+  .deck-panel-section-body {
+    padding: 14px;
+    display: flex; flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Methodology editor — collapsible fields, each one a textarea with a
+     small label above. Autosave on blur, persists to deck.methodology.*/
+  .methodology-field {
+    display: flex; flex-direction: column;
+    gap: 4px;
+  }
+  .methodology-field-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .methodology-field-input {
+    width: 100%;
+    min-height: 60px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.12s;
+    font-family: inherit;
+  }
+  .methodology-field-input:focus { border-color: var(--accent); }
+  .methodology-field-input.is-single { min-height: auto; height: 30px; resize: none; }
+  .methodology-field-input::placeholder { color: var(--text-faint); font-style: italic; }
+
+  /* Tech-cards list — repeating { name, reason } rows. */
+  .tech-cards-list { display: flex; flex-direction: column; gap: 8px; }
+  .tech-card-row {
+    display: grid;
+    grid-template-columns: 160px 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .tech-card-row .methodology-field-input { min-height: auto; height: 30px; resize: none; }
+  .tech-card-del {
+    width: 24px; height: 24px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .tech-card-del:hover { color: var(--warning); border-color: var(--warning); }
+  .tech-cards-add {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: 4px;
+    color: var(--text-faint);
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .tech-cards-add:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Decklists picker — list of build cards inside the deck panel.
+     Active build has accent border. */
+  .decklists-grid { display: flex; flex-direction: column; gap: 6px; }
+  .decklist-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+  }
+  .decklist-row.is-active { border-color: var(--accent); background: rgba(229,116,60,0.06); }
+  .decklist-row-name {
+    flex: 1; min-width: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    cursor: text;
+    border-bottom: 1px dashed transparent;
+  }
+  .decklist-row-name:hover { border-bottom-color: var(--border); color: var(--accent); }
+  .decklist-row-counts {
+    font-size: 10px;
+    color: var(--text-faint);
+    font-family: "SF Mono", Menlo, monospace;
+    flex-shrink: 0;
+  }
+  .decklist-row-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .decklist-row-action {
+    width: 24px; height: 24px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+  }
+  .decklist-row-action:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .decklist-row-action.is-active-marker {
+    color: var(--accent);
+    cursor: default;
+  }
+  .decklist-row-action.is-active-marker:hover { border-color: transparent; }
+
+  /* Key cards section — bucket grid showing how each card in the deck
+     gets classified, with per-card stopPriority annotations for matchup
+     planning. Used on both your-deck (what to protect / what to ride on)
+     and matchup decks (what to interrupt / what to ignore). */
+  .key-cards-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .key-cards-status {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+  .key-cards-extract {
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: 4px;
+    color: var(--text-faint);
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .key-cards-extract:hover { color: var(--accent); border-color: var(--accent); }
+
+  .key-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .key-cards-bucket {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    min-height: 60px;
+  }
+  .key-cards-bucket-header {
+    padding: 6px 10px;
+    background: rgba(0,0,0,0.06);
+    border-bottom: 1px solid var(--border);
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    display: flex; justify-content: space-between;
+  }
+  .key-cards-bucket-header .count {
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .key-cards-bucket[data-cat="Boss"]      .key-cards-bucket-header { color: var(--role-boss, #c46f95); }
+  .key-cards-bucket[data-cat="Starter"]   .key-cards-bucket-header { color: var(--role-starter, #6f9bc4); }
+  .key-cards-bucket[data-cat="Extender"]  .key-cards-bucket-header { color: var(--role-extender, #6fc486); }
+  .key-cards-bucket[data-cat="Handtrap"]  .key-cards-bucket-header { color: var(--role-handtrap, #c45f5f); }
+  .key-cards-bucket[data-cat="Floodgate"] .key-cards-bucket-header { color: var(--role-floodgate, #c4995f); }
+  .key-cards-bucket[data-cat="Tech"]      .key-cards-bucket-header { color: var(--role-engine, #95956f); }
+
+  .key-cards-list { display: flex; flex-direction: column; gap: 2px; padding: 6px; }
+  .key-card-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 7px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid transparent;
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .key-card-row:hover { border-color: var(--accent); }
+  .key-card-row.stop-high  { border-left-color: var(--role-handtrap, #c45f5f); }
+  .key-card-row.stop-medium { border-left-color: var(--warning, #e5a93c); }
+  .key-card-row-name {
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .key-card-row-priority-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .key-card-row.stop-high  .key-card-row-priority-dot { background: var(--role-handtrap, #c45f5f); }
+  .key-card-row.stop-medium .key-card-row-priority-dot { background: var(--warning, #e5a93c); }
+
+  /* Inline editor that expands below a clicked key-card row */
+  .key-card-editor {
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin: 4px 0 6px;
+    display: flex; flex-direction: column;
+    gap: 8px;
+  }
+  .key-card-editor-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .key-card-editor-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    min-width: 90px;
+    font-weight: 600;
+  }
+  .key-card-priority-btn-group { display: flex; gap: 3px; }
+  .key-card-priority-btn {
+    height: 22px; padding: 0 8px;
+    background: var(--bg);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font: inherit;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+  }
+  .key-card-priority-btn.active.high  { background: var(--role-handtrap, #c45f5f); color: white; border-color: var(--role-handtrap, #c45f5f); }
+  .key-card-priority-btn.active.medium { background: var(--warning, #e5a93c); color: white; border-color: var(--warning, #e5a93c); }
+  .key-card-priority-btn.active.none  { background: var(--text-faint); color: white; border-color: var(--text-faint); }
+  .key-card-stopwith-select {
+    height: 22px; padding: 0 6px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .key-card-cat-select {
+    height: 22px; padding: 0 6px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .key-card-notes-input {
+    width: 100%;
+    min-height: 40px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.4;
+    resize: vertical;
+    outline: none;
+  }
+  .key-card-notes-input:focus { border-color: var(--accent); }
+  .key-card-editor-actions { display: flex; justify-content: flex-end; gap: 6px; }
+  .key-card-editor-del {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    padding: 3px 10px;
+    border-radius: 3px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .key-card-editor-del:hover { color: var(--warning); border-color: var(--warning); }
+
+  /* Combos-in-deck list — read-only mini view inside the deck panel.
+     Real combo work still happens in the Combos tab. */
+  .deck-combos-mini {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .deck-combo-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.12s;
+  }
+  .deck-combo-row:hover { border-color: var(--accent); }
+  .deck-combo-row-arrow {
+    color: var(--text-faint);
+    font-size: 10px;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     FORMAT TAB — phase 3 of the planner. Banlist-bounded competitive
+     plan: your primary deck + matchup grid. Header has format picker
+     and primary-deck card; body has the matchups (or a drill-in view
+     for a selected matchup).
+     ════════════════════════════════════════════════════════════════ */
+  .format-tab-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 0 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .format-picker-select {
+    height: 32px;
+    padding: 0 10px;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .format-action-btn {
+    height: 30px;
+    padding: 0 12px;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: 4px;
+    color: var(--text-faint);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .format-action-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .format-action-btn.is-primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    border-style: solid;
+  }
+  .format-action-btn.is-primary:hover { filter: brightness(0.95); }
+
+  .format-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-faint);
+    font-style: italic;
+    font-size: 13px;
+  }
+  .format-empty strong { display: block; color: var(--text); font-size: 14px; margin-bottom: 8px; font-style: normal; }
+
+  .format-primary-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .format-primary-pick {
+    display: flex; flex-direction: column; gap: 4px;
+    flex: 1;
+  }
+  .format-primary-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .format-primary-name {
+    font-size: 18px; font-weight: 600;
+    color: var(--text);
+  }
+  .format-primary-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .format-primary-select {
+    height: 30px;
+    padding: 0 10px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .format-primary-go {
+    align-self: stretch;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-faint);
+    padding: 6px 12px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .format-primary-go:hover { color: var(--accent); border-color: var(--accent); }
+
+  .format-section-title {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    font-weight: 600;
+    margin: 18px 0 10px;
+  }
+  .format-section-title .count {
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-left: 6px;
+  }
+
+  .matchup-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .matchup-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--role-engine, #95956f);
+    border-radius: 6px;
+    padding: 12px 14px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: var(--text);
+    display: flex; flex-direction: column; gap: 6px;
+    transition: border-color 0.12s, background 0.12s;
+    position: relative;
+  }
+  .matchup-card:hover { border-color: var(--accent); }
+  .matchup-card.tier-tier1 { border-left-color: var(--role-handtrap, #c45f5f); }
+  .matchup-card.tier-tier2 { border-left-color: var(--warning, #e5a93c); }
+  .matchup-card.tier-rogue { border-left-color: var(--text-faint); }
+  .matchup-card-head {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .matchup-card-tier {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-weight: 700;
+    background: rgba(0,0,0,0.08);
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+  .matchup-card.tier-tier1 .matchup-card-tier { background: rgba(196,95,95,0.16); color: var(--role-handtrap, #c45f5f); }
+  .matchup-card.tier-tier2 .matchup-card-tier { background: rgba(229,169,60,0.16); color: var(--warning, #e5a93c); }
+  .matchup-card-name {
+    font-size: 14px; font-weight: 600;
+    color: var(--text);
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .matchup-card-del {
+    width: 22px; height: 22px;
+    background: transparent;
+    color: var(--text-faint);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .matchup-card-del:hover { color: var(--warning); background: rgba(229,116,60,0.08); }
+  .matchup-card-section {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .matchup-card-section .label {
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 9px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .matchup-card-targets {
+    display: flex; flex-wrap: wrap; gap: 3px;
+    margin-top: 4px;
+  }
+  .matchup-card-target-chip {
+    background: rgba(196,95,95,0.12);
+    color: var(--role-handtrap, #c45f5f);
+    border: 1px solid rgba(196,95,95,0.3);
+    border-radius: 2px;
+    padding: 1px 5px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  /* "+ Add matchup" tile */
+  .matchup-add-tile {
+    background: transparent;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 6px;
+    padding: 24px 14px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: center;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .matchup-add-tile:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Drill view (when a matchup card is clicked) */
+  .matchup-drill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .matchup-drill-head {
+    display: flex; align-items: baseline; gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .matchup-drill-name {
+    font-size: 20px; font-weight: 600;
+    color: var(--text);
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .matchup-drill-tier-select {
+    height: 26px;
+    padding: 0 8px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .matchup-drill-back {
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .matchup-drill-back:hover { color: var(--accent); border-color: var(--accent); }
+  .matchup-drill-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .matchup-drill-grid { grid-template-columns: 1fr; }
+  }
+  .matchup-drill-field {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .matchup-drill-field-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .matchup-drill-textarea {
+    width: 100%;
+    min-height: 70px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+  }
+  .matchup-drill-textarea:focus { border-color: var(--accent); }
+  .matchup-drill-textarea::placeholder { color: var(--text-faint); font-style: italic; }
+  .matchup-drill-keytargets {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    min-height: 70px;
+    display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;
+  }
+  .matchup-drill-keytarget-chip {
+    background: rgba(196,95,95,0.12);
+    color: var(--role-handtrap, #c45f5f);
+    border: 1px solid rgba(196,95,95,0.3);
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: default;
+  }
+  .matchup-drill-empty-hint {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-style: italic;
+    padding: 4px;
+  }
+
+  /* Related combos picker — list of your combos, click checkbox to link */
+  .matchup-related-combos {
+    display: flex; flex-direction: column; gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px;
+  }
+  .matchup-related-combo {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .matchup-related-combo:hover { background: rgba(0,0,0,0.05); }
+  .matchup-related-combo input[type="checkbox"] { cursor: pointer; }
+
+  /* Per-matchup Tech & Counter list — what works and what hurts.
+     Each row is { name, side, notes } where side = "good" or "bad".
+     The side button toggles between green (good-for-us) and red (bad-for-us). */
+  .matchup-tech-list { display: flex; flex-direction: column; gap: 8px; }
+  .matchup-tech-row {
+    display: grid;
+    grid-template-columns: 80px 180px 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+  @media (max-width: 700px) {
+    .matchup-tech-row {
+      grid-template-columns: 80px 1fr auto;
+    }
+    .matchup-tech-row .matchup-tech-notes { grid-column: 1 / -1; }
+  }
+  .matchup-tech-side-btn {
+    height: 28px;
+    background: var(--bg);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .matchup-tech-side-btn.is-good {
+    background: rgba(125,168,110,0.18);
+    color: var(--role-engine, #7da86e);
+    border-color: rgba(125,168,110,0.5);
+  }
+  .matchup-tech-side-btn.is-bad {
+    background: rgba(196,95,95,0.16);
+    color: var(--role-handtrap, #c45f5f);
+    border-color: rgba(196,95,95,0.5);
+  }
+  .matchup-tech-name {
+    height: 28px;
+    padding: 0 10px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+  }
+  .matchup-tech-name:focus { border-color: var(--accent); }
+  .matchup-tech-notes {
+    height: 28px;
+    padding: 0 10px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+  }
+  .matchup-tech-notes:focus { border-color: var(--accent); }
+  .matchup-tech-del {
+    width: 28px; height: 28px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1;
+  }
+  .matchup-tech-del:hover { color: var(--warning); border-color: var(--warning); }
+  .matchup-tech-add {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: 4px;
+    color: var(--text-faint);
+    padding: 5px 12px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .matchup-tech-add:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* "vs Branded" / "vs Kewl Tune" badge on combo tiles (Phase 4 polish) */
+  .combo-card-tile-vs-badge {
+    position: absolute;
+    bottom: 6px; left: 8px;
+    z-index: 2;
+    background: rgba(196,95,95,0.85);
+    color: white;
+    border: 1px solid rgba(196,95,95,0.95);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    max-width: 60%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /* Combos workspace — left sidebar (combo list) + right content (open
      combo). Master/detail layout. Sidebar is sticky-scrollable so it
      stays in view as the user scrolls through long combo content. */
@@ -642,6 +1636,71 @@
   }
   .combos-content {
     min-width: 0;          /* lets nested grids shrink properly */
+  }
+
+  /* Sidebar search — sticky at the top of the combo sidebar. Filters
+     tiles live by title / opening hand / step card names / notes. Doesn't
+     re-render the picker (which would reload thumbnails and lose input
+     focus) — just toggles visibility on the existing tile DOM. */
+  .combo-search-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: var(--bg);
+    padding: 4px 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .combo-search-row {
+    position: relative;
+  }
+  .combo-search-input {
+    width: 100%;
+    height: 30px;
+    padding: 0 28px 0 28px;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+  .combo-search-input:focus { border-color: var(--accent); }
+  .combo-search-input::placeholder { color: var(--text-faint); }
+  .combo-search-icon {
+    position: absolute;
+    left: 8px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-faint);
+    pointer-events: none;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .combo-search-clear {
+    position: absolute;
+    right: 4px; top: 50%;
+    transform: translateY(-50%);
+    width: 22px; height: 22px;
+    display: none;
+    align-items: center; justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  .combo-search-clear:hover { color: var(--text); background: rgba(0,0,0,0.08); }
+  .combo-search-wrap.has-text .combo-search-clear { display: flex; }
+  .combo-search-empty {
+    padding: 14px 8px;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-style: italic;
+    text-align: center;
   }
 
   /* Combo picker — a vertical stack inside the sidebar (was a wide
@@ -855,6 +1914,13 @@
     color: var(--text-faint); margin-bottom: 6px;
   }
   .combo-section-body { font-size: 12px; color: var(--text); line-height: 1.55; }
+
+  .combo-mulligan-banner {
+    background: var(--bg-card); border: 1px dashed var(--border);
+    border-radius: 5px; padding: 8px 12px; margin-bottom: 12px;
+    font-size: 11px; color: var(--text-faint); font-style: italic;
+    line-height: 1.4;
+  }
 
   .step-timestamp {
     font-family: "SF Mono", Menlo, monospace;
@@ -1411,6 +2477,45 @@
     color: var(--text);
     flex: 1; min-width: 0;
   }
+  /* "(via X's effect)" annotation — same look as the bullet text but
+     hoverable: hovering surfaces X's full card text in the preview pane.
+     Subtle underline + cursor change tells the user it's interactive. */
+  .bullet-via-chip {
+    color: var(--text-dim);
+    border-bottom: 1px dotted var(--text-faint);
+    cursor: help;
+    margin-left: 4px;
+  }
+  .bullet-via-chip:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  /* Per-step "?" info chip — clicking/hovering shows the primary card's
+     effect text in the preview pane. Tiny circle so it never crowds the
+     bullet line. Sits inline at the end of the step's text. */
+  .bullet-info-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    font-size: 9px; font-weight: 700;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--text-faint);
+    border-radius: 50%;
+    margin-left: 6px;
+    cursor: help;
+    line-height: 1;
+    vertical-align: middle;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+    user-select: none;
+  }
+  .bullet-info-chip:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(0,0,0,0.08);
+  }
+  /* Core/Full view step description — same chip styling but adjusts for
+     the larger step font size. */
+  .step-narrative .bullet-info-chip,
+  .step-narrative .bullet-via-chip { vertical-align: middle; }
   /* Cluster view bullet pills — sm sizing applied by giving the wrap
      .is-sm-pills, so we just need the layout rules here. */
   .phase-bullet-pills {
@@ -2839,6 +3944,49 @@
     color: var(--text-faint);
     margin: 0 4px;
   }
+  /* Mini-grid of opening-hand thumbs — replaces the comma-separated text.
+     Up to 3 thumbnails, with a "+N" chip if the hand has more. Faster
+     visual scan: the user recognizes the cards by art instead of reading
+     the names every time. */
+  .combo-card-tile-hand-thumbs {
+    display: flex;
+    flex-direction: row;
+    gap: 3px;
+    margin-top: 4px;
+    align-items: center;
+  }
+  .combo-card-tile-hand-thumb {
+    position: relative;
+    width: 26px;
+    height: 38px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .combo-card-tile-hand-thumb img {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%) scale(1.05);
+    transform-origin: center 32%;
+  }
+  .combo-card-tile-hand-thumb-fallback {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--text-faint);
+    background: linear-gradient(135deg, var(--bg-card), var(--bg));
+  }
+  .combo-card-tile-hand-more {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-faint);
+    padding-left: 2px;
+    line-height: 1.2;
+  }
   .combo-card-tile-stale {
     font-size: 9px; font-weight: 700;
     padding: 1px 5px; border-radius: 2px;
@@ -2869,6 +4017,49 @@
     color: white;
     border-color: var(--accent);
     text-decoration: none;
+  }
+  /* Drag-to-reorder visual feedback. Source tile fades while dragged;
+     drop targets show a 2px accent line above or below to mark where
+     the source will land. The line lives on the wrapper (combo-picker-item)
+     so the tile itself stays still. The bucket header also acts as a
+     drop target — it shows an underline-style accent across its bottom. */
+  .combo-card-tile[draggable="true"] { cursor: grab; }
+  .combo-card-tile.is-dragging { opacity: 0.35; cursor: grabbing; }
+  .combo-picker-item { position: relative; }
+  .combo-picker-item.is-drop-above::before,
+  .combo-picker-item.is-drop-below::after {
+    content: "";
+    position: absolute;
+    left: 4px; right: 4px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .combo-picker-item.is-drop-above::before { top: -2px; }
+  .combo-picker-item.is-drop-below::after  { bottom: -2px; }
+  .combo-picker-group-header.is-drop-into {
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  /* Notes badge — top-left over the art crop. Tells the user at a glance
+     that this combo has annotations without having to open it. Hover
+     reveals the first ~80 chars of the note as a tooltip. */
+  .combo-card-tile-notes-badge {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    z-index: 2;
+    background: rgba(0,0,0,0.45);
+    color: rgba(255,255,255,0.92);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 3px;
+    padding: 1px 4px 1px 5px;
+    font-size: 11px;
+    line-height: 1.2;
+    pointer-events: none;
+    user-select: none;
   }
 
   /* ════════════════════════════════════════════════════════════════
@@ -3065,6 +4256,31 @@
     line-height: 30px;        /* match the pill/dropdown height for clean alignment */
     flex: 1; min-width: 0;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: text;
+    border-bottom: 1px dashed transparent;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .combo-head-compact .combo-title-text:hover {
+    border-bottom-color: var(--border);
+    color: var(--accent);
+  }
+  .combo-head-compact .combo-title-text.is-custom {
+    /* Visual cue that the title was renamed by the user (vs auto-derived). */
+    color: var(--text);
+  }
+  .combo-title-edit-input {
+    flex: 1; min-width: 0;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 30px;
+    height: 30px;
+    padding: 0 6px;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    outline: none;
   }
 
   /* Opener-size pill — clickable; click opens a popover to override.
@@ -3425,11 +4641,15 @@
     })();
   </script>
 
-  <!-- Tabs: Cards / Combos / Practice. The old "Decks" tab is gone — its
-       functionality lives in the header deck-switcher. -->
+  <!-- Tabs: Cards / Combos / Decks / Practice. Decks returns as a top-level
+       tab (May 2026 format-planner phase 1) — methodology editor, multiple
+       decklists per deck, opponent decks for matchup planning. The header
+       deck-switcher still picks the active deck. -->
   <div class="tabs">
     <button class="tab active" data-tab="cards">Cards</button>
     <button class="tab" data-tab="combos">Combos</button>
+    <button class="tab" data-tab="decks">Decks</button>
+    <button class="tab" data-tab="format">Format</button>
     <button class="tab" data-tab="practice">Practice</button>
     <span class="tab-spacer"></span>
     <button class="tab tab-icon" data-tab="settings" title="Settings">⚙</button>
@@ -3460,7 +4680,21 @@
          On narrow viewports the layout collapses to stacked. -->
     <div class="combos-workspace">
       <aside class="combos-sidebar">
+        <div class="combo-search-wrap" id="combo-search-wrap">
+          <div class="combo-search-row">
+            <span class="combo-search-icon" aria-hidden="true">⌕</span>
+            <input
+              type="search"
+              class="combo-search-input"
+              id="combo-search-input"
+              placeholder="Search combos by name, card, or note…"
+              autocomplete="off"
+              spellcheck="false" />
+            <button type="button" class="combo-search-clear" id="combo-search-clear" aria-label="Clear search" title="Clear search">×</button>
+          </div>
+        </div>
         <div class="combo-picker" id="combo-picker"></div>
+        <div class="combo-search-empty" id="combo-search-empty" hidden>No combos match — try a card name, combo title, or part of a note.</div>
       </aside>
       <main class="combos-content" id="combos-output"></main>
     </div>
@@ -3552,6 +4786,39 @@
     </div>
   </div>
 
+  <!-- DECKS TAB (re-added May 2026 as foundation for format planner)
+       Master/detail: deck list on left, selected deck on right with
+       methodology editor (collapsible sections), multi-decklist picker,
+       and combos filtered to the selected decklist. Opposing meta decks
+       (role: "matchup") live here too once added via Format planner. -->
+  <div id="tab-decks" class="hidden">
+    <div class="decks-tab-header" id="decks-tab-header"></div>
+    <div class="decks-workspace">
+      <aside class="decks-sidebar">
+        <div class="decks-sidebar-tools">
+          <div class="decks-role-filter" id="decks-role-filter">
+            <button type="button" class="decks-role-btn active" data-role="all">All</button>
+            <button type="button" class="decks-role-btn" data-role="primary">Mine</button>
+            <button type="button" class="decks-role-btn" data-role="matchup">Matchup</button>
+          </div>
+        </div>
+        <div class="decks-list" id="decks-list-panel"></div>
+        <button type="button" class="decks-add-btn" id="decks-add-btn" title="Add a new deck">+ New deck</button>
+      </aside>
+      <main class="decks-content" id="decks-content"></main>
+    </div>
+  </div>
+
+  <!-- FORMAT TAB (Phase 3 of format planner)
+       Banlist-bounded competitive plan: your primary deck + a list of
+       opponent decks (role:"matchup" Decks). Per matchup: gameplan
+       going first / second, key targets to remove, tech that shines,
+       related combos that solve it, freeform notes. -->
+  <div id="tab-format" class="hidden">
+    <div class="format-tab-header" id="format-tab-header"></div>
+    <div class="format-tab-body" id="format-tab-body"></div>
+  </div>
+
   <!-- PRACTICE TAB
        Two-column layout: shuffled hand on the left, possible-combo
        suggestions on the right. Going first/second toggle changes the
@@ -3618,7 +4885,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-04-27-favicon+sidebar-combos+1-2-only";
+const YDK_BUILD = "2026-05-17-format-planner-complete+notes-everywhere+matchup-tech-cards";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -3631,6 +4898,11 @@ function ydkStatus(msg) {
 // DOMContentLoaded → confirm script is running end-to-end
 document.addEventListener("DOMContentLoaded", () => {
   ydkStatus("script parsed, DOM ready — awaiting renderCombos()");
+  // Run schema migrations BEFORE the first deck read. Idempotent and
+  // safe to run on every load — they bail out if already done.
+  if (typeof migrateDecksToV2 === "function") migrateDecksToV2();
+  if (typeof migrateCombosToDecklists === "function") migrateCombosToDecklists();
+  if (typeof updateTabTitle === "function") updateTabTitle();
 });
 
 window.addEventListener("error", (e) => {
@@ -4501,6 +5773,53 @@ function saveSavedCombos(combos) {
   }
 }
 
+// Display title — user-set userTitle wins, then auto-detected comboName,
+// then a generic fallback. Used everywhere the user sees a combo title
+// (sidebar tiles, open-combo header, toasts) so a rename propagates.
+function getComboDisplayTitle(c) {
+  if (!c) return "Untitled";
+  const ut = (c.userTitle || "").trim();
+  if (ut) return ut;
+  return c.comboName || "Untitled";
+}
+
+// Sort key for a combo. User-set sortIndex wins; otherwise we fall back
+// to extractedAt (older combos first) so the initial order is stable
+// before the user has dragged anything.
+function getComboSortKey(c) {
+  if (c && typeof c.sortIndex === "number") return c.sortIndex;
+  if (c && c.extractedAt) {
+    const t = Date.parse(c.extractedAt);
+    if (!Number.isNaN(t)) return t;
+  }
+  return Number.MAX_SAFE_INTEGER;
+}
+
+// Re-densify sortIndex across the whole combo list after a drag. We
+// rewrite every combo's sortIndex in 100-spaced increments based on
+// its current position so future inserts have headroom and the
+// numbers stay readable. Persists in one save call.
+function persistComboOrder(orderedCombos) {
+  const all = loadSavedCombos();
+  // Build a key→combo map of the new order
+  const orderByKey = new Map();
+  orderedCombos.forEach((c, i) => {
+    orderByKey.set(comboKey(c), (i + 1) * 100);
+  });
+  // Apply the new sortIndex to every saved combo whose key appears in
+  // the new order; leave others untouched (e.g. combos for inactive
+  // decks, which weren't part of this render).
+  let changed = false;
+  for (const c of all) {
+    const k = comboKey(c);
+    if (orderByKey.has(k)) {
+      const newIdx = orderByKey.get(k);
+      if (c.sortIndex !== newIdx) { c.sortIndex = newIdx; changed = true; }
+    }
+  }
+  if (changed) saveSavedCombos(all);
+}
+
 function comboKey(c) {
   return c.replayId || c.replayUrl || c.comboName || "";
 }
@@ -4659,6 +5978,57 @@ const CORE_STEP_ACTIONS = new Set([
   "Discard", "Tribute", "Banish"
 ]);
 
+// Solo Mode mulligan detection — DuelingBook's Solo Mode lets you draw 5
+// cards and return any/all to the deck before the duel starts. Those Draws
+// and Returns appear at the head of the log even though the player hasn't
+// done anything yet, and they're noise: every solo combo would look like it
+// started with "Drew 5 cards, returned 5 cards". Mark them so the renderer
+// can hide them universally (cluster, core, compact, diagram, full).
+//
+// The pattern: leading consecutive Draws (≥2), immediately followed by
+// consecutive hand→deck Returns. Conservative — needs both Draws AND
+// Returns to qualify; a real opening hand of 5 Draws with no Return at the
+// front won't be marked.
+function markMulliganSteps(steps) {
+  if (!Array.isArray(steps) || !steps.length) return steps;
+  let drawEnd = 0;
+  while (drawEnd < steps.length) {
+    const s = steps[drawEnd];
+    if (!s || s._truncated) break;
+    if (s.action !== "Draw") break;
+    drawEnd++;
+  }
+  if (drawEnd < 2) return steps; // not enough draws to be a mulligan block
+  let returnEnd = drawEnd;
+  while (returnEnd < steps.length) {
+    const s = steps[returnEnd];
+    if (!s || s._truncated) break;
+    if (s.action !== "Return") break;
+    const d = s.detail || "";
+    const isMulliganReturn =
+      /from\s+hand/i.test(d) &&
+      /to\s+(?:top|bottom)?\s*(?:of\s+)?deck\b/i.test(d);
+    if (!isMulliganReturn) break;
+    returnEnd++;
+  }
+  if (returnEnd === drawEnd) return steps; // no return block — not a mulligan
+  for (let i = 0; i < returnEnd; i++) {
+    if (steps[i]) steps[i]._mulligan = true;
+  }
+  return steps;
+}
+
+// Was this combo's prefix a Solo Mode mulligan? Used to decide whether to
+// surface a one-line banner ("drew & returned 5 cards") in place of the
+// hidden noise so the user knows nothing was lost.
+function getMulliganSummary(steps) {
+  if (!Array.isArray(steps)) return null;
+  const drew = steps.filter(s => s && s._mulligan && s.action === "Draw").length;
+  const returned = steps.filter(s => s && s._mulligan && s.action === "Return").length;
+  if (!drew && !returned) return null;
+  return { drew, returned };
+}
+
 // "Activated X from hand to S-3" places a continuous spell on the field —
 // that's a real play. "Declared effect of X" is just effect resolution.
 function isActivatePlacement(step) {
@@ -4671,6 +6041,7 @@ function isActivatePlacement(step) {
 function filterCoreSteps(steps) {
   return (steps || []).filter(s => {
     if (!s) return false;
+    if (s._mulligan) return false; // Solo Mode noise — hide everywhere
     if (CORE_STEP_ACTIONS.has(s.action)) return true;
     if (isActivatePlacement(s)) return true;
 
@@ -4856,9 +6227,16 @@ function applyStepToState(state, step, prevStep) {
       // property and the destination is S-1 or S-5 (the Pendulum slots).
       const card = lookupCardByName(primary);
       const isPendulumByScale = card && card.scale !== undefined && /to\s+S-[15]\b/i.test(detail);
+      // "Placed X from Deck/GY/banished to S-N" is structurally never a
+      // face-down Set in DuelingBook's log. It's an effect-driven placement
+      // (equip-to-monster, continuous spell/trap activation, or floodgate
+      // placement). Mark face-up so the playmat doesn't show face-downs
+      // that should be face-up — even when we don't yet have card data.
+      const isEffectPlace = /^Placed\b/i.test(detail) &&
+                            /from\s+(?:Deck|GY|banished)\b/i.test(detail);
       state.field.push({
         card: primary,
-        isSet: !isField && !isPendulumZone && !isPendulumByScale,
+        isSet: !isField && !isPendulumZone && !isPendulumByScale && !isEffectPlace,
         isField,
         materials: [],
         zone: placedZone,
@@ -5057,7 +6435,19 @@ function describeStep(step) {
   if (action === "Flip Summon" && c0) return `Flip Summon ${c0}`;
 
   if (action === "Special Summon" && c0) {
-    if (/ onto /.test(detail) && c1) return `Xyz/Link Summon ${c0} using ${c1} as material`;
+    // "onto X" — card-on-card transition. For Xyz monsters this is an Xyz
+    // Summon (X is consumed as material). For Link/Synchro/Fusion this
+    // shouldn't happen via "onto" usually, but if the type is known we
+    // narrate it as that summon type instead of the generic "Xyz/Link".
+    if (/ onto /.test(detail) && c1) {
+      const summonedCard = lookupCardByName(c0);
+      const t = summonedCard && (summonedCard.type || "");
+      if (/xyz/i.test(t)) return `Xyz Summon ${c0} using ${c1} as material`;
+      if (/link/i.test(t)) return `Link Summon ${c0} using ${c1} as material`;
+      if (/synchro/i.test(t)) return `Synchro Summon ${c0} using ${c1} as material`;
+      if (/fusion/i.test(t)) return `Fusion Summon ${c0} using ${c1} as material`;
+      return `Special Summon ${c0} on top of ${c1} (Xyz/Link material)`;
+    }
     if (/from\s+hand/i.test(detail)) return `Special Summon ${c0} from hand`;
     if (/from\s+Deck/i.test(detail)) return `Special Summon ${c0} from Deck`;
     if (/from\s+GY/i.test(detail)) return `Special Summon ${c0} from GY`;
@@ -5084,6 +6474,45 @@ function describeStep(step) {
       return `Activate ${c0} as Pendulum scale`;
     }
     if (/Field Spell/i.test(detail)) return `Set Field Spell ${c0}`;
+
+    // "Placed X from Deck/GY/banished to S-N" — DuelingBook logs effect-driven
+    // placements as "Placed", versus a manual face-down "Set". When the card
+    // is an Equip Spell (e.g. Drastea fetching ADRASTEIA from Deck), it's
+    // attaching to a monster face-up — NOT being set face-down. Show that
+    // explicitly so the user equips it instead of mis-setting it.
+    const isEffectPlace = /^Placed\b/i.test(detail) &&
+                          /from\s+(?:Deck|GY|banished)\b/i.test(detail);
+    const sourceMatch = detail.match(/from\s+(Deck|GY|banished)\b/i);
+    const source = sourceMatch ? sourceMatch[1] : "Deck";
+
+    if (isEffectPlace && isEquipSpell(c0)) {
+      const equipInfo = inferEquipTarget(step, c0);
+      if (equipInfo && equipInfo.confident) {
+        return `Equip ${c0} to ${equipInfo.name} from ${source} (by effect)`;
+      }
+      if (equipInfo) {
+        const others = equipInfo.candidates.filter(c => c !== equipInfo.name);
+        return `Equip ${c0} from ${source} (by effect) — likely to ${equipInfo.name}` +
+               (others.length ? ` (also possible: ${others.join(", ")})` : "");
+      }
+      return `Equip ${c0} from ${source} (by effect)`;
+    }
+    // Same shape but for non-Equip continuous spells/traps placed face-up
+    // by effect (search-and-place style). Still not a face-down Set.
+    if (isEffectPlace && card && (card.frameType === "spell" || card.frameType === "trap")) {
+      return `Place ${c0} face-up from ${source} (by effect)`;
+    }
+    // STRUCTURAL FALLBACK — even if we don't yet have card data (e.g. a
+    // brand-new combo whose cards haven't been fetched from YGOPRODeck yet),
+    // "Placed X from Deck/GY/banished" is never a face-down Set. DuelingBook
+    // logs manual sets as "Set X in S-N", and effect placements as "Placed
+    // X from <source> to S-N". Narrate as a face-up placement so we're
+    // never wrong even before the card cache hydrates. Once card data
+    // arrives, the more specific Equip / Spell-Trap branches above take
+    // over on the re-render.
+    if (isEffectPlace) {
+      return `Place ${c0} face-up from ${source} (by effect)`;
+    }
     return `Set ${c0}`;
   }
   if (action === "Activate" && c0) {
@@ -5111,6 +6540,13 @@ function describeStep(step) {
   if (action === "Detach" && c0 && c1) return `Detach ${c0} (Xyz cost on ${c1})`;
   if (action === "Send to GY" && c0) {
     if (/from\s+Deck/i.test(detail)) return `Send ${c0} from Deck to GY`;
+    // Equip Spell falling off: "Sent X from S-N to GY" right after its
+    // target left the field. Narrate so the user sees it as cleanup, not
+    // a fresh discard.
+    if (isEquipSpell(c0) && /from\s+S-\d/i.test(detail)) {
+      return `Equip ${c0} sent to GY (target left the field)`;
+    }
+    if (/from\s+hand/i.test(detail)) return `Send ${c0} from hand to GY`;
     return `Send ${c0} to GY`;
   }
   if (action === "Destroy" && c0) return `Destroy ${c0}`;
@@ -5183,11 +6619,17 @@ function setActiveTab(tabName) {
   document.getElementById("tab-practice").classList.toggle("hidden", tabName !== "practice");
   const settingsEl = document.getElementById("tab-settings");
   if (settingsEl) settingsEl.classList.toggle("hidden", tabName !== "settings");
-  // Decks tab is gone — kept for backwards-compat in case any old code calls it
+  // Decks tab — phase 1 of format planner. Renders on activation so the
+  // panel always reflects the latest deck list / methodology edits.
   const decksEl = document.getElementById("tab-decks");
-  if (decksEl) decksEl.classList.add("hidden");
+  if (decksEl) decksEl.classList.toggle("hidden", tabName !== "decks");
+  // Format tab — phase 3 of format planner. Banlist-bounded matchup planning.
+  const formatEl = document.getElementById("tab-format");
+  if (formatEl) formatEl.classList.toggle("hidden", tabName !== "format");
   if (tabName === "practice" && typeof renderPracticeTab === "function") renderPracticeTab();
   if (tabName === "settings" && typeof refreshSettingsTab === "function") refreshSettingsTab();
+  if (tabName === "decks" && typeof renderDecksTab === "function") renderDecksTab();
+  if (tabName === "format" && typeof renderFormatTab === "function") renderFormatTab();
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -5394,6 +6836,8 @@ function refreshSettingsTab() {
 // ============================================================
 const DECKS_KEY = "ydk_decks";
 const ACTIVE_DECK_KEY = "ydk_active_deck_id";
+const DECKS_BACKUP_KEY = "ydk_decks_premigration_backup";  // one-time pre-format-planner snapshot
+const DECKS_SCHEMA_KEY = "ydk_decks_schema_version";       // current = 2 (format-planner shape)
 
 function loadDecks() {
   try {
@@ -5401,6 +6845,146 @@ function loadDecks() {
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr : [];
   } catch (_) { return []; }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// SCHEMA MIGRATION — single-decklist deck → multi-decklist deck
+//
+// Before: deck = { ydkContent, main, extra, side, counts, ... }
+// After:  deck = { ...legacy fields preserved..., decklists: [...],
+//                  primaryDecklistId, role, methodology, keyCards }
+//
+// Idempotent: skips decks that already have a `decklists` array. Runs
+// once on init and snapshots the pre-migration array to a one-time
+// backup so the user can recover if anything goes wrong. Legacy fields
+// (ydkContent, main, extra, side, counts) are kept on the deck, mirrored
+// from the primary decklist, so any code that reads them keeps working.
+// ════════════════════════════════════════════════════════════════════════
+function migrateDecksToV2() {
+  try {
+    const schemaVersion = parseInt(localStorage.getItem(DECKS_SCHEMA_KEY) || "1", 10);
+    if (schemaVersion >= 2) return false; // already migrated
+    const decks = loadDecks();
+    if (!decks.length) {
+      // Empty library — just stamp the schema version so we don't keep checking.
+      localStorage.setItem(DECKS_SCHEMA_KEY, "2");
+      return false;
+    }
+    // One-time backup. If the key already exists (re-migration attempt),
+    // do NOT overwrite — preserve the oldest backup.
+    if (!localStorage.getItem(DECKS_BACKUP_KEY)) {
+      try {
+        localStorage.setItem(DECKS_BACKUP_KEY, JSON.stringify(decks));
+      } catch (e) {
+        console.warn("[YDK] Pre-migration backup failed (storage full?):", e);
+        // Don't proceed if we can't back up — safer to bail and let the
+        // user see the old shape than to migrate without a safety net.
+        return false;
+      }
+    }
+    let changed = 0;
+    const now = new Date().toISOString();
+    for (const deck of decks) {
+      if (!deck) continue;
+      if (Array.isArray(deck.decklists) && deck.decklists.length) continue; // already new shape
+      const decklistId = "dl_" + (deck.deckId || "x") + "_" + Math.random().toString(36).slice(2, 6);
+      const decklist = {
+        decklistId,
+        name: "Main build",
+        ydkContent: deck.ydkContent || "",
+        counts: deck.counts || { main: 0, extra: 0, side: 0, total: 0 },
+        main: (deck.main || []).slice(),
+        extra: (deck.extra || []).slice(),
+        side: (deck.side || []).slice(),
+        notes: deck.notes || "",
+        createdAt: deck.createdAt || now,
+        updatedAt: deck.updatedAt || now,
+      };
+      deck.decklists = [decklist];
+      deck.primaryDecklistId = decklistId;
+      // Role: existing decks are the user's own decks (matchup decks come
+      // later when added via Format planner).
+      if (!deck.role) deck.role = "primary";
+      if (!deck.methodology) {
+        deck.methodology = {
+          summary: "", endboard: "", howItWins: "",
+          strengths: "", weaknesses: "", keyRatios: "",
+          techCards: [],  // [{ name, reason }]
+        };
+      }
+      if (!Array.isArray(deck.keyCards)) deck.keyCards = [];
+      changed++;
+    }
+    if (changed) {
+      saveDecks(decks);
+      console.log("[YDK] Migrated " + changed + " deck(s) to v2 (format-planner shape).");
+    }
+    localStorage.setItem(DECKS_SCHEMA_KEY, "2");
+    return true;
+  } catch (e) {
+    console.warn("[YDK] Deck migration failed:", e);
+    return false;
+  }
+}
+
+// Migrate existing saved combos to add decklistId pointing at their
+// deck's primaryDecklistId. Lets us filter combos by decklist later
+// without losing the existing deckId linkage.
+function migrateCombosToDecklists() {
+  try {
+    const raw = localStorage.getItem("ydk_saved_combos");
+    if (!raw) return false;
+    const combos = JSON.parse(raw);
+    if (!Array.isArray(combos) || !combos.length) return false;
+    const decks = loadDecks();
+    const byDeckId = new Map(decks.map(d => [d.deckId, d]));
+    let changed = 0;
+    for (const c of combos) {
+      if (!c || c.decklistId) continue;
+      const d = c.deckId ? byDeckId.get(c.deckId) : null;
+      if (d && d.primaryDecklistId) {
+        c.decklistId = d.primaryDecklistId;
+        changed++;
+      }
+    }
+    if (changed) {
+      localStorage.setItem("ydk_saved_combos", JSON.stringify(combos));
+      console.log("[YDK] Stamped " + changed + " combo(s) with decklistId.");
+    }
+    return changed > 0;
+  } catch (e) {
+    console.warn("[YDK] Combo decklistId migration failed:", e);
+    return false;
+  }
+}
+
+// Accessors — single source of truth for "which decklist is active for
+// this deck right now". Used by Cards/Combos/Practice so they all show
+// data from the same decklist. Falls back gracefully to legacy fields
+// when a deck has no decklists array yet (pre-migration safety net).
+function getDeckPrimaryDecklist(deck) {
+  if (!deck) return null;
+  if (Array.isArray(deck.decklists) && deck.decklists.length) {
+    const found = deck.decklists.find(d => d && d.decklistId === deck.primaryDecklistId);
+    if (found) return found;
+    return deck.decklists[0]; // fallback: first decklist
+  }
+  // Legacy deck — synthesize a decklist-shaped object from the deck itself.
+  return {
+    decklistId: "legacy_" + (deck.deckId || ""),
+    name: "Main build",
+    ydkContent: deck.ydkContent || "",
+    counts: deck.counts || { main: 0, extra: 0, side: 0, total: 0 },
+    main: deck.main || [],
+    extra: deck.extra || [],
+    side: deck.side || [],
+    notes: deck.notes || "",
+  };
+}
+
+function getDecklistById(deck, decklistId) {
+  if (!deck || !Array.isArray(deck.decklists)) return null;
+  return deck.decklists.find(d => d && d.decklistId === decklistId) || null;
 }
 
 // Cheap-but-stable content hash for a .ydk file. Length + 200-char prefix
@@ -5437,14 +7021,39 @@ function upsertDeckFromYdkText(text, baseName) {
     return decks[existingIdx];
   }
   const deckId = "deck_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+  const decklistId = "dl_" + deckId + "_main";
+  // New decks come into the world in the v2 shape directly — one initial
+  // "Main build" decklist that mirrors the legacy ydkContent/main/extra/side
+  // fields. Legacy fields are preserved at the deck level so existing
+  // readers keep working until they're all moved to getDeckPrimaryDecklist.
   const deck = {
     deckId,
     name: (baseName || "").replace(/\.ydk$/i, "") || "Untitled deck",
+    role: "primary",
     ydkContent: text,
     counts,
     main: sections.main.map(String),
     extra: sections.extra.map(String),
     side: sections.side.map(String),
+    decklists: [{
+      decklistId,
+      name: "Main build",
+      ydkContent: text,
+      counts: { ...counts },
+      main: sections.main.map(String),
+      extra: sections.extra.map(String),
+      side: sections.side.map(String),
+      notes: "",
+      createdAt: now,
+      updatedAt: now,
+    }],
+    primaryDecklistId: decklistId,
+    methodology: {
+      summary: "", endboard: "", howItWins: "",
+      strengths: "", weaknesses: "", keyRatios: "",
+      techCards: [],
+    },
+    keyCards: [],
     source: "manual-upload",
     notes: "",
     createdAt: now,
@@ -5466,6 +7075,2020 @@ function setActiveDeckId(id) {
     if (id) localStorage.setItem(ACTIVE_DECK_KEY, id);
     else localStorage.removeItem(ACTIVE_DECK_KEY);
   } catch (_) {}
+  updateTabTitle();
+}
+
+// Tab title reflects the active deck so multiple decoder tabs are
+// distinguishable in the browser. Called whenever the active deck or
+// its name changes (switch / rename / init / late hydration).
+function updateTabTitle() {
+  try {
+    const activeId = getActiveDeckId();
+    const decks = (typeof loadDecks === "function") ? loadDecks() : [];
+    const active = activeId ? decks.find(d => d.deckId === activeId) : null;
+    const base = "YDK Decoder";
+    document.title = active && active.name ? `${active.name} · ${base}` : base;
+  } catch (_) { /* non-fatal */ }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// DECKS TAB — phase 1 of format planner (May 2026)
+//
+// Top-level tab. Master/detail layout: deck list on the left (with role
+// filter pills), selected-deck panel on the right with methodology
+// editor, multi-decklist picker, and combos filtered to the active
+// decklist. Hosts BOTH the user's own decks (role="primary") and
+// opposing meta decks added later via Format planner (role="matchup").
+//
+// Selection state lives in module-level vars so panel survives re-renders
+// (e.g. when a deck is renamed elsewhere).
+// ════════════════════════════════════════════════════════════════════════
+let _decksTabSelectedId = null;
+let _decksTabRoleFilter = "all"; // "all" | "primary" | "matchup"
+
+function renderDecksTab() {
+  const decks = loadDecks();
+  const header = document.getElementById("decks-tab-header");
+  const list = document.getElementById("decks-list-panel");
+  const content = document.getElementById("decks-content");
+  if (!list || !content) return;
+
+  // Default selection: active deck if available, else first deck.
+  if (!_decksTabSelectedId || !decks.find(d => d.deckId === _decksTabSelectedId)) {
+    const activeId = getActiveDeckId();
+    _decksTabSelectedId = (activeId && decks.find(d => d.deckId === activeId))
+      ? activeId
+      : (decks[0] ? decks[0].deckId : null);
+  }
+
+  // Header summary
+  if (header) {
+    const primary = decks.filter(d => (d.role || "primary") === "primary").length;
+    const matchup = decks.filter(d => d.role === "matchup").length;
+    header.innerHTML =
+      `<strong>${decks.length}</strong> deck${decks.length === 1 ? "" : "s"} · ` +
+      `<strong>${primary}</strong> yours · ` +
+      `<strong>${matchup}</strong> matchup`;
+  }
+
+  // Sidebar: filtered deck list
+  list.innerHTML = "";
+  const filtered = decks.filter(d => {
+    if (_decksTabRoleFilter === "all") return true;
+    return (d.role || "primary") === _decksTabRoleFilter;
+  });
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "decks-list-empty";
+    empty.textContent = _decksTabRoleFilter === "matchup"
+      ? "No matchup decks yet — add one from Format planner (coming next phase)."
+      : "No decks. Drop a .ydk in Cards tab or click + New deck.";
+    list.appendChild(empty);
+  } else {
+    for (const deck of filtered) {
+      list.appendChild(buildDeckTile(deck));
+    }
+  }
+
+  // Role filter button states
+  document.querySelectorAll(".decks-role-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.role === _decksTabRoleFilter);
+  });
+
+  // Right panel: selected deck
+  content.innerHTML = "";
+  const selected = decks.find(d => d.deckId === _decksTabSelectedId);
+  if (!selected) {
+    const empty = document.createElement("div");
+    empty.className = "decks-content-empty";
+    empty.textContent = "Pick a deck from the left to view its details.";
+    content.appendChild(empty);
+    return;
+  }
+  content.appendChild(buildDeckPanel(selected));
+}
+
+// One tile in the sidebar deck list. Click → set selection + re-render
+// the panel. Visual cue: role stripe color + active-state border.
+function buildDeckTile(deck) {
+  const isMatchup = (deck.role || "primary") === "matchup";
+  const isActive = deck.deckId === _decksTabSelectedId;
+  const tile = document.createElement("button");
+  tile.type = "button";
+  tile.className = "deck-tile" + (isActive ? " active" : "") + (isMatchup ? " is-matchup" : "");
+  const dl = getDeckPrimaryDecklist(deck);
+  const counts = (dl && dl.counts) || deck.counts || { main: 0, extra: 0, side: 0 };
+  const dlCount = Array.isArray(deck.decklists) ? deck.decklists.length : 1;
+  const variantBadge = dlCount > 1 ? ` · ${dlCount} builds` : "";
+  tile.innerHTML =
+    `<span class="deck-tile-role-stripe"></span>` +
+    `<span class="deck-tile-body">` +
+      `<span class="deck-tile-name">${escapeHtml(deck.name || "Untitled deck")}</span>` +
+      `<span class="deck-tile-meta">` +
+        `<span class="deck-tile-role-badge">${isMatchup ? "Matchup" : "Mine"}</span>` +
+        `<span>${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s${variantBadge}</span>` +
+      `</span>` +
+    `</span>`;
+  tile.onclick = () => {
+    _decksTabSelectedId = deck.deckId;
+    renderDecksTab();
+  };
+  return tile;
+}
+
+// The right-hand panel for the selected deck. Three collapsible sections:
+// methodology, decklists, combos. All persistence goes through saveDecks
+// so the existing header switcher + Cards/Combos/Practice tabs see edits
+// the next time they read.
+function buildDeckPanel(deck) {
+  const wrap = document.createElement("div");
+
+  // ── Header: editable name + role badge + counts ──
+  const head = document.createElement("div");
+  head.className = "deck-panel-header";
+
+  const title = document.createElement("div");
+  title.className = "deck-panel-title";
+  title.textContent = deck.name || "Untitled deck";
+  title.title = "Click to rename";
+  title.addEventListener("click", () => startRenameDeckPanel(title, deck));
+  head.appendChild(title);
+
+  const role = document.createElement("span");
+  role.className = "deck-panel-role" + (deck.role === "matchup" ? " is-matchup" : "");
+  role.textContent = deck.role === "matchup" ? "Matchup deck" : "Your deck";
+  head.appendChild(role);
+
+  const dl = getDeckPrimaryDecklist(deck);
+  const counts = (dl && dl.counts) || deck.counts || { main: 0, extra: 0, side: 0 };
+  const countsEl = document.createElement("span");
+  countsEl.className = "deck-panel-counts";
+  countsEl.textContent = `${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s`;
+  head.appendChild(countsEl);
+  wrap.appendChild(head);
+
+  // ── Methodology section ──
+  wrap.appendChild(buildMethodologySection(deck));
+
+  // ── Deck notes (free-form, separate from structured methodology) ──
+  wrap.appendChild(buildDeckNotesSection(deck));
+
+  // ── Decklists section ──
+  wrap.appendChild(buildDecklistsSection(deck));
+
+  // ── Key cards (Phase 2): bucketed list with per-card stopPriority/notes ──
+  wrap.appendChild(buildKeyCardsSection(deck));
+
+  // ── Combos section (read-only summary; full work happens in Combos tab) ──
+  wrap.appendChild(buildDeckCombosSection(deck));
+
+  return wrap;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PHASE 2 — KEY CARDS
+//
+// Each deck has a `keyCards` array bucketed into six canonical categories
+// (Boss / Starter / Extender / Handtrap / Floodgate / Tech). Auto-extracted
+// from the primary decklist on demand, with manual overrides preserved.
+// Per-card annotations: `stopPriority`, `stopWith`, `notes` — used in
+// matchup planning to know "this is their main starter, hand-trap it" or
+// "this is a board breaker we have to play around".
+// ════════════════════════════════════════════════════════════════════════
+
+const KEY_CARD_BUCKETS = ["Boss", "Starter", "Extender", "Handtrap", "Floodgate", "Tech"];
+
+// Find a card by ID across all available sources (INLINE_CACHE keyed by
+// number, the persistent cache, and NAME_INDEX-by-id search). Returns
+// the card with `id` filled in, or null if no data is available yet.
+function lookupCardById(id) {
+  if (id == null) return null;
+  const sid = String(id);
+  if (typeof INLINE_CACHE !== "undefined") {
+    if (INLINE_CACHE[sid]) return { id: sid, ...INLINE_CACHE[sid] };
+    const n = Number(sid);
+    if (!Number.isNaN(n) && INLINE_CACHE[n]) return { id: sid, ...INLINE_CACHE[n] };
+  }
+  if (typeof NAME_INDEX === "object") {
+    for (const k in NAME_INDEX) {
+      const c = NAME_INDEX[k];
+      if (c && String(c.id) === sid) return c;
+    }
+  }
+  return null;
+}
+
+// Map classify()'s canonical roles + card type into the six key-card
+// buckets. Boss = Extra Deck monster (Xyz/Link/Synchro/Fusion). The other
+// buckets prefer the most specific tag in priority order.
+function classifyKeyCardCategory(card) {
+  if (!card) return "Tech";
+  const type = card.type || "";
+  if (/xyz|link|synchro|fusion/i.test(type)) return "Boss";
+  const result = (typeof classify === "function") ? classify(card) : { roles: [] };
+  const roles = result.roles || [];
+  if (roles.includes("Handtrap"))  return "Handtrap";
+  if (roles.includes("Floodgate")) return "Floodgate";
+  if (roles.includes("Starter"))   return "Starter";
+  if (roles.includes("Extender"))  return "Extender";
+  return "Tech";
+}
+
+// Extract / refresh keyCards from the deck's primary decklist. Preserves
+// user-edited entries (`auto: false`); auto entries are regenerated.
+// Names not present in the decklist but kept as manual entries (e.g.,
+// user added a future-tech card) are retained at the end of their bucket.
+function extractKeyCardsFromDeck(deck) {
+  const dl = getDeckPrimaryDecklist(deck);
+  if (!dl) return [];
+  const allIds = [].concat(dl.main || [], dl.extra || [], dl.side || []);
+  const uniqueIds = Array.from(new Set(allIds.map(String)));
+  const existing = Array.isArray(deck.keyCards) ? deck.keyCards : [];
+  const manualByName = new Map(existing.filter(kc => kc && kc.auto === false).map(kc => [kc.name, kc]));
+  // Carry over auto entries' annotations (stopPriority/stopWith/notes)
+  // so a re-extract doesn't wipe planning even on auto entries.
+  const autoAnnotationsByName = new Map(
+    existing.filter(kc => kc && kc.auto !== false)
+      .map(kc => [kc.name, { stopPriority: kc.stopPriority || "none", stopWith: kc.stopWith || "", notes: kc.notes || "" }])
+  );
+
+  const seen = new Set();
+  const out = [];
+  let priority = 0;
+  for (const id of uniqueIds) {
+    const card = lookupCardById(id);
+    if (!card || !card.name) continue;
+    if (seen.has(card.name)) continue;
+    seen.add(card.name);
+    if (manualByName.has(card.name)) {
+      out.push(manualByName.get(card.name));
+      continue;
+    }
+    const ann = autoAnnotationsByName.get(card.name) || { stopPriority: "none", stopWith: "", notes: "" };
+    out.push({
+      name: card.name,
+      cardId: id,
+      category: classifyKeyCardCategory(card),
+      stopPriority: ann.stopPriority,
+      stopWith: ann.stopWith,
+      notes: ann.notes,
+      priority: priority++,
+      auto: true,
+    });
+  }
+  // Manual entries that aren't in the deck — keep them.
+  for (const [name, kc] of manualByName) {
+    if (!seen.has(name)) {
+      out.push({ ...kc, priority: priority++ });
+    }
+  }
+  return out;
+}
+
+// Read-only count of unresolvable cards — used to surface "X cards
+// missing data, open Cards tab to hydrate cache" hint to the user.
+function countMissingDeckCardData(deck) {
+  const dl = getDeckPrimaryDecklist(deck);
+  if (!dl) return 0;
+  const allIds = [].concat(dl.main || [], dl.extra || [], dl.side || []);
+  const uniqueIds = Array.from(new Set(allIds.map(String)));
+  let missing = 0;
+  for (const id of uniqueIds) if (!lookupCardById(id)) missing++;
+  return missing;
+}
+
+// Key-cards section UI — toolbar with status + re-extract button, then
+// six-bucket grid. Click any card row to expand the inline editor.
+function buildKeyCardsSection(deck) {
+  const section = buildPanelSection("Key cards — what to protect / what to stop", "key-cards", false);
+  const body = section._body;
+  if (!Array.isArray(deck.keyCards)) deck.keyCards = [];
+
+  // ── Toolbar ──
+  const toolbar = document.createElement("div");
+  toolbar.className = "key-cards-toolbar";
+  const status = document.createElement("span");
+  status.className = "key-cards-status";
+  const missing = countMissingDeckCardData(deck);
+  const total = deck.keyCards.length;
+  status.textContent = total
+    ? `${total} card${total === 1 ? "" : "s"} bucketed` + (missing ? ` · ${missing} unresolved (open Cards tab to fetch data)` : "")
+    : missing
+      ? `${missing} card${missing === 1 ? "" : "s"} need data — open Cards tab first`
+      : `No key cards yet — click Extract to bucket the active build's cards`;
+  toolbar.appendChild(status);
+
+  const extractBtn = document.createElement("button");
+  extractBtn.type = "button";
+  extractBtn.className = "key-cards-extract";
+  extractBtn.textContent = total ? "↻ Re-extract from active build" : "Extract key cards";
+  extractBtn.title = "Re-runs classification on the active decklist. Manual overrides are preserved.";
+  extractBtn.onclick = () => {
+    deck.keyCards = extractKeyCardsFromDeck(deck);
+    persistDeck(deck);
+    renderDecksTab();
+  };
+  toolbar.appendChild(extractBtn);
+  body.appendChild(toolbar);
+
+  // ── Bucket grid ──
+  const grid = document.createElement("div");
+  grid.className = "key-cards-grid";
+  for (const cat of KEY_CARD_BUCKETS) {
+    grid.appendChild(buildKeyCardBucket(deck, cat));
+  }
+  body.appendChild(grid);
+  return section;
+}
+
+function buildKeyCardBucket(deck, category) {
+  const cards = (deck.keyCards || []).filter(kc => kc && kc.category === category);
+  cards.sort((a, b) => {
+    // High-priority "stop this" cards float to the top
+    const pa = a.stopPriority === "high" ? 0 : a.stopPriority === "medium" ? 1 : 2;
+    const pb = b.stopPriority === "high" ? 0 : b.stopPriority === "medium" ? 1 : 2;
+    if (pa !== pb) return pa - pb;
+    return (a.priority || 0) - (b.priority || 0);
+  });
+
+  const bucket = document.createElement("div");
+  bucket.className = "key-cards-bucket";
+  bucket.dataset.cat = category;
+  const header = document.createElement("div");
+  header.className = "key-cards-bucket-header";
+  header.innerHTML = `<span>${category}</span><span class="count">${cards.length}</span>`;
+  bucket.appendChild(header);
+
+  const list = document.createElement("div");
+  list.className = "key-cards-list";
+  if (!cards.length) {
+    const empty = document.createElement("div");
+    empty.style.fontSize = "10px";
+    empty.style.color = "var(--text-faint)";
+    empty.style.fontStyle = "italic";
+    empty.style.padding = "4px 4px 0";
+    empty.textContent = "—";
+    list.appendChild(empty);
+  } else {
+    cards.forEach(kc => list.appendChild(buildKeyCardRow(deck, kc)));
+  }
+  bucket.appendChild(list);
+  return bucket;
+}
+
+function buildKeyCardRow(deck, kc) {
+  const row = document.createElement("div");
+  row.className = "key-card-row";
+  if (kc.stopPriority === "high")  row.classList.add("stop-high");
+  if (kc.stopPriority === "medium") row.classList.add("stop-medium");
+  const card = lookupCardByName(kc.name);
+  if (card && card.desc) {
+    // Reuse the per-step hover-preview infra so users can read the card's
+    // full text without leaving the Decks tab.
+    attachPreviewHover(row, card);
+  }
+  row.innerHTML =
+    `<span class="key-card-row-name" title="${escapeHtml(kc.name)}">${escapeHtml(kc.name)}</span>` +
+    `<span class="key-card-row-priority-dot"></span>`;
+  // Click → expand the inline editor below this row, or collapse if open.
+  row.onclick = (e) => {
+    e.stopPropagation();
+    const next = row.nextElementSibling;
+    if (next && next.classList && next.classList.contains("key-card-editor")) {
+      next.remove();
+      return;
+    }
+    // Close any other open editor in the same bucket
+    const open = row.parentElement.querySelector(".key-card-editor");
+    if (open) open.remove();
+    row.insertAdjacentElement("afterend", buildKeyCardEditor(deck, kc));
+  };
+  return row;
+}
+
+function buildKeyCardEditor(deck, kc) {
+  const editor = document.createElement("div");
+  editor.className = "key-card-editor";
+
+  // Row 1: priority buttons
+  const r1 = document.createElement("div");
+  r1.className = "key-card-editor-row";
+  const r1l = document.createElement("span");
+  r1l.className = "key-card-editor-label";
+  r1l.textContent = "Stop priority";
+  r1.appendChild(r1l);
+  const btnGroup = document.createElement("span");
+  btnGroup.className = "key-card-priority-btn-group";
+  ["high", "medium", "none"].forEach(level => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "key-card-priority-btn " + level + (kc.stopPriority === level ? " active" : "");
+    b.textContent = level === "none" ? "Don't stop" : (level === "high" ? "Must stop" : "If able");
+    b.onclick = () => {
+      kc.stopPriority = level;
+      kc.auto = false; // user edit
+      persistDeck(deck);
+      renderDecksTab();
+    };
+    btnGroup.appendChild(b);
+  });
+  r1.appendChild(btnGroup);
+  editor.appendChild(r1);
+
+  // Row 2: stopWith select + category override
+  const r2 = document.createElement("div");
+  r2.className = "key-card-editor-row";
+  const r2l = document.createElement("span");
+  r2l.className = "key-card-editor-label";
+  r2l.textContent = "Stop with";
+  r2.appendChild(r2l);
+  const swSel = document.createElement("select");
+  swSel.className = "key-card-stopwith-select";
+  [["", "— pick one —"], ["handtrap", "Handtrap"], ["removal", "Removal"], ["negate", "Negate"], ["outboard", "Out-resource"], ["ignore", "Ignore"]].forEach(([v, label]) => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = label;
+    if ((kc.stopWith || "") === v) opt.selected = true;
+    swSel.appendChild(opt);
+  });
+  swSel.onchange = () => {
+    kc.stopWith = swSel.value;
+    kc.auto = false;
+    persistDeck(deck);
+  };
+  r2.appendChild(swSel);
+
+  const catLabel = document.createElement("span");
+  catLabel.className = "key-card-editor-label";
+  catLabel.textContent = "Category";
+  catLabel.style.marginLeft = "12px";
+  r2.appendChild(catLabel);
+  const catSel = document.createElement("select");
+  catSel.className = "key-card-cat-select";
+  KEY_CARD_BUCKETS.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    if (kc.category === c) opt.selected = true;
+    catSel.appendChild(opt);
+  });
+  catSel.onchange = () => {
+    kc.category = catSel.value;
+    kc.auto = false;
+    persistDeck(deck);
+    renderDecksTab();
+  };
+  r2.appendChild(catSel);
+  editor.appendChild(r2);
+
+  // Row 3: notes
+  const r3 = document.createElement("div");
+  r3.className = "key-card-editor-row";
+  const r3l = document.createElement("span");
+  r3l.className = "key-card-editor-label";
+  r3l.textContent = "Notes";
+  r3l.style.alignSelf = "flex-start";
+  r3l.style.marginTop = "4px";
+  r3.appendChild(r3l);
+  const notes = document.createElement("textarea");
+  notes.className = "key-card-notes-input";
+  notes.value = kc.notes || "";
+  notes.placeholder = "e.g. \"Their main starter — Ash this every time.\"";
+  notes.rows = 2;
+  notes.style.flex = "1";
+  notes.style.minWidth = "0";
+  notes.addEventListener("blur", () => {
+    if (notes.value !== (kc.notes || "")) {
+      kc.notes = notes.value;
+      kc.auto = false;
+      persistDeck(deck);
+    }
+  });
+  notes.addEventListener("keydown", (e) => e.stopPropagation());
+  r3.appendChild(notes);
+  editor.appendChild(r3);
+
+  // Actions: remove this entry entirely
+  const r4 = document.createElement("div");
+  r4.className = "key-card-editor-actions";
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "key-card-editor-del";
+  del.textContent = "Remove from key cards";
+  del.onclick = async () => {
+    const ok = await ydkConfirm({
+      icon: "🗑",
+      title: "Remove from key cards?",
+      message: `<strong>${escapeHtml(kc.name)}</strong> will no longer appear in this deck's key-card buckets. You can always re-extract to bring it back.`,
+      confirmText: "Remove",
+      danger: true,
+    });
+    if (!ok) return;
+    const i = deck.keyCards.findIndex(x => x.name === kc.name);
+    if (i >= 0) deck.keyCards.splice(i, 1);
+    persistDeck(deck);
+    renderDecksTab();
+  };
+  r4.appendChild(del);
+  editor.appendChild(r4);
+
+  return editor;
+}
+
+// Helper: collapsible section shell. Body is whatever caller appends.
+function buildPanelSection(titleText, sectionKey, defaultCollapsed) {
+  const section = document.createElement("section");
+  section.className = "deck-panel-section";
+  if (defaultCollapsed) section.classList.add("is-collapsed");
+
+  const header = document.createElement("div");
+  header.className = "deck-panel-section-header";
+  header.innerHTML =
+    `<span class="deck-panel-section-title">${escapeHtml(titleText)}</span>` +
+    `<span class="deck-panel-section-chevron">▾</span>`;
+  header.onclick = () => section.classList.toggle("is-collapsed");
+  section.appendChild(header);
+
+  const body = document.createElement("div");
+  body.className = "deck-panel-section-body";
+  section.appendChild(body);
+  section._body = body;
+  return section;
+}
+
+// Methodology editor — collapsible, autosaves on blur. Each field is a
+// textarea writing into deck.methodology[key]. Tech cards is a repeating
+// list of { name, reason } rows with add/remove.
+function buildMethodologySection(deck) {
+  const section = buildPanelSection("Methodology — how this deck plays", "methodology", false);
+  const body = section._body;
+  deck.methodology = deck.methodology || {
+    summary: "", endboard: "", howItWins: "",
+    strengths: "", weaknesses: "", keyRatios: "", techCards: [],
+  };
+
+  const fields = [
+    { key: "summary", label: "Summary", placeholder: "One paragraph: what the deck does and why it's chosen for this format.", multi: true },
+    { key: "endboard", label: "Ideal end board", placeholder: "What you're aiming for on turn 1 / 3.", multi: true },
+    { key: "howItWins", label: "How it wins", placeholder: "Lethal lines, win conditions.", multi: true },
+    { key: "strengths", label: "Strengths", placeholder: "1-card combos, multi-negate, going first/second flex…", multi: true },
+    { key: "weaknesses", label: "Weaknesses", placeholder: "Handtraps that hurt most, bricks, weak matchups.", multi: true },
+    { key: "keyRatios", label: "Key ratios", placeholder: "e.g. 3× Amalthe, 2× Drastea, 1× Elara, 3× Ash, …", multi: false },
+  ];
+
+  for (const f of fields) {
+    const fieldWrap = document.createElement("div");
+    fieldWrap.className = "methodology-field";
+    const labelEl = document.createElement("div");
+    labelEl.className = "methodology-field-label";
+    labelEl.textContent = f.label;
+    fieldWrap.appendChild(labelEl);
+    const input = document.createElement("textarea");
+    input.className = "methodology-field-input" + (f.multi ? "" : " is-single");
+    input.value = deck.methodology[f.key] || "";
+    input.placeholder = f.placeholder;
+    input.rows = f.multi ? 3 : 1;
+    input.addEventListener("blur", () => {
+      if (input.value !== (deck.methodology[f.key] || "")) {
+        deck.methodology[f.key] = input.value;
+        persistDeck(deck);
+      }
+    });
+    input.addEventListener("keydown", (e) => e.stopPropagation());
+    fieldWrap.appendChild(input);
+    body.appendChild(fieldWrap);
+  }
+
+  // Tech cards repeating list
+  const techLabel = document.createElement("div");
+  techLabel.className = "methodology-field-label";
+  techLabel.textContent = "Tech cards (and why)";
+  body.appendChild(techLabel);
+
+  const techList = document.createElement("div");
+  techList.className = "tech-cards-list";
+  const renderTechRows = () => {
+    techList.innerHTML = "";
+    (deck.methodology.techCards || []).forEach((tc, i) => {
+      const row = document.createElement("div");
+      row.className = "tech-card-row";
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "methodology-field-input is-single";
+      nameInput.value = tc.name || "";
+      nameInput.placeholder = "Card name";
+      nameInput.addEventListener("blur", () => {
+        deck.methodology.techCards[i].name = nameInput.value;
+        persistDeck(deck);
+      });
+      nameInput.addEventListener("keydown", (e) => e.stopPropagation());
+      const reasonInput = document.createElement("input");
+      reasonInput.type = "text";
+      reasonInput.className = "methodology-field-input is-single";
+      reasonInput.value = tc.reason || "";
+      reasonInput.placeholder = "Why it's in the deck for this format";
+      reasonInput.addEventListener("blur", () => {
+        deck.methodology.techCards[i].reason = reasonInput.value;
+        persistDeck(deck);
+      });
+      reasonInput.addEventListener("keydown", (e) => e.stopPropagation());
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "tech-card-del";
+      del.textContent = "×";
+      del.title = "Remove this tech card";
+      del.onclick = () => {
+        deck.methodology.techCards.splice(i, 1);
+        persistDeck(deck);
+        renderTechRows();
+      };
+      row.appendChild(nameInput);
+      row.appendChild(reasonInput);
+      row.appendChild(del);
+      techList.appendChild(row);
+    });
+  };
+  renderTechRows();
+  body.appendChild(techList);
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "tech-cards-add";
+  addBtn.textContent = "+ Add tech card";
+  addBtn.onclick = () => {
+    deck.methodology.techCards = deck.methodology.techCards || [];
+    deck.methodology.techCards.push({ name: "", reason: "" });
+    persistDeck(deck);
+    renderTechRows();
+  };
+  body.appendChild(addBtn);
+
+  return section;
+}
+
+// Free-form deck notes — sits below the structured methodology editor.
+// Use for thoughts that don't fit a labeled methodology slot: build
+// rationale, sideboard plans, "this version is for tournaments / locals",
+// matchup-agnostic scouting notes, etc.
+function buildDeckNotesSection(deck) {
+  const section = buildPanelSection("Notes — anything else about this deck", "deck-notes", true);
+  const body = section._body;
+  const fieldWrap = document.createElement("div");
+  fieldWrap.className = "methodology-field";
+  const label = document.createElement("div");
+  label.className = "methodology-field-label";
+  label.textContent = "Free-form notes";
+  fieldWrap.appendChild(label);
+  const ta = document.createElement("textarea");
+  ta.className = "methodology-field-input";
+  ta.value = deck.notes || "";
+  ta.placeholder = "Anything that doesn't fit the methodology slots — build rationale, side-deck plans, things to remember.";
+  ta.rows = 4;
+  ta.addEventListener("blur", () => {
+    if (ta.value !== (deck.notes || "")) {
+      deck.notes = ta.value;
+      persistDeck(deck);
+    }
+  });
+  ta.addEventListener("keydown", (e) => e.stopPropagation());
+  fieldWrap.appendChild(ta);
+  body.appendChild(fieldWrap);
+  return section;
+}
+
+// Decklists section — list every build, mark the active one, allow
+// rename / set-active / delete. Adding a new build re-uses the same
+// .ydk parser the Cards-tab drop zone uses.
+function buildDecklistsSection(deck) {
+  const section = buildPanelSection("Decklists — variants of this deck", "decklists", false);
+  const body = section._body;
+  const grid = document.createElement("div");
+  grid.className = "decklists-grid";
+
+  const decklists = Array.isArray(deck.decklists) ? deck.decklists : [];
+  for (const dl of decklists) {
+    const isActive = dl.decklistId === deck.primaryDecklistId;
+    const row = document.createElement("div");
+    row.className = "decklist-row" + (isActive ? " is-active" : "");
+    const nameEl = document.createElement("span");
+    nameEl.className = "decklist-row-name";
+    nameEl.textContent = dl.name || "Untitled build";
+    nameEl.title = "Click to rename";
+    nameEl.addEventListener("click", () => startRenameDecklist(nameEl, deck, dl));
+    row.appendChild(nameEl);
+
+    const counts = dl.counts || { main: 0, extra: 0, side: 0 };
+    const countsEl = document.createElement("span");
+    countsEl.className = "decklist-row-counts";
+    countsEl.textContent = `${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s`;
+    row.appendChild(countsEl);
+
+    const actions = document.createElement("span");
+    actions.className = "decklist-row-actions";
+
+    if (isActive) {
+      const marker = document.createElement("button");
+      marker.type = "button";
+      marker.className = "decklist-row-action is-active-marker";
+      marker.textContent = "●";
+      marker.title = "Active build";
+      actions.appendChild(marker);
+    } else {
+      const setActive = document.createElement("button");
+      setActive.type = "button";
+      setActive.className = "decklist-row-action";
+      setActive.textContent = "○";
+      setActive.title = "Set as active build";
+      setActive.onclick = () => {
+        deck.primaryDecklistId = dl.decklistId;
+        // Mirror to legacy deck-level fields so other tabs reading the
+        // legacy shape see the new active build.
+        deck.ydkContent = dl.ydkContent;
+        deck.counts = dl.counts;
+        deck.main = dl.main;
+        deck.extra = dl.extra;
+        deck.side = dl.side;
+        persistDeck(deck);
+        renderDecksTab();
+      };
+      actions.appendChild(setActive);
+    }
+
+    const download = document.createElement("button");
+    download.type = "button";
+    download.className = "decklist-row-action";
+    download.textContent = "↓";
+    download.title = "Download this build as .ydk";
+    download.onclick = () => downloadDecklist(deck, dl);
+    actions.appendChild(download);
+
+    if (decklists.length > 1) {
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "decklist-row-action";
+      del.textContent = "×";
+      del.title = "Delete this build";
+      del.onclick = async () => {
+        const ok = await ydkConfirm({
+          icon: "🗑",
+          title: `Delete build "${dl.name || "Untitled"}"?`,
+          message: `This build will be removed from <strong>${escapeHtml(deck.name)}</strong>. The deck's other builds and combos stay.`,
+          confirmText: "Delete build",
+          danger: true,
+        });
+        if (!ok) return;
+        const i = deck.decklists.findIndex(x => x.decklistId === dl.decklistId);
+        if (i >= 0) deck.decklists.splice(i, 1);
+        if (deck.primaryDecklistId === dl.decklistId) {
+          const fallback = deck.decklists[0];
+          deck.primaryDecklistId = fallback.decklistId;
+          deck.ydkContent = fallback.ydkContent;
+          deck.counts = fallback.counts;
+          deck.main = fallback.main;
+          deck.extra = fallback.extra;
+          deck.side = fallback.side;
+        }
+        persistDeck(deck);
+        renderDecksTab();
+      };
+      actions.appendChild(del);
+    }
+
+    row.appendChild(actions);
+    grid.appendChild(row);
+
+    // Per-build notes — small textarea immediately below the row. Use
+    // for "this version cuts Ash for Mulcharmy" / "tournament build only"
+    // type build-specific reminders.
+    const notesTa = document.createElement("textarea");
+    notesTa.className = "methodology-field-input";
+    notesTa.style.fontSize = "11px";
+    notesTa.style.minHeight = "auto";
+    notesTa.style.padding = "5px 8px";
+    notesTa.style.marginTop = "-2px";
+    notesTa.value = dl.notes || "";
+    notesTa.placeholder = `Notes about this build (cuts, swaps, when to use it)…`;
+    notesTa.rows = 2;
+    notesTa.addEventListener("blur", () => {
+      if (notesTa.value !== (dl.notes || "")) {
+        dl.notes = notesTa.value;
+        persistDeck(deck);
+      }
+    });
+    notesTa.addEventListener("keydown", (e) => e.stopPropagation());
+    grid.appendChild(notesTa);
+  }
+  body.appendChild(grid);
+
+  // + Add build — paste .ydk in a textarea, parse on submit.
+  const addWrap = document.createElement("div");
+  addWrap.style.display = "flex";
+  addWrap.style.flexDirection = "column";
+  addWrap.style.gap = "6px";
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "tech-cards-add";
+  addBtn.textContent = "+ Add a new build";
+  let isExpanded = false;
+  let paster = null;
+  let saveBtn = null;
+  addBtn.onclick = () => {
+    if (isExpanded) {
+      addWrap.removeChild(paster);
+      addWrap.removeChild(saveBtn);
+      addBtn.textContent = "+ Add a new build";
+      isExpanded = false;
+      return;
+    }
+    paster = document.createElement("textarea");
+    paster.className = "methodology-field-input";
+    paster.placeholder = "Paste a .ydk file's contents here (e.g. #main\\n14558127\\n…). Each new build becomes its own variant.";
+    paster.rows = 5;
+    paster.addEventListener("keydown", (e) => e.stopPropagation());
+    saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "tech-cards-add";
+    saveBtn.textContent = "Save build";
+    saveBtn.onclick = () => addDecklistFromYdkText(deck, paster.value || "");
+    addWrap.appendChild(paster);
+    addWrap.appendChild(saveBtn);
+    addBtn.textContent = "Cancel";
+    isExpanded = true;
+    paster.focus();
+  };
+  addWrap.appendChild(addBtn);
+  body.appendChild(addWrap);
+
+  return section;
+}
+
+// Add a new decklist (build) to an existing deck. Reuses parseYdk so
+// the same validation/dedup logic as Cards-tab drops applies.
+function addDecklistFromYdkText(deck, text) {
+  const sections = parseYdk(text || "");
+  const total = sections.main.length + sections.extra.length + sections.side.length;
+  if (!total) {
+    ydkAlert({ title: "Couldn't parse .ydk", message: "The text didn't contain any card IDs under #main / !side / #extra. Paste the full file contents." });
+    return;
+  }
+  const now = new Date().toISOString();
+  const decklistId = "dl_" + deck.deckId + "_" + Math.random().toString(36).slice(2, 7);
+  const newDl = {
+    decklistId,
+    name: "Build " + ((deck.decklists || []).length + 1),
+    ydkContent: text,
+    counts: { main: sections.main.length, extra: sections.extra.length, side: sections.side.length, total },
+    main: sections.main.map(String),
+    extra: sections.extra.map(String),
+    side: sections.side.map(String),
+    notes: "",
+    createdAt: now,
+    updatedAt: now,
+  };
+  deck.decklists = deck.decklists || [];
+  deck.decklists.push(newDl);
+  persistDeck(deck);
+  renderDecksTab();
+}
+
+function downloadDecklist(deck, dl) {
+  const blob = new Blob([dl.ydkContent || ""], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const safeName = (deck.name || "deck").replace(/[^a-z0-9_\-]+/gi, "_");
+  const safeBuild = (dl.name || "build").replace(/[^a-z0-9_\-]+/gi, "_");
+  a.download = `${safeName}_${safeBuild}.ydk`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Read-only summary of combos linked to the deck's active decklist.
+// Clicking a row jumps to the Combos tab focused on that combo.
+function buildDeckCombosSection(deck) {
+  const section = buildPanelSection("Combos for the active build", "combos", false);
+  const body = section._body;
+  const all = loadSavedCombos();
+  const activeDl = deck.primaryDecklistId;
+  // Show combos linked to this deck. Prefer decklistId match when set,
+  // else fall back to deckId match so legacy combos still appear.
+  const combos = all.filter(c => {
+    if (!c) return false;
+    if (c.deckId !== deck.deckId) return false;
+    if (c.decklistId && activeDl) return c.decklistId === activeDl;
+    return true;
+  });
+
+  if (!combos.length) {
+    const empty = document.createElement("div");
+    empty.style.fontSize = "12px";
+    empty.style.color = "var(--text-faint)";
+    empty.style.fontStyle = "italic";
+    empty.textContent = "No combos yet for this build. Extract one with the Chrome extension on a DuelingBook replay.";
+    body.appendChild(empty);
+    return section;
+  }
+
+  const list = document.createElement("div");
+  list.className = "deck-combos-mini";
+  combos.forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "deck-combo-row";
+    row.innerHTML =
+      `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(getComboDisplayTitle(c))}</span>` +
+      `<span class="deck-combo-row-arrow">↗</span>`;
+    row.title = "Open in Combos tab";
+    row.onclick = () => {
+      // Look up the combo fresh at click time by stable key — the saved
+      // array could have been re-ordered or mutated between render + click.
+      setActiveTab("combos");
+      setTimeout(() => {
+        const fresh = loadSavedCombos();
+        const idx = fresh.findIndex(x => comboKey(x) === comboKey(c));
+        if (idx >= 0 && typeof showSavedCombo === "function") {
+          showSavedCombo(idx, null);
+        }
+      }, 50);
+    };
+    list.appendChild(row);
+  });
+  body.appendChild(list);
+  return section;
+}
+
+// Inline rename for the deck panel title. Same pattern as combo-title
+// rename: swap to input, commit on Enter/blur, discard on Escape.
+function startRenameDeckPanel(titleEl, deck) {
+  if (titleEl.querySelector("input")) return;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "combo-title-edit-input";
+  input.value = deck.name || "";
+  input.maxLength = 80;
+  titleEl.textContent = "";
+  titleEl.appendChild(input);
+  input.focus();
+  input.select();
+  let committed = false;
+  const commit = (save) => {
+    if (committed) return;
+    committed = true;
+    const newName = (input.value || "").trim();
+    if (save && newName && newName !== deck.name) {
+      deck.name = newName;
+      persistDeck(deck);
+      if (deck.deckId === getActiveDeckId()) updateTabTitle();
+    }
+    renderDecksTab();
+  };
+  input.addEventListener("blur", () => commit(true));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    else if (e.key === "Escape") { e.preventDefault(); commit(false); }
+    else e.stopPropagation();
+  });
+}
+
+// Inline rename for a decklist row's name.
+function startRenameDecklist(nameEl, deck, dl) {
+  if (nameEl.querySelector("input")) return;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "combo-title-edit-input";
+  input.value = dl.name || "";
+  input.maxLength = 60;
+  nameEl.textContent = "";
+  nameEl.appendChild(input);
+  input.focus();
+  input.select();
+  let committed = false;
+  const commit = (save) => {
+    if (committed) return;
+    committed = true;
+    const newName = (input.value || "").trim();
+    if (save && newName && newName !== dl.name) {
+      dl.name = newName;
+      persistDeck(deck);
+    }
+    renderDecksTab();
+  };
+  input.addEventListener("blur", () => commit(true));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    else if (e.key === "Escape") { e.preventDefault(); commit(false); }
+    else e.stopPropagation();
+  });
+}
+
+// Persist a single deck back to localStorage. Saves the whole decks
+// array (the storage key holds an array) — single-deck mutation here
+// is fine because we always read fresh before writing.
+function persistDeck(deck) {
+  const all = loadDecks();
+  const idx = all.findIndex(d => d.deckId === deck.deckId);
+  if (idx >= 0) {
+    deck.updatedAt = new Date().toISOString();
+    all[idx] = deck;
+    saveDecks(all);
+  }
+}
+
+// Wire the sidebar role filter + "+ New deck" once on first render.
+(function wireDecksTabOnce() {
+  document.addEventListener("DOMContentLoaded", () => {
+    const filter = document.getElementById("decks-role-filter");
+    if (filter) {
+      filter.addEventListener("click", (e) => {
+        const btn = e.target.closest(".decks-role-btn");
+        if (!btn) return;
+        _decksTabRoleFilter = btn.dataset.role || "all";
+        renderDecksTab();
+      });
+    }
+    const addBtn = document.getElementById("decks-add-btn");
+    if (addBtn) {
+      addBtn.addEventListener("click", () => {
+        // Reuse the existing import-flow: simulate the Cards-tab drop
+        // zone by opening a hidden file input.
+        const f = document.createElement("input");
+        f.type = "file";
+        f.accept = ".ydk,text/plain";
+        f.onchange = () => {
+          const file = f.files && f.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const deck = upsertDeckFromYdkText(String(reader.result || ""), file.name);
+            if (deck) {
+              _decksTabSelectedId = deck.deckId;
+              renderDecksTab();
+            }
+          };
+          reader.readAsText(file);
+        };
+        f.click();
+      });
+    }
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// FORMAT TAB — phase 3 of format planner (May 2026)
+//
+// Top-level tab. A Format is a banlist-bounded plan:
+//   - one primary Deck (yours) by reference
+//   - N matchups, each referencing an opposing Deck (role:"matchup")
+//   - per-matchup strategy notes (gameplan first/second, key targets,
+//     tech that shines, related combos that solve it, freeform notes)
+//
+// Decks are top-level entities — referenced, not copied. Update Branded
+// once → every format that references it sees the update. New format
+// clones the previous format's matchup list so notes are reusable across
+// banlists.
+// ════════════════════════════════════════════════════════════════════════
+
+const FORMATS_KEY = "ydk_formats";
+const ACTIVE_FORMAT_KEY = "ydk_active_format_id";
+
+function loadFormats() {
+  try {
+    const raw = localStorage.getItem(FORMATS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (_) { return []; }
+}
+function saveFormats(arr) {
+  try { localStorage.setItem(FORMATS_KEY, JSON.stringify(arr)); } catch (_) {}
+}
+function getActiveFormatId() {
+  try { return localStorage.getItem(ACTIVE_FORMAT_KEY) || null; } catch (_) { return null; }
+}
+function setActiveFormatId(id) {
+  try {
+    if (id) localStorage.setItem(ACTIVE_FORMAT_KEY, id);
+    else localStorage.removeItem(ACTIVE_FORMAT_KEY);
+  } catch (_) {}
+}
+
+function getActiveFormat() {
+  const all = loadFormats();
+  const id = getActiveFormatId();
+  if (id) {
+    const found = all.find(f => f.formatId === id);
+    if (found) return found;
+  }
+  return all[0] || null;
+}
+
+function makeFormat(name, opts) {
+  const now = new Date().toISOString();
+  return {
+    formatId: "fmt_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+    name: name || "New format",
+    startDate: (opts && opts.startDate) || now.slice(0, 10),
+    endDate: null,
+    primaryDeckId: (opts && opts.primaryDeckId) || null,
+    matchups: (opts && opts.matchups) || [],
+    notes: "",
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function makeMatchup(opponentDeckId) {
+  return {
+    matchupId: "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 5),
+    opponentDeckId,
+    tier: "tier1",
+    howTheyWin: "",
+    gameplanFirst: "",
+    gameplanSecond: "",
+    keyTargets: [],             // populated from opponent's keyCards (stop-priority)
+    techCardsThatShine: [],     // legacy slot — kept for back-compat
+    counterCards: [],            // [{ name, side: "good"|"bad", notes }] — Phase 4
+    relatedComboIds: [],         // combos in primary deck that solve this
+    freeformNotes: "",
+  };
+}
+
+// Sync keyTargets from the opponent deck's keyCards (high/medium stopPriority).
+// Called when rendering a matchup so the chips reflect the latest annotations.
+function syncMatchupKeyTargets(matchup, opponentDeck) {
+  if (!opponentDeck || !Array.isArray(opponentDeck.keyCards)) {
+    matchup.keyTargets = [];
+    return;
+  }
+  matchup.keyTargets = opponentDeck.keyCards
+    .filter(kc => kc && (kc.stopPriority === "high" || kc.stopPriority === "medium"))
+    .sort((a, b) => (a.stopPriority === "high" ? 0 : 1) - (b.stopPriority === "high" ? 0 : 1))
+    .map(kc => kc.name);
+}
+
+function persistFormat(format) {
+  const all = loadFormats();
+  const idx = all.findIndex(f => f.formatId === format.formatId);
+  format.updatedAt = new Date().toISOString();
+  if (idx >= 0) all[idx] = format;
+  else all.push(format);
+  saveFormats(all);
+}
+
+// Module-level selection state for the Format tab
+let _formatActiveDrillId = null; // matchupId of currently-drilled matchup
+
+// Returns { short, title } for the "vs Opponent" badge on a combo tile,
+// or null if this combo isn't linked from any matchup in the active
+// format. The short label is the first matchup deck's name (truncated);
+// the title (tooltip) lists every matchup it solves.
+function getComboVsBadge(combo) {
+  if (!combo) return null;
+  const fmt = getActiveFormat();
+  if (!fmt || !Array.isArray(fmt.matchups) || !fmt.matchups.length) return null;
+  const key = comboKey(combo);
+  const linkedMatchups = fmt.matchups.filter(m => Array.isArray(m.relatedComboIds) && m.relatedComboIds.includes(key));
+  if (!linkedMatchups.length) return null;
+  const decks = loadDecks();
+  const names = linkedMatchups
+    .map(m => decks.find(d => d.deckId === m.opponentDeckId))
+    .filter(Boolean)
+    .map(d => d.name);
+  if (!names.length) return null;
+  const first = names[0];
+  const short = first.length > 14 ? first.slice(0, 13) + "…" : first;
+  const title = names.length === 1
+    ? `Solves: ${names[0]}`
+    : `Solves: ${names.join(", ")}`;
+  return { short, title };
+}
+
+// Main render entrypoint — called by setActiveTab("format")
+function renderFormatTab() {
+  const header = document.getElementById("format-tab-header");
+  const body = document.getElementById("format-tab-body");
+  if (!header || !body) return;
+  const formats = loadFormats();
+  const decks = loadDecks();
+  const primaryDecks = decks.filter(d => (d.role || "primary") === "primary");
+
+  // ── Empty state: no formats yet, prompt to create the first ──
+  if (!formats.length) {
+    header.innerHTML = "";
+    body.innerHTML = "";
+    const empty = document.createElement("div");
+    empty.className = "format-empty";
+    empty.innerHTML =
+      `<strong>No format planned yet.</strong>` +
+      `Plan a format to map your deck against the meta. Each format groups:<br>` +
+      `your primary deck · matchup decks · per-matchup gameplans · related combos that solve each matchup.`;
+    const startBtn = document.createElement("button");
+    startBtn.type = "button";
+    startBtn.className = "format-action-btn is-primary";
+    startBtn.style.marginTop = "16px";
+    startBtn.textContent = "+ Create your first format";
+    startBtn.onclick = () => createFormatFlow();
+    empty.appendChild(startBtn);
+    body.appendChild(empty);
+    return;
+  }
+
+  // ── Header: format picker + actions ──
+  header.innerHTML = "";
+  const activeFormat = getActiveFormat();
+  const picker = document.createElement("select");
+  picker.className = "format-picker-select";
+  formats.forEach(f => {
+    const opt = document.createElement("option");
+    opt.value = f.formatId;
+    opt.textContent = f.name + (f.endDate ? "" : " (current)");
+    if (activeFormat && f.formatId === activeFormat.formatId) opt.selected = true;
+    picker.appendChild(opt);
+  });
+  picker.onchange = () => {
+    setActiveFormatId(picker.value);
+    _formatActiveDrillId = null;
+    renderFormatTab();
+  };
+  header.appendChild(picker);
+
+  const newBtn = document.createElement("button");
+  newBtn.type = "button";
+  newBtn.className = "format-action-btn";
+  newBtn.textContent = "+ New format (clone matchups)";
+  newBtn.title = "Create a new format starting from the current format's matchup list. Useful when a banlist drops.";
+  newBtn.onclick = () => createFormatFlow(activeFormat);
+  header.appendChild(newBtn);
+
+  const renameBtn = document.createElement("button");
+  renameBtn.type = "button";
+  renameBtn.className = "format-action-btn";
+  renameBtn.textContent = "✎ Rename";
+  renameBtn.title = "Rename this format";
+  renameBtn.onclick = async () => {
+    const newName = await ydkPrompt({ title: "Rename format", message: "New name:", value: activeFormat.name });
+    if (newName == null) return;
+    activeFormat.name = (newName || "").trim() || activeFormat.name;
+    persistFormat(activeFormat);
+    renderFormatTab();
+  };
+  header.appendChild(renameBtn);
+
+  if (formats.length > 1) {
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "format-action-btn";
+    delBtn.textContent = "× Delete";
+    delBtn.title = "Delete this format (matchup decks are kept)";
+    delBtn.onclick = async () => {
+      const ok = await ydkConfirm({
+        icon: "🗑",
+        title: `Delete format "${activeFormat.name}"?`,
+        message: `The matchup decks and notes <strong>within other formats</strong> are unaffected. Only this format's plan and its matchup gameplans are removed.`,
+        confirmText: "Delete format",
+        danger: true,
+      });
+      if (!ok) return;
+      const all = loadFormats().filter(f => f.formatId !== activeFormat.formatId);
+      saveFormats(all);
+      setActiveFormatId(all[0] ? all[0].formatId : null);
+      _formatActiveDrillId = null;
+      renderFormatTab();
+    };
+    header.appendChild(delBtn);
+  }
+
+  // ── Body: primary-deck section + drill view OR matchup grid ──
+  body.innerHTML = "";
+  body.appendChild(buildFormatPrimaryDeckSection(activeFormat, primaryDecks));
+
+  if (_formatActiveDrillId) {
+    const m = (activeFormat.matchups || []).find(x => x.matchupId === _formatActiveDrillId);
+    if (m) {
+      body.appendChild(buildMatchupDrill(activeFormat, m));
+      return;
+    }
+    _formatActiveDrillId = null;
+  }
+
+  // ── Format-level notes — meta context that doesn't fit a specific matchup ──
+  body.appendChild(buildFormatNotesSection(activeFormat));
+
+  // Matchup grid
+  const matchupsTitle = document.createElement("div");
+  matchupsTitle.className = "format-section-title";
+  const matchupCount = (activeFormat.matchups || []).length;
+  matchupsTitle.innerHTML =
+    `<span>Matchups <span class="count">(${matchupCount})</span></span>`;
+  body.appendChild(matchupsTitle);
+
+  const grid = document.createElement("div");
+  grid.className = "matchup-grid";
+  (activeFormat.matchups || []).forEach(m => {
+    grid.appendChild(buildMatchupCard(activeFormat, m));
+  });
+  // + Add matchup tile (always at the end)
+  const addTile = document.createElement("button");
+  addTile.type = "button";
+  addTile.className = "matchup-add-tile";
+  addTile.innerHTML = "+ Add matchup<br><span style=\"font-size:10px;\">(import opponent .ydk or pick existing)</span>";
+  addTile.onclick = () => addMatchupFlow(activeFormat);
+  grid.appendChild(addTile);
+  body.appendChild(grid);
+}
+
+// Lightweight prompt — uses ydkConfirm/ydkAlert primitives if a richer
+// prompt isn't available. Returns the entered string or null on cancel.
+async function ydkPrompt({ title, message, value }) {
+  // Build a small modal-ish input using browser prompt as fallback.
+  // (We could extend ydkConfirm to support input, but prompt() is fine for
+  // names — non-destructive, low-friction.)
+  const result = window.prompt(message || "Enter value:", value || "");
+  return result;
+}
+
+// Format-level notes — meta context that doesn't fit a specific matchup.
+// Sits between the primary-deck section and the matchup grid. Use for
+// banlist-wide thoughts, side-deck plans, meta predictions.
+function buildFormatNotesSection(format) {
+  const wrap = document.createElement("div");
+  wrap.style.marginBottom = "18px";
+  const title = document.createElement("div");
+  title.className = "format-section-title";
+  title.innerHTML = `<span>Format notes <span class="count">(banlist-wide context)</span></span>`;
+  wrap.appendChild(title);
+  const ta = document.createElement("textarea");
+  ta.className = "matchup-drill-textarea";
+  ta.value = format.notes || "";
+  ta.placeholder = "Format-wide context: what defines this meta, top decks to expect, side-deck plans, format predictions.";
+  ta.rows = 3;
+  ta.addEventListener("blur", () => {
+    if (ta.value !== (format.notes || "")) {
+      format.notes = ta.value;
+      persistFormat(format);
+    }
+  });
+  ta.addEventListener("keydown", (e) => e.stopPropagation());
+  wrap.appendChild(ta);
+  return wrap;
+}
+
+// Primary-deck section in the Format header — picks which of your decks
+// is the deck you're playing this format, with a quick link to its Decks
+// tab panel for methodology / decklists editing.
+function buildFormatPrimaryDeckSection(format, primaryDecks) {
+  const wrap = document.createElement("div");
+  wrap.className = "format-primary-section";
+
+  const pick = document.createElement("div");
+  pick.className = "format-primary-pick";
+  const label = document.createElement("div");
+  label.className = "format-primary-label";
+  label.textContent = "Your deck for this format";
+  pick.appendChild(label);
+
+  const current = primaryDecks.find(d => d.deckId === format.primaryDeckId);
+  if (current) {
+    const name = document.createElement("div");
+    name.className = "format-primary-name";
+    name.textContent = current.name;
+    pick.appendChild(name);
+    const dl = getDeckPrimaryDecklist(current);
+    const c = (dl && dl.counts) || current.counts || { main: 0, extra: 0, side: 0 };
+    const meta = document.createElement("div");
+    meta.className = "format-primary-meta";
+    const allCombos = loadSavedCombos().filter(co => co.deckId === current.deckId);
+    meta.textContent = `${c.main || 0}m · ${c.extra || 0}e · ${c.side || 0}s · ${allCombos.length} combo${allCombos.length === 1 ? "" : "s"}`;
+    pick.appendChild(meta);
+  } else {
+    const hint = document.createElement("div");
+    hint.className = "format-primary-meta";
+    hint.style.fontStyle = "italic";
+    hint.textContent = primaryDecks.length
+      ? "Pick which of your decks you're playing this format ↓"
+      : "No decks marked as yours yet. Import a .ydk from the Decks tab first.";
+    pick.appendChild(hint);
+  }
+  wrap.appendChild(pick);
+
+  if (primaryDecks.length) {
+    const sel = document.createElement("select");
+    sel.className = "format-primary-select";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "— pick a deck —";
+    sel.appendChild(blank);
+    primaryDecks.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.deckId;
+      opt.textContent = d.name;
+      if (d.deckId === format.primaryDeckId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => {
+      format.primaryDeckId = sel.value || null;
+      persistFormat(format);
+      renderFormatTab();
+    };
+    wrap.appendChild(sel);
+  }
+
+  if (current) {
+    const goBtn = document.createElement("button");
+    goBtn.type = "button";
+    goBtn.className = "format-primary-go";
+    goBtn.textContent = "Edit in Decks ↗";
+    goBtn.onclick = () => {
+      _decksTabSelectedId = current.deckId;
+      _decksTabRoleFilter = "all";
+      setActiveTab("decks");
+    };
+    wrap.appendChild(goBtn);
+  }
+  return wrap;
+}
+
+// One matchup tile in the grid. Click → open drill view.
+function buildMatchupCard(format, matchup) {
+  const decks = loadDecks();
+  const opp = decks.find(d => d.deckId === matchup.opponentDeckId);
+  // Refresh keyTargets from opponent's current keyCards
+  syncMatchupKeyTargets(matchup, opp);
+
+  // Use <div role="button"> instead of <button> because we contain a
+  // nested <button> (the × delete). Buttons-in-buttons is invalid HTML
+  // and breaks focus / click handling in some browsers.
+  const card = document.createElement("div");
+  card.setAttribute("role", "button");
+  card.tabIndex = 0;
+  card.className = "matchup-card tier-" + (matchup.tier || "tier1");
+
+  const head = document.createElement("div");
+  head.className = "matchup-card-head";
+  const tier = document.createElement("span");
+  tier.className = "matchup-card-tier";
+  tier.textContent = matchup.tier || "tier1";
+  head.appendChild(tier);
+  const name = document.createElement("span");
+  name.className = "matchup-card-name";
+  name.textContent = opp ? opp.name : "(opponent deck missing)";
+  head.appendChild(name);
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "matchup-card-del";
+  del.textContent = "×";
+  del.title = "Remove matchup (opponent deck is kept)";
+  del.onclick = async (e) => {
+    e.stopPropagation();
+    const ok = await ydkConfirm({
+      icon: "🗑",
+      title: `Remove "${opp ? opp.name : "matchup"}" from this format?`,
+      message: `The opponent's deck stays in the Decks tab and its notes stay attached to it. Only this format's gameplan against them is removed.`,
+      confirmText: "Remove",
+      danger: true,
+    });
+    if (!ok) return;
+    format.matchups = format.matchups.filter(m => m.matchupId !== matchup.matchupId);
+    persistFormat(format);
+    renderFormatTab();
+  };
+  head.appendChild(del);
+  card.appendChild(head);
+
+  // How they win (preview)
+  if ((matchup.howTheyWin || "").trim()) {
+    const tw = document.createElement("div");
+    tw.className = "matchup-card-section";
+    tw.innerHTML = `<span class="label">They win by</span>${escapeHtml(matchup.howTheyWin).slice(0, 140)}${matchup.howTheyWin.length > 140 ? "…" : ""}`;
+    card.appendChild(tw);
+  }
+
+  // Our plan (preview)
+  const plan = (matchup.gameplanFirst || matchup.gameplanSecond || "").trim();
+  if (plan) {
+    const op = document.createElement("div");
+    op.className = "matchup-card-section";
+    op.innerHTML = `<span class="label">Our plan</span>${escapeHtml(plan).slice(0, 140)}${plan.length > 140 ? "…" : ""}`;
+    card.appendChild(op);
+  }
+
+  // Key targets chips (from opp deck's high/medium stopPriority cards)
+  if (matchup.keyTargets && matchup.keyTargets.length) {
+    const tgWrap = document.createElement("div");
+    tgWrap.className = "matchup-card-section";
+    tgWrap.innerHTML = `<span class="label">Key targets</span>`;
+    const chips = document.createElement("span");
+    chips.className = "matchup-card-targets";
+    matchup.keyTargets.slice(0, 4).forEach(name => {
+      const chip = document.createElement("span");
+      chip.className = "matchup-card-target-chip";
+      chip.textContent = name;
+      chips.appendChild(chip);
+    });
+    if (matchup.keyTargets.length > 4) {
+      const more = document.createElement("span");
+      more.className = "matchup-card-target-chip";
+      more.style.opacity = "0.6";
+      more.textContent = "+" + (matchup.keyTargets.length - 4);
+      chips.appendChild(more);
+    }
+    tgWrap.appendChild(chips);
+    card.appendChild(tgWrap);
+  }
+
+  card.onclick = () => {
+    _formatActiveDrillId = matchup.matchupId;
+    renderFormatTab();
+  };
+  card.onkeydown = (e) => {
+    // Only handle keys when the card itself has focus — not when a nested
+    // button (like the × delete) has focus, or we'd break its keyboard
+    // activation by preventDefault()ing the browser's button handling.
+    if (e.target !== card) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      card.click();
+    }
+  };
+  return card;
+}
+
+// Drill view — full editor for one matchup.
+function buildMatchupDrill(format, matchup) {
+  const decks = loadDecks();
+  const opp = decks.find(d => d.deckId === matchup.opponentDeckId);
+  syncMatchupKeyTargets(matchup, opp);
+
+  const wrap = document.createElement("div");
+  wrap.className = "matchup-drill";
+
+  // Head: name + tier + back button
+  const head = document.createElement("div");
+  head.className = "matchup-drill-head";
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "matchup-drill-back";
+  back.textContent = "← Back to matchups";
+  back.onclick = () => {
+    _formatActiveDrillId = null;
+    renderFormatTab();
+  };
+  head.appendChild(back);
+
+  const name = document.createElement("div");
+  name.className = "matchup-drill-name";
+  name.textContent = opp ? opp.name : "(opponent deck missing)";
+  head.appendChild(name);
+
+  const tier = document.createElement("select");
+  tier.className = "matchup-drill-tier-select";
+  ["tier1", "tier2", "rogue"].forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t === "tier1" ? "Tier 1" : t === "tier2" ? "Tier 2" : "Rogue";
+    if (matchup.tier === t) opt.selected = true;
+    tier.appendChild(opt);
+  });
+  tier.onchange = () => {
+    matchup.tier = tier.value;
+    persistFormat(format);
+  };
+  head.appendChild(tier);
+
+  if (opp) {
+    const goOpp = document.createElement("button");
+    goOpp.type = "button";
+    goOpp.className = "matchup-drill-back";
+    goOpp.textContent = "Edit opponent's deck ↗";
+    goOpp.onclick = () => {
+      _decksTabSelectedId = opp.deckId;
+      // Make sure the opponent deck is actually visible in the sidebar
+      // — switch role filter to All so the user sees what they jumped to.
+      _decksTabRoleFilter = "all";
+      setActiveTab("decks");
+    };
+    head.appendChild(goOpp);
+  }
+  wrap.appendChild(head);
+
+  // Grid: how-they-win + gameplans
+  const grid = document.createElement("div");
+  grid.className = "matchup-drill-grid";
+
+  const fields = [
+    { key: "howTheyWin", label: "How they win", placeholder: "Their main win condition: end-board pieces, lethal lines, key triggers." },
+    { key: "gameplanFirst", label: "Our plan going first", placeholder: "What we set up, what we leave open, what we negate first." },
+    { key: "gameplanSecond", label: "Our plan going second", placeholder: "Break their board: which pieces to remove first, board breakers we lead with." },
+    { key: "freeformNotes", label: "Other notes", placeholder: "Tech that shines here, lines you've tried, things that surprised you in the matchup." },
+  ];
+  fields.forEach(f => {
+    const fieldWrap = document.createElement("div");
+    fieldWrap.className = "matchup-drill-field";
+    const lab = document.createElement("div");
+    lab.className = "matchup-drill-field-label";
+    lab.textContent = f.label;
+    fieldWrap.appendChild(lab);
+    const ta = document.createElement("textarea");
+    ta.className = "matchup-drill-textarea";
+    ta.value = matchup[f.key] || "";
+    ta.placeholder = f.placeholder;
+    ta.rows = 4;
+    ta.addEventListener("blur", () => {
+      if (ta.value !== (matchup[f.key] || "")) {
+        matchup[f.key] = ta.value;
+        persistFormat(format);
+      }
+    });
+    ta.addEventListener("keydown", (e) => e.stopPropagation());
+    fieldWrap.appendChild(ta);
+    grid.appendChild(fieldWrap);
+  });
+
+  // Key targets cell (read-only, synced from opponent's keyCards)
+  const targetsWrap = document.createElement("div");
+  targetsWrap.className = "matchup-drill-field";
+  const tLab = document.createElement("div");
+  tLab.className = "matchup-drill-field-label";
+  tLab.textContent = "Key targets (auto from opponent's key cards)";
+  targetsWrap.appendChild(tLab);
+  const targets = document.createElement("div");
+  targets.className = "matchup-drill-keytargets";
+  if (!matchup.keyTargets || !matchup.keyTargets.length) {
+    const hint = document.createElement("span");
+    hint.className = "matchup-drill-empty-hint";
+    hint.textContent = opp
+      ? `Mark cards as "Must stop" or "If able" in ${opp.name}'s key-card buckets to populate this.`
+      : "Pick an opponent deck first.";
+    targets.appendChild(hint);
+  } else {
+    matchup.keyTargets.forEach(nm => {
+      const chip = document.createElement("span");
+      chip.className = "matchup-drill-keytarget-chip";
+      chip.textContent = nm;
+      const card = lookupCardByName(nm);
+      if (card && card.desc) attachPreviewHover(chip, card);
+      targets.appendChild(chip);
+    });
+  }
+  targetsWrap.appendChild(targets);
+  grid.appendChild(targetsWrap);
+
+  // Tech & Counter cards — what we run that's good against them,
+  // what THEY run that hurts us. Each entry: name + side + notes.
+  // E.g. "Illusion Gate · good-for-us · Blows up board, can summon
+  // Mirrorjade from their GY".
+  const techWrap = document.createElement("div");
+  techWrap.className = "matchup-drill-field";
+  techWrap.style.gridColumn = "1 / -1";
+  const techLab = document.createElement("div");
+  techLab.className = "matchup-drill-field-label";
+  techLab.textContent = "Tech & counter cards — what works for us, what hurts us";
+  techWrap.appendChild(techLab);
+  techWrap.appendChild(buildMatchupTechList(format, matchup));
+  grid.appendChild(techWrap);
+
+  // Related combos picker — checkbox list of YOUR combos
+  const comboWrap = document.createElement("div");
+  comboWrap.className = "matchup-drill-field";
+  comboWrap.style.gridColumn = "1 / -1";
+  const cLab = document.createElement("div");
+  cLab.className = "matchup-drill-field-label";
+  cLab.textContent = "Combos that solve this matchup";
+  comboWrap.appendChild(cLab);
+  const combosBox = document.createElement("div");
+  combosBox.className = "matchup-related-combos";
+  const allCombos = loadSavedCombos().filter(c => c.deckId === format.primaryDeckId);
+  if (!allCombos.length) {
+    const hint = document.createElement("div");
+    hint.className = "matchup-drill-empty-hint";
+    hint.textContent = format.primaryDeckId
+      ? "No combos extracted for your deck yet. Use the Chrome extension on a replay first."
+      : "Pick your primary deck above first.";
+    combosBox.appendChild(hint);
+  } else {
+    matchup.relatedComboIds = matchup.relatedComboIds || [];
+    allCombos.forEach(c => {
+      const row = document.createElement("label");
+      row.className = "matchup-related-combo";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      const key = comboKey(c);
+      cb.checked = matchup.relatedComboIds.includes(key);
+      cb.onchange = () => {
+        if (cb.checked) {
+          if (!matchup.relatedComboIds.includes(key)) matchup.relatedComboIds.push(key);
+        } else {
+          matchup.relatedComboIds = matchup.relatedComboIds.filter(k => k !== key);
+        }
+        persistFormat(format);
+      };
+      const txt = document.createElement("span");
+      txt.textContent = getComboDisplayTitle(c);
+      row.appendChild(cb);
+      row.appendChild(txt);
+      combosBox.appendChild(row);
+    });
+  }
+  comboWrap.appendChild(combosBox);
+  grid.appendChild(comboWrap);
+
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+// Create a brand-new matchup deck from .ydk text. We intentionally do
+// NOT reuse upsertDeckFromYdkText because its content-hash dedup could
+// match a user's primary deck and flip its role to "matchup" — a
+// destructive mutation. A matchup deck is always a fresh entity. The
+// _contentHash slot is intentionally omitted so future opponent .ydk
+// pastes also bypass the dedup.
+function createMatchupDeck(ydkText, name) {
+  const sections = parseYdk(ydkText || "");
+  const total = sections.main.length + sections.extra.length + sections.side.length;
+  if (!total) {
+    ydkAlert({ title: "Couldn't parse .ydk", message: "The pasted text didn't contain any card IDs. Check the file and try again." });
+    return null;
+  }
+  const now = new Date().toISOString();
+  const deckId = "deck_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+  const decklistId = "dl_" + deckId + "_main";
+  const counts = { main: sections.main.length, extra: sections.extra.length, side: sections.side.length, total };
+  const deck = {
+    deckId,
+    name: name || "Opponent deck",
+    role: "matchup",
+    ydkContent: ydkText,
+    counts,
+    main: sections.main.map(String),
+    extra: sections.extra.map(String),
+    side: sections.side.map(String),
+    decklists: [{
+      decklistId,
+      name: "Their build",
+      ydkContent: ydkText,
+      counts: { ...counts },
+      main: sections.main.map(String),
+      extra: sections.extra.map(String),
+      side: sections.side.map(String),
+      notes: "",
+      createdAt: now, updatedAt: now,
+    }],
+    primaryDecklistId: decklistId,
+    methodology: { summary: "", endboard: "", howItWins: "", strengths: "", weaknesses: "", keyRatios: "", techCards: [] },
+    keyCards: [],
+    source: "matchup-import",
+    notes: "",
+    createdAt: now, updatedAt: now,
+    // Intentionally no _contentHash so future opponent pastes don't dedup
+    // against this deck either.
+  };
+  const all = loadDecks();
+  all.push(deck);
+  saveDecks(all);
+  return deck;
+}
+
+// Tech & Counter card list — repeating rows of { name, side, notes }.
+// `side: "good"` = card works in our favor against this matchup.
+// `side: "bad"`  = card the opponent has that hurts us.
+// Each name input hover-previews the card's text when the name resolves
+// in NAME_INDEX. Persists to matchup.counterCards on blur.
+function buildMatchupTechList(format, matchup) {
+  if (!Array.isArray(matchup.counterCards)) matchup.counterCards = [];
+  const container = document.createElement("div");
+  const list = document.createElement("div");
+  list.className = "matchup-tech-list";
+
+  const renderRows = () => {
+    list.innerHTML = "";
+    matchup.counterCards.forEach((entry, i) => {
+      const row = document.createElement("div");
+      row.className = "matchup-tech-row";
+
+      // Side toggle (Good / Bad)
+      const side = document.createElement("button");
+      side.type = "button";
+      side.className = "matchup-tech-side-btn " + (entry.side === "bad" ? "is-bad" : "is-good");
+      side.textContent = entry.side === "bad" ? "Bad for us" : "Good for us";
+      side.title = "Click to flip — good = card helps us; bad = card hurts us";
+      side.onclick = () => {
+        entry.side = entry.side === "bad" ? "good" : "bad";
+        persistFormat(format);
+        renderRows();
+      };
+      row.appendChild(side);
+
+      // Name input
+      const nameIn = document.createElement("input");
+      nameIn.type = "text";
+      nameIn.className = "matchup-tech-name";
+      nameIn.value = entry.name || "";
+      nameIn.placeholder = "Card name (e.g. Illusion Gate)";
+      // Hover-only preview (no click-to-pin) so the user can still focus
+      // the input by clicking. Re-attached on blur if the name changed.
+      const wireNameHover = () => {
+        const fresh = lookupCardByName(nameIn.value);
+        nameIn.onmouseenter = (fresh && fresh.desc) ? () => showPreview(nameIn, fresh) : null;
+        nameIn.onmouseleave = (fresh && fresh.desc) ? () => hidePreview() : null;
+      };
+      nameIn.addEventListener("blur", () => {
+        entry.name = nameIn.value;
+        persistFormat(format);
+        wireNameHover();
+      });
+      nameIn.addEventListener("keydown", (e) => e.stopPropagation());
+      wireNameHover();
+      row.appendChild(nameIn);
+
+      // Notes input
+      const notesIn = document.createElement("input");
+      notesIn.type = "text";
+      notesIn.className = "matchup-tech-notes";
+      notesIn.value = entry.notes || "";
+      notesIn.placeholder = entry.side === "bad"
+        ? "Why it hurts us (e.g. Ash on Drastea ends our turn)"
+        : "Why it's good (e.g. blows up board, recovers their resources)";
+      notesIn.addEventListener("blur", () => {
+        entry.notes = notesIn.value;
+        persistFormat(format);
+      });
+      notesIn.addEventListener("keydown", (e) => e.stopPropagation());
+      row.appendChild(notesIn);
+
+      // Delete row
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "matchup-tech-del";
+      del.textContent = "×";
+      del.title = "Remove this entry";
+      del.onclick = () => {
+        matchup.counterCards.splice(i, 1);
+        persistFormat(format);
+        renderRows();
+      };
+      row.appendChild(del);
+
+      list.appendChild(row);
+    });
+  };
+  renderRows();
+  container.appendChild(list);
+
+  // Add buttons — two of them, pre-fills the side correctly so the user
+  // doesn't have to click the toggle for every entry.
+  const btnRow = document.createElement("div");
+  btnRow.style.display = "flex";
+  btnRow.style.gap = "6px";
+  btnRow.style.marginTop = "4px";
+  const addGood = document.createElement("button");
+  addGood.type = "button";
+  addGood.className = "matchup-tech-add";
+  addGood.textContent = "+ Card that's good for us";
+  addGood.onclick = () => {
+    matchup.counterCards.push({ name: "", side: "good", notes: "" });
+    persistFormat(format);
+    renderRows();
+  };
+  const addBad = document.createElement("button");
+  addBad.type = "button";
+  addBad.className = "matchup-tech-add";
+  addBad.textContent = "+ Card that hurts us";
+  addBad.onclick = () => {
+    matchup.counterCards.push({ name: "", side: "bad", notes: "" });
+    persistFormat(format);
+    renderRows();
+  };
+  btnRow.appendChild(addGood);
+  btnRow.appendChild(addBad);
+  container.appendChild(btnRow);
+
+  return container;
+}
+
+// Add-matchup flow: pick an existing matchup deck, or paste a .ydk to
+// create a new matchup deck inline. The new deck gets role: "matchup"
+// so it's clearly opposing.
+async function addMatchupFlow(format) {
+  const decks = loadDecks();
+  const matchupDecks = decks.filter(d => d.role === "matchup");
+  // Decks already linked in this format — exclude from the picker.
+  const alreadyLinked = new Set((format.matchups || []).map(m => m.opponentDeckId));
+  const available = matchupDecks.filter(d => !alreadyLinked.has(d.deckId));
+
+  const choice = await ydkConfirm({
+    icon: "⚔",
+    title: "Add a matchup",
+    message: available.length
+      ? `Pick from your matchup decks below, or click <strong>Add new matchup deck</strong> to paste an opponent's .ydk.<br><br><em>Existing matchup decks:</em> ${available.map(d => escapeHtml(d.name)).join(", ")}`
+      : "No matchup decks yet. Click <strong>Add new matchup deck</strong> to paste an opponent's .ydk and start tracking how to play against them.",
+    confirmText: "Add new matchup deck",
+    cancelText: available.length ? "Pick from existing" : "Cancel",
+  });
+  if (choice === true) {
+    // Add new flow — prompt for name + .ydk paste
+    const name = await ydkPrompt({ title: "Opponent deck name", message: "Deck name (e.g. \"Branded Despia\"):" });
+    if (!name) return;
+    const ydkText = await ydkPrompt({ title: "Paste opponent .ydk", message: `Paste the opponent's .ydk contents (or leave blank to track ${name} by notes only):` });
+    let deck;
+    if (ydkText && ydkText.trim()) {
+      // Always create a NEW deck for matchups — never reuse via dedup,
+      // because two different decks can hash the same and we must not
+      // mutate the user's primary decks. createMatchupDeck guarantees
+      // a fresh entity with role:"matchup" up front.
+      deck = createMatchupDeck(ydkText, name);
+    } else {
+      // Notes-only deck — empty decklist, role:matchup
+      const now = new Date().toISOString();
+      const deckId = "deck_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+      const decklistId = "dl_" + deckId + "_notes";
+      deck = {
+        deckId,
+        name,
+        role: "matchup",
+        ydkContent: "",
+        counts: { main: 0, extra: 0, side: 0, total: 0 },
+        main: [], extra: [], side: [],
+        decklists: [{
+          decklistId, name: "Notes only", ydkContent: "",
+          counts: { main: 0, extra: 0, side: 0, total: 0 },
+          main: [], extra: [], side: [], notes: "",
+          createdAt: now, updatedAt: now,
+        }],
+        primaryDecklistId: decklistId,
+        methodology: { summary: "", endboard: "", howItWins: "", strengths: "", weaknesses: "", keyRatios: "", techCards: [] },
+        keyCards: [],
+        source: "matchup-notes-only",
+        notes: "",
+        createdAt: now, updatedAt: now,
+      };
+      const all = loadDecks();
+      all.push(deck);
+      saveDecks(all);
+    }
+    if (!deck) return;
+    const matchup = makeMatchup(deck.deckId);
+    format.matchups = format.matchups || [];
+    format.matchups.push(matchup);
+    persistFormat(format);
+    _formatActiveDrillId = matchup.matchupId;
+    renderFormatTab();
+  } else if (choice === false && available.length) {
+    // Pick from existing — simple prompt with comma-separated index
+    // (lightweight UI; we could build a picker modal later)
+    const labels = available.map((d, i) => `${i + 1}. ${d.name}`).join("\n");
+    const pick = await ydkPrompt({ title: "Pick existing matchup deck", message: `Type the number:\n${labels}` });
+    const idx = parseInt(pick, 10) - 1;
+    const chosen = available[idx];
+    if (!chosen) return;
+    const matchup = makeMatchup(chosen.deckId);
+    format.matchups = format.matchups || [];
+    format.matchups.push(matchup);
+    persistFormat(format);
+    _formatActiveDrillId = matchup.matchupId;
+    renderFormatTab();
+  }
+}
+
+// Create / clone format flow. If `cloneFrom` is provided, copy matchups
+// from it (carry-forward — Branded survives banlist, you keep Branded
+// notes/decklist/combos without re-entering them).
+async function createFormatFlow(cloneFrom) {
+  const name = await ydkPrompt({
+    title: "New format",
+    message: "Format name (e.g. \"May 2026\", \"Aug 2026\"):",
+    value: cloneFrom ? "" : "May 2026",
+  });
+  if (!name) return;
+  const opts = {};
+  if (cloneFrom) {
+    opts.primaryDeckId = cloneFrom.primaryDeckId;
+    // Deep clone matchups so editing the new format doesn't mutate the old.
+    // We DO preserve opponentDeckId refs (those are top-level decks).
+    opts.matchups = (cloneFrom.matchups || []).map(m => ({
+      matchupId: "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 5),
+      opponentDeckId: m.opponentDeckId,
+      tier: m.tier,
+      howTheyWin: m.howTheyWin || "",
+      gameplanFirst: m.gameplanFirst || "",
+      gameplanSecond: m.gameplanSecond || "",
+      keyTargets: (m.keyTargets || []).slice(),
+      techCardsThatShine: (m.techCardsThatShine || []).slice(),
+      // Deep-clone counterCards so editing one format doesn't bleed into another
+      counterCards: (m.counterCards || []).map(c => ({ name: c.name, side: c.side, notes: c.notes })),
+      relatedComboIds: (m.relatedComboIds || []).slice(),
+      freeformNotes: m.freeformNotes || "",
+    }));
+    // Mark old format as ended (today's date)
+    cloneFrom.endDate = new Date().toISOString().slice(0, 10);
+    persistFormat(cloneFrom);
+  }
+  const fmt = makeFormat(name.trim(), opts);
+  const all = loadFormats();
+  all.push(fmt);
+  saveFormats(all);
+  setActiveFormatId(fmt.formatId);
+  _formatActiveDrillId = null;
+  renderFormatTab();
 }
 
 function renderDecksLibrary() {
@@ -5656,6 +9279,8 @@ function startRenameDeck(rowEl, deck) {
         decks[idx].updatedAt = new Date().toISOString();
         saveDecks(decks);
       }
+      // Keep the browser tab title in sync if the renamed deck is active
+      if (deck.deckId === getActiveDeckId()) updateTabTitle();
     }
     renderDecksLibrary();
   }
@@ -5827,6 +9452,7 @@ function startRenameDeckSwitcherRow(row, deck) {
         decks[idx].updatedAt = new Date().toISOString();
         saveDecks(decks);
       }
+      if (deck.deckId === getActiveDeckId()) updateTabTitle();
     }
     renderDeckSwitcherList();
     refreshDeckSwitcher();
@@ -5983,6 +9609,10 @@ const BACKUP_KEYS = {
   cardsView:        "ydk_cards_view",
   comboViewMode:    "ydk_combo_view_mode",
   comboDeckFilter:  "ydk_combo_deck_filter",
+  // Format planner (May 2026)
+  formats:          "ydk_formats",
+  activeFormatId:   "ydk_active_format_id",
+  decksSchemaVer:   "ydk_decks_schema_version",
 };
 
 function readLs(key) {
@@ -6357,6 +9987,8 @@ function groupStepsIntoPhases(steps) {
       lastSec = null;
       continue;
     }
+    // Skip Solo Mode mulligan noise — never let it create or pollute a phase.
+    if (step._mulligan) continue;
 
     const sec = timestampToSeconds(step.timestamp);
     let breakHere = current === null;
@@ -6402,6 +10034,43 @@ function groupStepsIntoPhases(steps) {
   return phases;
 }
 
+// Pick the most informative card for a step — the one whose card text
+// the user is most likely asking about. For "via X's effect" steps, the
+// trigger has higher value than the object being acted upon. Otherwise
+// we fall back to the step's first card. Returns the resolved card data
+// (including .desc) if we can find it; otherwise null. Used by the
+// per-step info chip in Cluster/Core views.
+function getStepPrimaryCard(step) {
+  if (!step) return null;
+  // For Detach / Banish-equip / Overlay actions, cards[0] is often a
+  // material being moved; the actor is cards[1]. Use that when present.
+  const action = step.action || "";
+  let name = null;
+  if ((action === "Detach" || action === "Overlay" || action === "AttachMaterial") && step.cards && step.cards[1]) {
+    name = step.cards[1];
+  } else {
+    name = (step.cards && step.cards[0]) || null;
+  }
+  if (!name) return null;
+  return lookupCardByName(name);
+}
+
+// Wires a small inline element (a chip, an annotation, anything) to the
+// existing hover-preview pane. On mouseenter, the preview shows the
+// card's image + name + effect text; on leave, it hides. Click toggles
+// pinned mode so the preview stays open while the user reads.
+function attachPreviewHover(el, card) {
+  if (!el || !card) return;
+  el.addEventListener("mouseenter", () => showPreview(el, card));
+  el.addEventListener("mouseleave", () => hidePreview());
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const key = card.id || card.name || "";
+    if (_previewPinned && _previewPinnedKey === key) unpinPreview();
+    else pinPreview(el, card);
+  });
+}
+
 // Render a logical phase as a tight bullet list — each bullet is one
 // "play" (a meaningful step). Chain-link "Declared effect of X" lines are
 // folded out unless they sit by themselves with no related outcome step.
@@ -6416,15 +10085,39 @@ function renderPhaseBullets(phase) {
     const li = document.createElement("li");
     li.className = "phase-bullet";
 
-    let desc = describeStep(step);
-    if (step._viaTrigger) {
-      desc += ` (via ${step._viaTrigger}'s effect)`;
-    }
-
     const text = document.createElement("span");
     text.className = "phase-bullet-text";
-    text.textContent = desc;
+    text.textContent = describeStep(step);
     li.appendChild(text);
+
+    // "(via X's effect)" — separate span so we can wire hover-preview
+    // showing X's full card text. The user can hover this to confirm
+    // what the trigger card actually does without leaving the combo.
+    if (step._viaTrigger) {
+      const triggerCard = lookupCardByName(step._viaTrigger);
+      const viaSpan = document.createElement("span");
+      viaSpan.className = "bullet-via-chip";
+      viaSpan.textContent = ` (via ${step._viaTrigger}'s effect)`;
+      if (triggerCard) {
+        viaSpan.title = "Hover to see " + step._viaTrigger + "'s card text";
+        attachPreviewHover(viaSpan, { ...triggerCard, name: step._viaTrigger });
+      }
+      li.appendChild(viaSpan);
+    }
+
+    // Per-step "?" info chip — surfaces the primary card's effect text
+    // so the user can verify what this step actually does. Reuses the
+    // same preview pane as card-pill hovers. Only shown when we have
+    // card data with effect text — otherwise the chip is just clutter.
+    const primary = getStepPrimaryCard(step);
+    if (primary && primary.desc) {
+      const info = document.createElement("span");
+      info.className = "bullet-info-chip";
+      info.textContent = "?";
+      info.title = "Hover for " + (primary.name || "card") + "'s text";
+      attachPreviewHover(info, primary);
+      li.appendChild(info);
+    }
 
     if (Array.isArray(step.cards) && step.cards.some(Boolean)) {
       const pills = document.createElement("span");
@@ -6554,12 +10247,30 @@ function renderPhaseCompact(phase, pIdx) {
   for (const step of meaningful) {
     const li = document.createElement("li");
     li.className = "phase-bullet phase-bullet-compact";
-    let desc = describeStep(step);
-    if (step._viaTrigger) desc += ` · via ${step._viaTrigger}`;
     const text = document.createElement("span");
     text.className = "phase-bullet-text";
-    text.textContent = desc;
+    text.textContent = describeStep(step);
     li.appendChild(text);
+    if (step._viaTrigger) {
+      const triggerCard = lookupCardByName(step._viaTrigger);
+      const viaSpan = document.createElement("span");
+      viaSpan.className = "bullet-via-chip";
+      viaSpan.textContent = ` · via ${step._viaTrigger}`;
+      if (triggerCard) {
+        viaSpan.title = "Hover to see " + step._viaTrigger + "'s card text";
+        attachPreviewHover(viaSpan, { ...triggerCard, name: step._viaTrigger });
+      }
+      li.appendChild(viaSpan);
+    }
+    const primary = getStepPrimaryCard(step);
+    if (primary && primary.desc) {
+      const info = document.createElement("span");
+      info.className = "bullet-info-chip";
+      info.textContent = "?";
+      info.title = "Hover for " + (primary.name || "card") + "'s text";
+      attachPreviewHover(info, primary);
+      li.appendChild(info);
+    }
     if (Array.isArray(step.cards) && step.cards.some(Boolean)) {
       const pills = document.createElement("span");
       pills.className = "phase-bullet-pills";
@@ -6728,6 +10439,32 @@ function renderStep(s) {
   desc.className = "step-description";
   desc.textContent = describeStep(s);
   narrative.appendChild(desc);
+
+  // "(via X's effect)" — hoverable annotation showing X's card text.
+  if (s._viaTrigger) {
+    const triggerCard = lookupCardByName(s._viaTrigger);
+    const viaSpan = document.createElement("span");
+    viaSpan.className = "bullet-via-chip";
+    viaSpan.textContent = ` (via ${s._viaTrigger}'s effect)`;
+    if (triggerCard) {
+      viaSpan.title = "Hover to see " + s._viaTrigger + "'s card text";
+      attachPreviewHover(viaSpan, { ...triggerCard, name: s._viaTrigger });
+    }
+    narrative.appendChild(viaSpan);
+  }
+
+  // Per-step "?" info chip — surfaces the primary card's effect text on
+  // hover. Same chip as Cluster view so behavior is consistent.
+  const primary = getStepPrimaryCard(s);
+  if (primary && primary.desc) {
+    const info = document.createElement("span");
+    info.className = "bullet-info-chip";
+    info.textContent = "?";
+    info.title = "Hover for " + (primary.name || "card") + "'s text";
+    attachPreviewHover(info, primary);
+    narrative.appendChild(info);
+  }
+
   content.appendChild(narrative);
 
   // Actor row — cards directly involved in this step's action.
@@ -7453,6 +11190,67 @@ function renderComboNotesPin(combo) {
   return wrap;
 }
 
+// Inline-rename the open combo's title. Swap the title element for an
+// input, commit on Enter/blur, discard on Escape. Persists to
+// combo.userTitle (clearing the field reverts to the auto-detected
+// comboName). After save, updates localStorage AND re-renders the
+// sidebar tile so the new name shows up everywhere.
+function startRenameComboTitle(titleEl, combo) {
+  if (titleEl.querySelector("input")) return; // already editing
+  const current = combo.userTitle || combo.comboName || "";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "combo-title-edit-input";
+  input.value = current;
+  input.maxLength = 120;
+  input.placeholder = combo.comboName || "Untitled";
+  // Replace the title element's contents with the input, but keep the
+  // titleEl wrapper so we can swap back without touching siblings.
+  titleEl.textContent = "";
+  titleEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  let committed = false;
+  const restore = () => {
+    titleEl.textContent = getComboDisplayTitle(combo);
+    titleEl.classList.toggle("is-custom", !!(combo.userTitle && combo.userTitle.trim()));
+    titleEl.title = combo.userTitle
+      ? `Renamed by you (auto: ${combo.comboName || "—"}). Click to edit.`
+      : `Click to rename (current: auto-detected from log)`;
+  };
+  const commit = (save) => {
+    if (committed) return;
+    committed = true;
+    if (save) {
+      const raw = (input.value || "").trim();
+      // Empty / equal-to-auto = clear the override (revert to auto).
+      const newTitle = (!raw || raw === (combo.comboName || "")) ? "" : raw;
+      if ((combo.userTitle || "") !== newTitle) {
+        combo.userTitle = newTitle;
+        // Persist by replacing the matching combo in saved storage.
+        const all = loadSavedCombos();
+        const idx = all.findIndex(c => comboKey(c) === comboKey(combo));
+        if (idx >= 0) {
+          all[idx] = combo;
+          saveSavedCombos(all);
+        }
+        // Refresh the sidebar tile list so the new title shows there too.
+        if (typeof renderCombos === "function") renderCombos();
+      }
+    }
+    restore();
+  };
+  input.addEventListener("blur", () => commit(true));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    else if (e.key === "Escape") { e.preventDefault(); commit(false); }
+    else e.stopPropagation();
+  });
+  // Stop click on the input from re-firing the title's click handler.
+  input.addEventListener("click", (e) => e.stopPropagation());
+}
+
 function renderExtractedCombo(combo) {
   const div = document.createElement("div");
   div.className = "combo extracted-combo";
@@ -7461,7 +11259,11 @@ function renderExtractedCombo(combo) {
   // including non-core ones). Phases are computed on full data so boundaries
   // are accurate; the view mode determines what's rendered inside each phase.
   const simulated = simulateCombo(combo);
+  // Mark Solo Mode mulligan steps (leading Draw + matching Return block) so
+  // the renderers can hide them universally without losing simulator state.
+  markMulliganSteps(simulated);
   const allSteps = simulated.filter(s => !s._truncated);
+  const mulliganSummary = getMulliganSummary(allSteps);
   const coreSteps = filterCoreSteps(allSteps);
   const viewMode = loadViewMode();
 
@@ -7473,8 +11275,12 @@ function renderExtractedCombo(combo) {
   head.className = "combo-head-compact";
 
   const titleEl = document.createElement("div");
-  titleEl.className = "combo-title-text";
-  titleEl.textContent = combo.comboName || "Untitled";
+  titleEl.className = "combo-title-text" + (combo.userTitle ? " is-custom" : "");
+  titleEl.textContent = getComboDisplayTitle(combo);
+  titleEl.title = combo.userTitle
+    ? `Renamed by you (auto: ${combo.comboName || "—"}). Click to edit.`
+    : `Click to rename (current: auto-detected from log)`;
+  titleEl.addEventListener("click", () => startRenameComboTitle(titleEl, combo));
   head.appendChild(titleEl);
 
   // Opener-size pill — clickable to override the auto-bucketing.
@@ -7540,6 +11346,17 @@ function renderExtractedCombo(combo) {
   // default and unobtrusive; expands when there's content or when the
   // user clicks to add some.
   div.appendChild(renderComboNotesCollapse(combo));
+
+  // Solo Mode mulligan banner — replaces the hidden Draw 5 / Return 5 noise
+  // with a single-line note so the user knows what was filtered out.
+  if (mulliganSummary && (mulliganSummary.drew || mulliganSummary.returned)) {
+    const banner = document.createElement("div");
+    banner.className = "combo-mulligan-banner";
+    banner.textContent =
+      `Solo Mode mulligan — drew ${mulliganSummary.drew} card${mulliganSummary.drew === 1 ? "" : "s"}, ` +
+      `returned ${mulliganSummary.returned} to deck (hidden — not part of the combo).`;
+    div.appendChild(banner);
+  }
 
   // Opening hand block — always render when there's a hand OR a Solo Mode flag,
   // so the user gets context even if the hand is empty (legacy v1 extractions).
@@ -7678,8 +11495,11 @@ function renderExtractedCombo(combo) {
       const stepsToShow = filterCoreSteps(phase.steps);
       stepsToShow.forEach(s => wrap.appendChild(renderStep(s)));
     } else {
-      // Full step-by-step
-      phase.steps.forEach(s => wrap.appendChild(renderStep(s)));
+      // Full step-by-step — still hide Solo Mode mulligan noise; the
+      // pre-game draw/return shuffle is never useful to anyone.
+      phase.steps
+        .filter(s => !s._mulligan)
+        .forEach(s => wrap.appendChild(renderStep(s)));
     }
 
     div.appendChild(wrap);
@@ -8092,7 +11912,7 @@ function renderPracticeLines(hand, deck) {
         const allBtns = document.querySelectorAll("#combo-picker .combo-card-tile");
         if (allBtns[0]) showSavedCombo(idx, null);
         // Find the right tile to highlight as active (by combo title)
-        const target = Array.from(allBtns).find(b => b.querySelector(".combo-card-tile-title")?.textContent === (loadSavedCombos()[idx]?.comboName || ""));
+        const target = Array.from(allBtns).find(b => b.querySelector(".combo-card-tile-title")?.textContent === getComboDisplayTitle(loadSavedCombos()[idx]));
         if (target) {
           allBtns.forEach(b => b.classList.remove("active"));
           target.classList.add("active");
@@ -8193,11 +12013,298 @@ function setComboDeckFilter(deckId) {
   } catch (_) {}
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// DRAG-TO-REORDER — universal across buckets
+//
+// Goal: the user owns the order of combos in the sidebar. Buckets are
+// visual groupings, not constraints. Dragging a tile to a position
+// inside a different bucket re-buckets the combo (writes
+// userOpenerSize) AND re-positions it (writes sortIndex).
+//
+// Implementation uses native HTML5 DnD. The drag source is the tile
+// button; drop targets are the row wrappers (.combo-picker-item) and
+// the bucket headers (for empty / top-of-bucket drops). Drop position
+// is computed from the mouse Y relative to the target's midline:
+// upper half = before, lower half = after.
+//
+// State during drag is stored in a single module-level object so any
+// drop handler can read the source's identity without serializing it
+// through dataTransfer (which has restrictions).
+// ════════════════════════════════════════════════════════════════════════
+const _dndState = { sourceKey: null, sourceBucket: null };
+
+function wireTileDrag(btn, combo, bucketKey) {
+  btn.addEventListener("dragstart", (e) => {
+    _dndState.sourceKey = comboKey(combo);
+    _dndState.sourceBucket = bucketKey;
+    btn.classList.add("is-dragging");
+    // dataTransfer is required in Firefox or dragstart fires but no
+    // subsequent drag events do. The payload is unused — _dndState is
+    // the source of truth — but setting something keeps the OS happy.
+    try {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", _dndState.sourceKey);
+    } catch (_) {}
+  });
+  btn.addEventListener("dragend", () => {
+    btn.classList.remove("is-dragging");
+    _dndState.sourceKey = null;
+    _dndState.sourceBucket = null;
+    document.querySelectorAll(".combo-picker-item.is-drop-above, .combo-picker-item.is-drop-below")
+      .forEach(el => el.classList.remove("is-drop-above", "is-drop-below"));
+    document.querySelectorAll(".combo-picker-group-header.is-drop-into")
+      .forEach(el => el.classList.remove("is-drop-into"));
+  });
+}
+
+function wireTileDrop(wrap, combo, bucketKey) {
+  wrap.addEventListener("dragover", (e) => {
+    if (!_dndState.sourceKey) return;
+    if (_dndState.sourceKey === comboKey(combo)) return; // dropping on self
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const rect = wrap.getBoundingClientRect();
+    const isAbove = (e.clientY - rect.top) < (rect.height / 2);
+    wrap.classList.toggle("is-drop-above", isAbove);
+    wrap.classList.toggle("is-drop-below", !isAbove);
+  });
+  wrap.addEventListener("dragleave", (e) => {
+    // Only clear if we're leaving the wrap itself, not bubbling from a child
+    if (e.currentTarget === wrap && !wrap.contains(e.relatedTarget)) {
+      wrap.classList.remove("is-drop-above", "is-drop-below");
+    }
+  });
+  wrap.addEventListener("drop", (e) => {
+    if (!_dndState.sourceKey) return;
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    const isAbove = (e.clientY - rect.top) < (rect.height / 2);
+    const targetKey = comboKey(combo);
+    const sourceKey = _dndState.sourceKey;
+    wrap.classList.remove("is-drop-above", "is-drop-below");
+    if (sourceKey === targetKey) return;
+    applyDragMove(sourceKey, { kind: "tile", targetKey, before: isAbove, bucket: bucketKey });
+  });
+}
+
+function wireBucketHeaderDrop(headerEl, bucketKey) {
+  headerEl.addEventListener("dragover", (e) => {
+    if (!_dndState.sourceKey) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    headerEl.classList.add("is-drop-into");
+  });
+  headerEl.addEventListener("dragleave", (e) => {
+    if (e.currentTarget === headerEl && !headerEl.contains(e.relatedTarget)) {
+      headerEl.classList.remove("is-drop-into");
+    }
+  });
+  headerEl.addEventListener("drop", (e) => {
+    if (!_dndState.sourceKey) return;
+    e.preventDefault();
+    headerEl.classList.remove("is-drop-into");
+    applyDragMove(_dndState.sourceKey, { kind: "bucket", bucket: bucketKey });
+  });
+}
+
+// Applies a drag result: re-buckets the source if needed, splices it
+// into the new position, re-densifies sortIndex, and re-renders.
+//   target.kind = "tile"   → drop next to a specific tile (before/after)
+//   target.kind = "bucket" → drop at the top of an empty/header zone
+function applyDragMove(sourceKey, target) {
+  const all = loadSavedCombos();
+  const sourceIdx = all.findIndex(c => comboKey(c) === sourceKey);
+  if (sourceIdx < 0) return;
+  const source = all[sourceIdx];
+
+  // 1. Re-bucket the source if dropped into a different bucket. Map
+  //    the bucket key back to userOpenerSize: "1"/"2" → number, "other"
+  //    → string. This is the same shape getComboOpenerSize expects.
+  const destBucketKey = target.bucket;
+  const destBucketSize = destBucketKey === "other" ? "other" : parseInt(destBucketKey, 10);
+  const currentBucketSize = getComboOpenerSize(source);
+  const currentBucketKey = currentBucketSize === "other" ? "other" : String(currentBucketSize);
+  if (destBucketKey !== currentBucketKey) {
+    source.userOpenerSize = destBucketSize;
+  }
+
+  // 2. Build the visible-deck combo list in current order so we can
+  //    splice. We work on the active deck's combos only — never reorder
+  //    combos that aren't currently rendered.
+  const activeDeckId = getActiveDeckId();
+  const visible = activeDeckId
+    ? all.filter(c => c.deckId === activeDeckId)
+    : all.filter(c => !c.deckId);
+
+  // Sort matches what renderCombos() shows: bucket order × sortKey within bucket.
+  const groupOrder = ["1", "2", "other"];
+  const bucketOf = (c) => {
+    const s = getComboOpenerSize(c);
+    return s === "other" ? "other" : String(s);
+  };
+  const ordered = [];
+  for (const g of groupOrder) {
+    const inGroup = visible.filter(c => bucketOf(c) === g);
+    inGroup.sort((a, b) => getComboSortKey(a) - getComboSortKey(b));
+    ordered.push(...inGroup);
+  }
+
+  // 3. Remove source from its current position in the ordered array.
+  const fromPos = ordered.findIndex(c => comboKey(c) === sourceKey);
+  if (fromPos >= 0) ordered.splice(fromPos, 1);
+
+  // 4. Compute insertion index based on the drop target.
+  let insertAt;
+  if (target.kind === "tile") {
+    const tilePos = ordered.findIndex(c => comboKey(c) === target.targetKey);
+    insertAt = tilePos < 0 ? ordered.length : (target.before ? tilePos : tilePos + 1);
+  } else {
+    // Bucket header drop → top of that bucket = position of the first
+    // combo currently in it (after source was removed). If empty, append
+    // to the natural position based on group order.
+    const firstInBucket = ordered.findIndex(c => bucketOf(c) === destBucketKey);
+    if (firstInBucket >= 0) {
+      insertAt = firstInBucket;
+    } else {
+      // Bucket is empty — find where it should go in groupOrder
+      const groupIdx = groupOrder.indexOf(destBucketKey);
+      let pos = ordered.length;
+      for (let i = 0; i < ordered.length; i++) {
+        if (groupOrder.indexOf(bucketOf(ordered[i])) > groupIdx) { pos = i; break; }
+      }
+      insertAt = pos;
+    }
+  }
+  ordered.splice(insertAt, 0, source);
+
+  // 5. Persist: rewrite sortIndex for the visible-deck combos AND save
+  //    the (possibly changed) userOpenerSize on source. saveSavedCombos
+  //    requires the full array, so we mutate `all` in place: replace
+  //    the `source` slot, then let persistComboOrder do the densify.
+  all[sourceIdx] = source;
+  saveSavedCombos(all);
+  persistComboOrder(ordered);
+
+  renderCombos();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// SIDEBAR SEARCH — live filter for the combo picker
+//
+// Stamps each tile with a `data-search-haystack` (title + opening hand +
+// step card names + notes + replay id, all lowercased). Input handler
+// toggles visibility on existing tiles rather than re-rendering, so:
+// - thumbnails don't reload on every keystroke
+// - input focus and caret position are preserved
+// - drag-and-drop wiring on tiles isn't torn down
+//
+// State persists across renders (sortIndex changes, opening a combo,
+// rename, etc.) via the module-level `_comboFilterText` and a re-apply
+// call at the bottom of renderCombos.
+// ════════════════════════════════════════════════════════════════════════
+let _comboFilterText = "";
+
+function buildComboSearchHaystack(combo) {
+  if (!combo) return "";
+  const parts = [];
+  parts.push(getComboDisplayTitle(combo));
+  if (combo.comboName && combo.comboName !== combo.userTitle) parts.push(combo.comboName);
+  if (Array.isArray(combo.openingHand)) parts.push(combo.openingHand.join(" "));
+  if (Array.isArray(combo.steps)) {
+    const stepCards = new Set();
+    for (const s of combo.steps) {
+      if (Array.isArray(s.cards)) s.cards.forEach(n => n && stepCards.add(n));
+    }
+    parts.push(Array.from(stepCards).join(" "));
+  }
+  if (combo.userNotes) parts.push(combo.userNotes);
+  if (combo.replayId) parts.push(String(combo.replayId));
+  // Include "vs Opponent" linkage so searching by an opponent name in
+  // the sidebar surfaces combos linked to that matchup.
+  if (typeof getComboVsBadge === "function") {
+    const vs = getComboVsBadge(combo);
+    if (vs && vs.title) parts.push(vs.title);
+  }
+  return parts.join(" ").toLowerCase();
+}
+
+// Apply the current filter to the existing tile DOM. Called on every
+// keystroke AND at the end of renderCombos (so filter survives renders).
+function applyComboFilter() {
+  const term = (_comboFilterText || "").trim().toLowerCase();
+  const picker = document.getElementById("combo-picker");
+  const emptyEl = document.getElementById("combo-search-empty");
+  if (!picker) return;
+
+  const items = picker.querySelectorAll(".combo-picker-item");
+  const headers = picker.querySelectorAll(".combo-picker-group-header");
+  let visibleCount = 0;
+  // Track which buckets have at least one visible tile so we can
+  // hide bucket headers that emptied out.
+  const bucketHasVisible = new Set();
+
+  items.forEach(item => {
+    const haystack = item.dataset.searchHaystack || "";
+    const matches = !term || haystack.includes(term);
+    item.style.display = matches ? "" : "none";
+    if (matches) {
+      visibleCount++;
+      if (item.dataset.bucket) bucketHasVisible.add(item.dataset.bucket);
+    }
+  });
+
+  headers.forEach(h => {
+    const b = h.dataset.size;
+    // No filter → show all headers. With filter → only show ones whose
+    // bucket has at least one visible tile.
+    h.style.display = (!term || bucketHasVisible.has(b)) ? "" : "none";
+  });
+
+  // Empty-state message + reflect "has-text" on the wrap for the clear button
+  if (emptyEl) emptyEl.hidden = (!term || visibleCount > 0);
+  const wrap = document.getElementById("combo-search-wrap");
+  if (wrap) wrap.classList.toggle("has-text", term.length > 0);
+}
+
+// Wire the search input once on first render. Idempotent — repeated
+// calls are no-ops because we tag the input with a data flag.
+function wireComboSearchOnce() {
+  const input = document.getElementById("combo-search-input");
+  const clearBtn = document.getElementById("combo-search-clear");
+  if (!input || input.dataset.wired === "1") return;
+  input.dataset.wired = "1";
+  input.value = _comboFilterText;
+  input.addEventListener("input", () => {
+    _comboFilterText = input.value || "";
+    applyComboFilter();
+  });
+  // Keep `/` shortcut feeling out-of-scope here (Esc still useful to clear).
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      input.value = "";
+      _comboFilterText = "";
+      applyComboFilter();
+      input.blur();
+    }
+    e.stopPropagation();
+  });
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      _comboFilterText = "";
+      applyComboFilter();
+      input.focus();
+    });
+  }
+}
+
 function renderCombos() {
   const picker = document.getElementById("combo-picker");
   picker.innerHTML = "";
   const out = document.getElementById("combos-output");
   out.innerHTML = "";
+  wireComboSearchOnce();
 
   const allSaved = loadSavedCombos();
   const cachedCount = Object.keys(loadCardCache()).length;
@@ -8240,7 +12347,8 @@ function renderCombos() {
 
   // Group combos by OPENER SIZE — uses combo.userOpenerSize override
   // when set, falls back to openingHand.length otherwise. User can
-  // change this anytime via the pill in the open combo header.
+  // change this anytime via the pill in the open combo header OR by
+  // dragging a tile into a different bucket.
   const groups = {};
   saved.forEach((c) => {
     const i = allSaved.indexOf(c);
@@ -8248,6 +12356,13 @@ function renderCombos() {
     const key = size === "other" ? "other" : String(size);
     if (!groups[key]) groups[key] = [];
     groups[key].push({ combo: c, idx: i });
+  });
+
+  // Sort each bucket by user-set sortIndex (ascending). Combos without
+  // a sortIndex fall back to extractedAt so the original order stays
+  // stable until the user drags something.
+  Object.keys(groups).forEach(k => {
+    groups[k].sort((a, b) => getComboSortKey(a.combo) - getComboSortKey(b.combo));
   });
 
   const groupOrder = ["1", "2", "other"];
@@ -8262,20 +12377,32 @@ function renderCombos() {
     groupHeader.dataset.size = key;
     const headerText = key === "other" ? "Other / mulligan" : `${key}-card opener`;
     groupHeader.innerHTML = `<span>${headerText}</span><span class="group-count">${list.length}</span>`;
+    // Drop target: bucket header. Dropping on the header places the
+    // dragged combo at the TOP of this bucket (and re-buckets it if
+    // the source is from a different bucket).
+    wireBucketHeaderDrop(groupHeader, key);
     picker.appendChild(groupHeader);
 
     list.forEach(({ combo: c, idx: i }) => {
       const wrap = document.createElement("div");
       wrap.className = "combo-picker-item";
+      wrap.dataset.comboKey = comboKey(c);
+      wrap.dataset.bucket = key;
+      // Stamp the searchable text on the wrapper so applyComboFilter()
+      // can match without re-querying combos on every keystroke.
+      wrap.dataset.searchHaystack = buildComboSearchHaystack(c);
 
       const btn = document.createElement("button");
       // The new combo card tile — visual, not a flat pill.
       btn.className = "combo-card-tile" + (firstActive ? " active" : "");
+      btn.draggable = true;
+      btn.dataset.comboKey = comboKey(c);
       firstActive = false;
       const stepCount = (c.steps || []).filter(s => !s._truncated).length;
       const ver = c.version || 1;
       const dateStr = c.extractedAt ? new Date(c.extractedAt).toLocaleString() : "unknown";
-      btn.title = `${c.comboName || "Untitled"}\nversion ${ver} · ${stepCount} steps\nReplay: ${c.replayId || "?"}\nExtracted: ${dateStr}`;
+      const displayTitle = getComboDisplayTitle(c);
+      btn.title = `${displayTitle}${c.userTitle ? ` (auto: ${c.comboName || "—"})` : ""}\nversion ${ver} · ${stepCount} steps\nReplay: ${c.replayId || "?"}\nExtracted: ${dateStr}`;
 
       // ── Left side: cropped art of the FIRST opening-hand card ──
       // Each combo gets a distinct visual identity from its opener.
@@ -8293,25 +12420,76 @@ function renderCombos() {
       const openerLabel = openerSizeLabel(tileSize);
       const openerTagHtml = `<span class="combo-card-tile-opener-tag ${openerTagClass}">${openerLabel}</span>`;
 
-      const artHtml = artId
-        ? `<span class="combo-card-tile-art" data-art-id="${artId}">${openerTagHtml}</span>`
-        : `<span class="combo-card-tile-art"><span class="combo-card-tile-art-fallback">${handSize || "?"}</span>${openerTagHtml}</span>`;
+      // Notes badge — render only when the combo has non-empty notes.
+      // Tooltip shows the first ~80 chars so the user can preview without
+      // opening the combo. Position: top-left of the art crop.
+      const notesText = (c.userNotes || "").trim();
+      const notesPreview = notesText
+        ? notesText.replace(/\s+/g, " ").slice(0, 80) + (notesText.length > 80 ? "…" : "")
+        : "";
+      const notesBadgeHtml = notesText
+        ? `<span class="combo-card-tile-notes-badge" title="${escapeHtml(notesPreview)}">📝</span>`
+        : "";
 
-      // ── Right side: title + meta + hand summary (opener tag moved to art) ──
-      const handTextHtml = hand.length
-        ? `<div class="combo-card-tile-hand">${hand.slice(0, 5).map(n => escapeHtml(n)).join('<span class="combo-card-tile-hand-sep">·</span>')}${hand.length > 5 ? ` <span class="combo-card-tile-hand-sep">+${hand.length - 5}</span>` : ""}</div>`
+      // "vs Opponent" badge — appears when the active format links this
+      // combo to one or more matchups. Helps the user see at a glance
+      // which combo solves which matchup.
+      const vsLabel = getComboVsBadge(c);
+      const vsBadgeHtml = vsLabel
+        ? `<span class="combo-card-tile-vs-badge" title="${escapeHtml(vsLabel.title)}">vs ${escapeHtml(vsLabel.short)}</span>`
+        : "";
+
+      const artInner = openerTagHtml + notesBadgeHtml + vsBadgeHtml;
+      const artHtml = artId
+        ? `<span class="combo-card-tile-art" data-art-id="${artId}">${artInner}</span>`
+        : `<span class="combo-card-tile-art"><span class="combo-card-tile-art-fallback">${handSize || "?"}</span>${artInner}</span>`;
+
+      // ── Right side: title + meta + hand thumbnail strip ──
+      // Mini-grid of up to 3 opening-hand cards as thumbnails, with a
+      // "+N" chip when the hand has more. Each thumb is keyed by its
+      // YGOPRODeck id so we can lazy-load the image after insertion.
+      const MAX_THUMBS = 3;
+      const thumbsHtml = hand.length
+        ? (() => {
+            const slice = hand.slice(0, MAX_THUMBS);
+            const more = hand.length - slice.length;
+            const inner = slice.map(name => {
+              const card = lookupCardByName(name);
+              const cid = card && card.id;
+              const safeName = escapeHtml(name);
+              if (cid) {
+                return `<span class="combo-card-tile-hand-thumb" data-thumb-id="${cid}" title="${safeName}"></span>`;
+              }
+              return `<span class="combo-card-tile-hand-thumb" title="${safeName}"><span class="combo-card-tile-hand-thumb-fallback">?</span></span>`;
+            }).join("");
+            const moreHtml = more > 0
+              ? `<span class="combo-card-tile-hand-more" title="${escapeHtml(hand.slice(MAX_THUMBS).join(', '))}">+${more}</span>`
+              : "";
+            return `<div class="combo-card-tile-hand-thumbs">${inner}${moreHtml}</div>`;
+          })()
         : "";
 
       btn.innerHTML = artHtml + `
         <span class="combo-card-tile-body">
           <span class="combo-card-tile-title-row">
-            <span class="combo-card-tile-title">${escapeHtml(c.comboName || "Untitled")}</span>
+            <span class="combo-card-tile-title">${escapeHtml(displayTitle)}</span>
             ${ver < 2 ? `<span class="combo-card-tile-stale" title="v1 extraction — re-extract for accurate hand">v1</span>` : ""}
           </span>
           <span class="combo-card-tile-meta">${stepCount} step${stepCount === 1 ? "" : "s"}</span>
-          ${handTextHtml}
+          ${thumbsHtml}
         </span>
       `;
+
+      // Lazy-load each hand-thumb image now that the tile is in the DOM
+      // (createImage attaches retry-on-error). On failure, swap to a
+      // simple "?" fallback so layout stays stable.
+      btn.querySelectorAll(".combo-card-tile-hand-thumb[data-thumb-id]").forEach(span => {
+        const tid = span.getAttribute("data-thumb-id");
+        const img = createImage(tid, span.getAttribute("title") || "", () => {
+          span.innerHTML = `<span class="combo-card-tile-hand-thumb-fallback">?</span>`;
+        });
+        if (img) span.appendChild(img);
+      });
       btn.onclick = () => showSavedCombo(i, btn);
       wrap.appendChild(btn);
 
@@ -8323,10 +12501,15 @@ function renderCombos() {
         const artSpan = btn.querySelector(`.combo-card-tile-art[data-art-id="${artId}"]`);
         if (artSpan) {
           const img = createImage(artId, c.comboName || "", () => {
-            // Preserve the existing opener tag (which is a child of artSpan)
+            // Preserve overlays (opener tag + notes badge + vs badge) when
+            // art fails to load — they should stay regardless of image state.
             const existingTag = artSpan.querySelector(".combo-card-tile-opener-tag");
+            const existingNotes = artSpan.querySelector(".combo-card-tile-notes-badge");
+            const existingVs = artSpan.querySelector(".combo-card-tile-vs-badge");
             artSpan.innerHTML = `<span class="combo-card-tile-art-fallback">${handSize || "?"}</span>`;
             if (existingTag) artSpan.appendChild(existingTag);
+            if (existingNotes) artSpan.appendChild(existingNotes);
+            if (existingVs) artSpan.appendChild(existingVs);
           });
           if (img) artSpan.appendChild(img);
         }
@@ -8370,6 +12553,14 @@ function renderCombos() {
         renderCombos();
       };
       wrap.appendChild(del);
+
+      // Drag/drop: source = the tile button; drop targets = the wrap
+      // (so the indicator line aligns with the row). The dragged combo
+      // can land in any bucket — cross-bucket drops re-bucket the combo
+      // by setting userOpenerSize so it sticks where the user dropped it.
+      wireTileDrag(btn, c, key);
+      wireTileDrop(wrap, c, key);
+
       picker.appendChild(wrap);
     });
   });
@@ -8379,6 +12570,10 @@ function renderCombos() {
 
   const firstTile = picker.querySelector(".combo-card-tile");
   if (firstTile) showSavedCombo(0, firstTile);
+
+  // Re-apply the persisted search filter after the picker rebuilds so
+  // the user's filter survives drag-reorder / rename / late hydration.
+  applyComboFilter();
 }
 
 // ============================================================
