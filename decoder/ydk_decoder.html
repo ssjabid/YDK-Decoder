@@ -814,6 +814,27 @@
     font-family: "SF Mono", Menlo, monospace;
     flex-shrink: 0;
   }
+  /* Phase 6A bug fix: delete button in the deck panel header. Subtle
+     by default — gets prominent on hover — so it's accessible but
+     doesn't shout for attention next to the title. */
+  .deck-panel-del-btn {
+    height: 28px;
+    padding: 0 10px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .deck-panel-del-btn:hover {
+    background: rgba(196,95,95,0.12);
+    color: var(--role-handtrap, #c45f5f);
+    border-color: var(--role-handtrap, #c45f5f);
+  }
 
   .deck-panel-section {
     background: var(--bg-card);
@@ -5482,7 +5503,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round1";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round2-add-flows";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7868,6 +7889,15 @@ function renderDecksTab() {
   document.querySelectorAll(".decks-role-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.role === _decksTabRoleFilter);
   });
+  // Phase 6A bug fix: + New deck button label reflects which kind of deck
+  // will be created based on current filter. Avoids "I clicked + New deck
+  // under Matchup but got a primary deck" confusion.
+  const addBtnLabel = document.getElementById("decks-add-btn");
+  if (addBtnLabel) {
+    addBtnLabel.textContent = _decksTabRoleFilter === "matchup"
+      ? "+ New matchup deck"
+      : "+ New deck";
+  }
 
   // Right panel: selected deck
   content.innerHTML = "";
@@ -7939,6 +7969,39 @@ function buildDeckPanel(deck) {
   countsEl.className = "deck-panel-counts";
   countsEl.textContent = `${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s`;
   head.appendChild(countsEl);
+
+  // Phase 6A bug fix (May 18): delete button for the selected deck.
+  // Works for both Mine and Matchup decks; cleanupDeckReferences sweeps
+  // every entity that points at this deck (combos / formats / matchups).
+  const delBtn = document.createElement("button");
+  delBtn.type = "button";
+  delBtn.className = "deck-panel-del-btn";
+  delBtn.innerHTML = "× Delete deck";
+  delBtn.title = "Delete this deck — combos lose their deck link, formats lose this as primary or matchup";
+  delBtn.onclick = async () => {
+    const isMatchup = deck.role === "matchup";
+    const ok = await ydkConfirm({
+      icon: "🗑",
+      title: `Delete "${deck.name}"?`,
+      message: isMatchup
+        ? `This matchup deck and its key-card annotations will be removed. <strong>Matchup planning notes referencing this deck stay</strong> but show "(opponent deck missing)" until you re-link.`
+        : `This deck and all its builds will be removed. <strong>Combos linked to it become unassigned.</strong> Formats with this deck as primary clear their primary-deck pick.`,
+      confirmText: "Delete deck",
+      danger: true,
+    });
+    if (!ok) return;
+    cleanupDeckReferences(deck.deckId);
+    const remaining = loadDecks().filter(d => d.deckId !== deck.deckId);
+    saveDecks(remaining);
+    if (getActiveDeckId() === deck.deckId) setActiveDeckId(null);
+    // Pick a sensible next selection
+    _decksTabSelectedId = remaining[0] ? remaining[0].deckId : null;
+    if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
+    renderDecksTab();
+    if (typeof renderFormatTab === "function") renderFormatTab();
+    if (typeof ydkStatus === "function") ydkStatus(`Deleted ${isMatchup ? "matchup" : ""} deck "${deck.name}"`);
+  };
+  head.appendChild(delBtn);
 
   // Phase 6A: Cards / Combos entry buttons. Cards and Combos are no
   // longer top-level tabs — they're sub-views of a selected deck. The
@@ -8860,8 +8923,11 @@ function persistDeck(deck) {
     const addBtn = document.getElementById("decks-add-btn");
     if (addBtn) {
       addBtn.addEventListener("click", () => {
-        // Reuse the existing import-flow: simulate the Cards-tab drop
-        // zone by opening a hidden file input.
+        // Phase 6A bug fix: respect the current role filter. If user is
+        // on "Matchup Decks" and clicks + New deck, they expect a NEW
+        // MATCHUP DECK (not a primary deck). Use createMatchupDeck which
+        // bypasses dedup AND sets role="matchup" up front.
+        const isMatchup = _decksTabRoleFilter === "matchup";
         const f = document.createElement("input");
         f.type = "file";
         f.accept = ".ydk,text/plain";
@@ -8870,17 +8936,28 @@ function persistDeck(deck) {
           if (!file) return;
           const reader = new FileReader();
           reader.onload = () => {
-            const deck = upsertDeckFromYdkText(String(reader.result || ""), file.name);
+            const text = String(reader.result || "");
+            const baseName = (file.name || "deck").replace(/\.ydk$/i, "");
+            let deck;
+            if (isMatchup) {
+              deck = createMatchupDeck(text, baseName);
+            } else {
+              deck = upsertDeckFromYdkText(text, file.name);
+            }
             if (deck) {
               _decksTabSelectedId = deck.deckId;
               renderDecksTab();
-              // Keep the header deck-switcher in sync so the new deck
-              // is selectable from there too.
               if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
+              if (typeof ydkStatus === "function") {
+                const counts = deck.counts || { main: 0, extra: 0, side: 0 };
+                ydkStatus(`Created ${isMatchup ? "matchup" : "primary"} deck "${deck.name}" · ${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s`);
+              }
             }
           };
           reader.readAsText(file);
         };
+        // Also use the modern cancel event so we know if the user backs out
+        f.addEventListener("cancel", () => {});
         f.click();
       });
     }
@@ -9199,13 +9276,32 @@ function renderFormatTab() {
   (activeFormat.matchups || []).forEach(m => {
     grid.appendChild(buildMatchupCard(activeFormat, m));
   });
-  // + Add matchup tile (always at the end)
-  const addTile = document.createElement("button");
-  addTile.type = "button";
-  addTile.className = "matchup-add-tile";
-  addTile.innerHTML = "+ Add matchup<br><span style=\"font-size:10px;\">(import opponent .ydk or pick existing)</span>";
-  addTile.onclick = () => addMatchupFlow(activeFormat);
-  grid.appendChild(addTile);
+  // + Add matchup — TWO tiles instead of one modal. This is the fix for
+  // the "file picker doesn't open" bug: each tile's onclick is a direct
+  // user gesture, so calling input.click() synchronously stays inside
+  // the user-activation window. Going through ydkConfirm + ydkPrompt
+  // before the file picker consumed activation and browsers blocked it.
+  const addNewTile = document.createElement("button");
+  addNewTile.type = "button";
+  addNewTile.className = "matchup-add-tile";
+  addNewTile.innerHTML = `+ Import opponent .ydk<br><span style="font-size:10px;">create a new matchup deck</span>`;
+  addNewTile.onclick = () => addMatchupFromYdk(activeFormat);
+  grid.appendChild(addNewTile);
+
+  // Only show "Pick existing" tile when there are existing matchup decks
+  // not already linked to this format
+  const decks = loadDecks();
+  const matchupDecks = decks.filter(d => d.role === "matchup");
+  const alreadyLinked = new Set((activeFormat.matchups || []).map(m => m.opponentDeckId));
+  const linkable = matchupDecks.filter(d => !alreadyLinked.has(d.deckId));
+  if (linkable.length) {
+    const linkTile = document.createElement("button");
+    linkTile.type = "button";
+    linkTile.className = "matchup-add-tile";
+    linkTile.innerHTML = `+ Link existing matchup deck<br><span style="font-size:10px;">(${linkable.length} available: ${linkable.slice(0, 2).map(d => escapeHtml(d.name)).join(", ")}${linkable.length > 2 ? "…" : ""})</span>`;
+    linkTile.onclick = () => addMatchupFromExisting(activeFormat, linkable);
+    grid.appendChild(linkTile);
+  }
   body.appendChild(grid);
 
   // ── Tournament journal (collapsible) ──
@@ -10748,9 +10844,78 @@ function buildMatchupTechList(format, matchup) {
   return container;
 }
 
-// Add-matchup flow: pick an existing matchup deck, or paste a .ydk to
-// create a new matchup deck inline. The new deck gets role: "matchup"
-// so it's clearly opposing.
+// Phase 6A bug fix (May 18): direct file-picker entry point. Click
+// fires synchronously from the user gesture, so the browser keeps user
+// activation alive for input.click(). We ask for the deck name AFTER
+// the file is in hand — window.prompt doesn't need activation, so the
+// post-pick prompt works fine.
+//
+// This replaces the older addMatchupFlow which used ydkConfirm+ydkPrompt
+// BEFORE the file picker, consuming activation and silently breaking it.
+function addMatchupFromYdk(format) {
+  const f = document.createElement("input");
+  f.type = "file";
+  f.accept = ".ydk,text/plain";
+  f.addEventListener("change", () => {
+    const file = f.files && f.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const text = String(reader.result || "");
+      // Default name = filename without .ydk; user can override.
+      const defaultName = (file.name || "Opponent").replace(/\.ydk$/i, "");
+      const name = await ydkPrompt({
+        title: "Name this matchup deck",
+        message: "Opponent deck name:",
+        value: defaultName,
+      });
+      if (name === null) return; // user cancelled the name prompt
+      const finalName = (name || "").trim() || defaultName;
+      const deck = createMatchupDeck(text, finalName);
+      if (!deck) return;
+      const matchup = makeMatchup(deck.deckId);
+      format.matchups = format.matchups || [];
+      format.matchups.push(matchup);
+      persistFormat(format);
+      _formatActiveDrillId = matchup.matchupId;
+      const counts = deck.counts || { main: 0, extra: 0, side: 0 };
+      if (typeof ydkStatus === "function") {
+        ydkStatus(`Matchup deck "${deck.name}" created · ${counts.main}m · ${counts.extra}e · ${counts.side}s`);
+      }
+      renderFormatTab();
+    };
+    reader.readAsText(file);
+  });
+  f.addEventListener("cancel", () => {});
+  f.click();
+}
+
+// Pick from existing matchup decks. Uses a lightweight prompt-based
+// picker (numbered list). For a richer modal-based picker we'd build
+// out a custom select component — deferred until needed.
+async function addMatchupFromExisting(format, available) {
+  if (!available || !available.length) return;
+  const labels = available.map((d, i) => `${i + 1}. ${d.name}`).join("\n");
+  const pick = await ydkPrompt({
+    title: "Pick existing matchup deck",
+    message: `Type the number of the matchup deck to add:\n\n${labels}`,
+  });
+  const idx = parseInt(pick, 10) - 1;
+  const chosen = available[idx];
+  if (!chosen) return;
+  const matchup = makeMatchup(chosen.deckId);
+  format.matchups = format.matchups || [];
+  format.matchups.push(matchup);
+  persistFormat(format);
+  _formatActiveDrillId = matchup.matchupId;
+  if (typeof ydkStatus === "function") {
+    ydkStatus(`Linked existing matchup "${chosen.name}" to this format`);
+  }
+  renderFormatTab();
+}
+
+// LEGACY add-matchup flow (kept for back-compat — any callers we missed).
+// Not reached from the UI anymore; the new tiles call the direct paths.
 async function addMatchupFlow(format) {
   const decks = loadDecks();
   const matchupDecks = decks.filter(d => d.role === "matchup");
