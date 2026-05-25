@@ -11,18 +11,42 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5.5' y='9' width='9' height='14' rx='1.5' transform='rotate(-18 10 16)' fill='%23e55b3c' opacity='0.55'/><rect x='11.5' y='7' width='9' height='14' rx='1.5' fill='%23e55b3c'/><rect x='17.5' y='9' width='9' height='14' rx='1.5' transform='rotate(18 22 16)' fill='%23e55b3c' opacity='0.55'/></svg>">
 <style>
   :root {
-    --bg: #0b0b0d;
-    --bg-elevated: #131318;
-    --bg-hover: #1c1c22;
-    --bg-card: #17171c;
-    --border: #26262e;
-    --border-strong: #3a3a44;
-    --text: #e8e8ea;
-    --text-dim: #8a8a94;
-    --text-faint: #55555e;
+    /* Phase 6E (May 19): refreshed tokens. Deeper background layers
+       for clearer hierarchy, slightly softer borders, refined accent.
+       Existing names preserved so all old references keep working. */
+    --bg: #08080a;
+    --bg-elevated: #14141a;
+    --bg-hover: #1d1d24;
+    --bg-card: #16161c;
+    --bg-card-hover: #1c1c24;
+    --border: #25252d;
+    --border-strong: #383843;
+    --border-subtle: #1c1c24;
+    --text: #ecedf0;
+    --text-dim: #92929c;
+    --text-faint: #5a5a64;
     --accent: #e55b3c;
+    --accent-hover: #ee6e51;
+    --accent-soft: rgba(229,91,60,0.14);
     --accent-dim: rgba(229,91,60,0.12);
     --warning: #e5a93c;
+    --success: #6fc88e;
+
+    /* Elevation shadows */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.25);
+    --shadow-glow: 0 0 0 1px var(--accent), 0 6px 22px rgba(229,91,60,0.22);
+
+    /* Radii */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+
+    /* Motion */
+    --motion-fast: 100ms cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-slow: 280ms cubic-bezier(0.4, 0, 0.2, 1);
 
     --role-starter:      #d89f4a;
     --role-extender:     #7da86e;
@@ -65,25 +89,36 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--bg);
+    background:
+      radial-gradient(circle at 12% 0%, rgba(229,91,60,0.045) 0%, transparent 38%),
+      radial-gradient(circle at 92% 100%, rgba(95,200,142,0.025) 0%, transparent 45%),
+      var(--bg);
+    background-attachment: fixed;
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-    font-size: 14px; line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text", "Segoe UI", sans-serif;
+    font-size: 14px; line-height: 1.55;
     min-height: 100vh;
     padding: 32px 24px 80px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
   }
 
   .container { max-width: 1400px; margin: 0 auto; }
 
   header {
     border-bottom: 1px solid var(--border);
-    padding-bottom: 20px; margin-bottom: 24px;
+    padding-bottom: 22px; margin-bottom: 26px;
     display: flex; align-items: baseline;
     justify-content: space-between; flex-wrap: wrap; gap: 16px;
   }
-  h1 { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+  h1 {
+    font-size: 19px; font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
   h1 .accent { color: var(--accent); }
-  .subtitle { color: var(--text-dim); font-size: 13px; }
+  .subtitle { color: var(--text-dim); font-size: 13px; letter-spacing: -0.005em; }
 
   /* Setup banner */
   .setup-banner {
@@ -106,19 +141,30 @@
     font-size: 11px;
   }
 
+  /* Phase 6E refresh — refined tab bar. Subtler border, slight active
+     glow, smoother transition. */
   .tabs {
-    display: flex; gap: 2px;
+    display: flex; gap: 4px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 24px;
+    margin-bottom: 28px;
+    padding: 0 2px;
   }
   .tab {
     background: none; border: none; color: var(--text-dim);
-    padding: 10px 18px; cursor: pointer; font-family: inherit; font-size: 13px;
+    padding: 11px 18px; cursor: pointer; font-family: inherit;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: -0.005em;
     border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+    border-radius: 4px 4px 0 0;
+    transition: color var(--motion-base), background var(--motion-base), border-color var(--motion-base);
   }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .tab.tab-icon { padding: 11px 12px; font-size: 15px; }
 
   /* Upload zone — fat dashed dropzone before a deck is loaded; collapses
      to a slim "Replace deck" bar afterwards so it doesn't hog vertical
@@ -5610,6 +5656,323 @@
   }
   /* Single-button mode (alert): hide the cancel, center the confirm */
   .ydk-modal.is-single .ydk-modal-cancel { display: none; }
+
+  /* ════════════════════════════════════════════════════════════════
+     PHASE 6E (May 19) — VISUAL REFRESH
+     Polish layer that goes at the end of the CSS so it cascades over
+     legacy rules where needed. Touches: modals, deck/combo tiles,
+     panel sections, RTE, sub-view back-bar, scrollbars, focus rings.
+     Functionality unchanged — visual only.
+     ════════════════════════════════════════════════════════════════ */
+
+  /* Focus rings — keyboard accessible without being ugly */
+  *:focus-visible {
+    outline: 2px solid rgba(229,91,60,0.55);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  [contenteditable]:focus-visible {
+    outline-offset: 1px;
+  }
+
+  /* Scrollbars — subtle, dark theme */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+    border: 2px solid var(--bg);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  /* Subtle scrollbar inside the combos sidebar (was 6px previously) */
+  .combos-sidebar::-webkit-scrollbar, .decks-sidebar::-webkit-scrollbar { width: 6px; }
+  .combos-sidebar::-webkit-scrollbar-thumb, .decks-sidebar::-webkit-scrollbar-thumb {
+    background: var(--border-strong); border: none; border-radius: 3px;
+  }
+
+  /* ── Modal refresh: more spacious, softer shadow ── */
+  .ydk-modal {
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+  .ydk-modal-title {
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .ydk-modal-message {
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .ydk-modal-btn {
+    transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .ydk-modal-btn:active { transform: translateY(1px); }
+  .ydk-modal-confirm {
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, var(--shadow-sm);
+  }
+  .ydk-modal-confirm:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+  /* ── Deck tile polish — subtle elevation + smoother hover ── */
+  .deck-tile {
+    box-shadow: var(--shadow-sm);
+    transition: background var(--motion-base), box-shadow var(--motion-base), transform var(--motion-fast);
+  }
+  .deck-tile:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateX(1px);
+  }
+  .deck-tile-name { letter-spacing: -0.005em; }
+
+  /* ── Combo tile polish ── */
+  .combo-card-tile {
+    transition: background var(--motion-base), box-shadow var(--motion-base), transform var(--motion-fast), border-color var(--motion-base);
+    box-shadow: var(--shadow-sm);
+  }
+  .combo-card-tile:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .combo-card-tile.active {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* ── Panel section polish (Decks tab collapsible sections) ── */
+  .deck-panel-section {
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--motion-base);
+  }
+  .deck-panel-section:not(.is-collapsed) { box-shadow: var(--shadow-md); }
+  .deck-panel-section-header {
+    transition: background var(--motion-base);
+  }
+  .deck-panel-section-header:hover { background: rgba(255,255,255,0.04); }
+
+  /* ── Matchup card polish ── */
+  .matchup-card {
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--motion-base), border-color var(--motion-base), transform var(--motion-fast);
+  }
+  .matchup-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  /* ── RTE toolbar polish ── */
+  .rt-editor {
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--motion-base), box-shadow var(--motion-base);
+  }
+  .rt-editor:focus-within {
+    box-shadow: var(--shadow-md);
+  }
+  .rt-editor-toolbar {
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+  }
+  .rt-editor-btn { transition: background var(--motion-fast), color var(--motion-fast); }
+  .rt-editor-btn.is-active {
+    box-shadow: 0 2px 6px rgba(229,91,60,0.35);
+  }
+
+  /* ── Sub-view back bar refresh ── */
+  .subview-back-bar {
+    background: linear-gradient(180deg, rgba(229,91,60,0.04), transparent);
+    margin-left: -8px;
+    margin-right: -8px;
+    padding: 10px 16px;
+    border-radius: 6px 6px 0 0;
+  }
+  .subview-back-btn {
+    transition: background var(--motion-base), color var(--motion-base), border-color var(--motion-base), transform var(--motion-fast);
+  }
+  .subview-back-btn:active { transform: translateX(-1px); }
+
+  /* ── Header deck switcher polish ── */
+  .deck-switcher-btn,
+  #deck-switcher-btn {
+    transition: background var(--motion-base), border-color var(--motion-base), box-shadow var(--motion-base);
+  }
+
+  /* ── Modal entrance animation refinement (smoother) ── */
+  .ydk-modal-backdrop:not([hidden]) {
+    animation: ydk-modal-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes ydk-modal-fade-in {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to   { opacity: 1; backdrop-filter: blur(4px); }
+  }
+  .ydk-modal-backdrop:not([hidden]) .ydk-modal {
+    animation: ydk-modal-slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes ydk-modal-slide-up {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Section collapse chevron rotation (smoother) ── */
+  .deck-panel-section-chevron {
+    transition: transform var(--motion-base);
+  }
+
+  /* ── Unified .btn helper (used for new components) ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text);
+    transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+    user-select: none;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.is-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, var(--shadow-sm);
+  }
+  .btn.is-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+  .btn.is-secondary {
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  .btn.is-secondary:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn.is-ghost {
+    background: transparent;
+    color: var(--text-faint);
+    border-color: transparent;
+  }
+  .btn.is-ghost:hover:not(:disabled) {
+    color: var(--accent);
+    background: rgba(255,255,255,0.04);
+  }
+  .btn.is-danger:hover:not(:disabled) {
+    background: rgba(196,95,95,0.16);
+    border-color: var(--role-handtrap, #c45f5f);
+    color: var(--role-handtrap, #c45f5f);
+  }
+
+  /* ── Save indicator toast (Phase 6E.7) — fixed, bottom-right.
+       JS adds one element to <body> and pushes notifications into it. */
+  .save-toast-container {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    z-index: 200;
+    display: flex; flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .save-toast {
+    background: var(--bg-elevated);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--success);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 12px;
+    box-shadow: var(--shadow-md);
+    display: flex; align-items: center; gap: 8px;
+    pointer-events: auto;
+    animation: save-toast-in 0.22s ease-out;
+  }
+  .save-toast.is-fade-out { animation: save-toast-out 0.32s ease-in forwards; }
+  .save-toast-icon { color: var(--success); font-weight: 700; }
+  @keyframes save-toast-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes save-toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(20px); }
+  }
+
+  /* ── Matchup drill — Phase 6E.6 collapsible sections ── */
+  .matchup-drill-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    grid-column: 1 / -1;
+  }
+  .matchup-drill-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.08);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--motion-base);
+  }
+  .matchup-drill-section-header:hover { background: rgba(255,255,255,0.04); }
+  .matchup-drill-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .matchup-drill-section-meta {
+    font-size: 10px;
+    color: var(--text-faint);
+    margin-left: 8px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .matchup-drill-section-chevron {
+    color: var(--text-faint);
+    font-size: 10px;
+    transition: transform var(--motion-base);
+  }
+  .matchup-drill-section.is-collapsed .matchup-drill-section-body { display: none; }
+  .matchup-drill-section.is-collapsed .matchup-drill-section-chevron { transform: rotate(-90deg); }
+  .matchup-drill-section.is-collapsed { border-bottom: 1px solid var(--border); }
+  .matchup-drill-section-body {
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .matchup-drill-section-body { grid-template-columns: 1fr; }
+  }
+  .matchup-drill-section-body > .matchup-drill-field {
+    grid-column: auto;
+  }
+  .matchup-drill-section-body > .matchup-drill-field.is-full {
+    grid-column: 1 / -1;
+  }
+
+  /* Tile selection: smoother left-stripe transition (was 0.12s, now uses
+     the unified motion variable). */
+  .deck-tile-role-stripe { transition: width var(--motion-base); }
+
 </style>
 </head>
 <body>
@@ -5958,7 +6321,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6BC-card-picker-everywhere";
+const YDK_BUILD = "2026-05-19-phase6E-visual-refresh";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7958,6 +8321,8 @@ function createRichTextEditor(opts) {
     debounceTimer = setTimeout(() => {
       const html = body.innerHTML;
       if (typeof opts.onChange === "function") opts.onChange(html);
+      // Phase 6E.7: visible auto-save confirmation
+      if (typeof showSaveToast === "function") showSaveToast("Saved");
     }, 200);
   }
   // Trigger change on user input
@@ -8012,6 +8377,43 @@ function notesHtmlToText(html) {
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
   return tmp.textContent || tmp.innerText || "";
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PHASE 6E.7 — SAVE INDICATOR TOAST
+// Auto-save is implicit (every change persists silently). The toast
+// surfaces that so the user feels confident their work is safe.
+// Stack of toasts in the bottom-right; each fades in, lingers ~1.4s,
+// fades out. Coalesces rapid saves so we don't spam.
+// ════════════════════════════════════════════════════════════════════════
+let _lastToastTime = 0;
+let _lastToastLabel = "";
+function showSaveToast(label) {
+  // Coalesce: skip if same label fired within 600ms (rapid keystroke saves)
+  const now = Date.now();
+  if (label === _lastToastLabel && now - _lastToastTime < 600) {
+    _lastToastTime = now;
+    return;
+  }
+  _lastToastTime = now;
+  _lastToastLabel = label;
+
+  let container = document.querySelector(".save-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "save-toast-container";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  toast.className = "save-toast";
+  toast.innerHTML = `<span class="save-toast-icon">✓</span><span>${escapeHtml(label || "Saved")}</span>`;
+  container.appendChild(toast);
+  // Cap to 3 visible toasts
+  while (container.children.length > 3) container.removeChild(container.firstChild);
+  setTimeout(() => {
+    toast.classList.add("is-fade-out");
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 320);
+  }, 1400);
 }
 
 // ── @cardname mention picker ──
@@ -11057,157 +11459,182 @@ function buildMatchupDrill(format, matchup) {
   }
   wrap.appendChild(head);
 
-  // Grid: how-they-win + gameplans
-  const grid = document.createElement("div");
-  grid.className = "matchup-drill-grid";
+  // Phase 6E.6: collapsible sections. The drill was a 10-section
+  // vertical scroll — now grouped into 6 collapsible blocks, with the
+  // most important (Quick reference, Playbook, End board) open by
+  // default and the heavier ones (Side-deck, Tech, Combos, Detailed
+  // notes) collapsed until needed.
 
-  // ── Phase 5: Chokepoints (the ONE thing each side must stop) ──
-  grid.appendChild(buildMatchupChokepoints(format, matchup));
+  // Helper: wrap content in a collapsible section block
+  const buildSection = (title, contentBuilder, defaultCollapsed, meta) => {
+    const section = document.createElement("section");
+    section.className = "matchup-drill-section" + (defaultCollapsed ? " is-collapsed" : "");
+    const header = document.createElement("div");
+    header.className = "matchup-drill-section-header";
+    const metaHtml = meta ? `<span class="matchup-drill-section-meta">${escapeHtml(meta)}</span>` : "";
+    header.innerHTML =
+      `<span class="matchup-drill-section-title">${escapeHtml(title)}${metaHtml}</span>` +
+      `<span class="matchup-drill-section-chevron">▾</span>`;
+    header.onclick = () => section.classList.toggle("is-collapsed");
+    section.appendChild(header);
+    const body = document.createElement("div");
+    body.className = "matchup-drill-section-body";
+    contentBuilder(body);
+    section.appendChild(body);
+    return section;
+  };
 
-  // ── Phase 5: Priority playbook (ordered list of plays) ──
-  grid.appendChild(buildMatchupPriorityPlaybook(format, matchup));
+  // 1. Quick reference — chokepoints + key targets (always open)
+  wrap.appendChild(buildSection("Quick reference — what matters most", (body) => {
+    // Chokepoints span full width
+    const chokeWrap = buildMatchupChokepoints(format, matchup);
+    body.appendChild(chokeWrap);
+    // Key targets cell
+    const targetsWrap = document.createElement("div");
+    targetsWrap.className = "matchup-drill-field is-full";
+    const tLab = document.createElement("div");
+    tLab.className = "matchup-drill-field-label";
+    tLab.textContent = "Key targets (auto from opponent's key cards)";
+    targetsWrap.appendChild(tLab);
+    const targets = document.createElement("div");
+    targets.className = "matchup-drill-keytargets";
+    if (!matchup.keyTargets || !matchup.keyTargets.length) {
+      const hint = document.createElement("span");
+      hint.className = "matchup-drill-empty-hint";
+      hint.textContent = opp
+        ? `Mark cards as "Must stop" or "If able" in ${opp.name}'s key-card buckets to populate this.`
+        : "Pick an opponent deck first.";
+      targets.appendChild(hint);
+    } else {
+      matchup.keyTargets.forEach(nm => {
+        const chip = document.createElement("span");
+        chip.className = "matchup-drill-keytarget-chip";
+        chip.textContent = nm;
+        const card = lookupCardByName(nm);
+        if (card && card.desc) attachPreviewHover(chip, card);
+        targets.appendChild(chip);
+      });
+    }
+    targetsWrap.appendChild(targets);
+    body.appendChild(targetsWrap);
+  }, false));
 
-  // ── Phase 5: Target end board for THIS matchup ──
-  const tebWrap = document.createElement("div");
-  tebWrap.className = "matchup-drill-field";
-  tebWrap.style.gridColumn = "1 / -1";
-  const tebLab = document.createElement("div");
-  tebLab.className = "matchup-drill-field-label";
-  tebLab.textContent = "Target end board (what we want on the field vs THIS deck)";
-  tebWrap.appendChild(tebLab);
-  tebWrap.appendChild(buildMatchupTargetEndboard(format, matchup));
-  grid.appendChild(tebWrap);
+  // 2. Playbook (priority steps going first + second)
+  wrap.appendChild(buildSection("Playbook — ordered plays", (body) => {
+    body.appendChild(buildMatchupPriorityPlaybook(format, matchup));
+  }, false));
 
-  // ── Phase 5: Side-deck planner (going first / second) ──
-  const sbWrap = document.createElement("div");
-  sbWrap.className = "matchup-drill-field";
-  sbWrap.style.gridColumn = "1 / -1";
-  const sbLab = document.createElement("div");
-  sbLab.className = "matchup-drill-field-label";
-  sbLab.textContent = "Side-deck plan (drag cards from pool to bring in / take out)";
-  sbWrap.appendChild(sbLab);
-  sbWrap.appendChild(buildMatchupSideboardPlanner(format, matchup));
-  grid.appendChild(sbWrap);
+  // 3. Target end board — what we want on the field vs THIS deck
+  wrap.appendChild(buildSection("Target end board", (body) => {
+    const tebWrap = document.createElement("div");
+    tebWrap.className = "matchup-drill-field is-full";
+    tebWrap.appendChild(buildMatchupTargetEndboard(format, matchup));
+    body.appendChild(tebWrap);
+  }, false, "what we want on the field vs THIS deck"));
 
-  const fields = [
-    { key: "howTheyWin", label: "How they win", placeholder: "Their main win condition: end-board pieces, lethal lines, key triggers." },
-    { key: "gameplanFirst", label: "Our plan going first (freeform — the playbook above is the structured version)", placeholder: "What we set up, what we leave open, what we negate first." },
-    { key: "gameplanSecond", label: "Our plan going second (freeform)", placeholder: "Break their board: which pieces to remove first, board breakers we lead with." },
-    { key: "freeformNotes", label: "Other notes", placeholder: "Tech that shines here, lines you've tried, things that surprised you in the matchup." },
-  ];
-  fields.forEach(f => {
-    const fieldWrap = document.createElement("div");
-    fieldWrap.className = "matchup-drill-field";
-    const lab = document.createElement("div");
-    lab.className = "matchup-drill-field-label";
-    lab.textContent = f.label;
-    fieldWrap.appendChild(lab);
-    // Phase 6B: rich-text editor with @cardname mentions on all freeform
-    // matchup fields. The structured fields (priority list, chokepoints,
-    // sideboard, target endboard) keep their bespoke editors.
-    const editor = createRichTextEditor({
-      initialValue: matchup[f.key] || "",
-      placeholder: f.placeholder + " Type @ to mention a card.",
-      onChange: (html) => {
-        if (html !== (matchup[f.key] || "")) {
-          matchup[f.key] = html;
-          persistFormat(format);
-        }
-      },
-    });
-    fieldWrap.appendChild(editor.element);
-    grid.appendChild(fieldWrap);
-  });
+  // 4. Side-deck plan — heavy, default collapsed
+  wrap.appendChild(buildSection("Side-deck plan", (body) => {
+    const sbWrap = document.createElement("div");
+    sbWrap.className = "matchup-drill-field is-full";
+    sbWrap.appendChild(buildMatchupSideboardPlanner(format, matchup));
+    body.appendChild(sbWrap);
+  }, true, "what to bring in / take out"));
 
-  // Key targets cell (read-only, synced from opponent's keyCards)
-  const targetsWrap = document.createElement("div");
-  targetsWrap.className = "matchup-drill-field";
-  const tLab = document.createElement("div");
-  tLab.className = "matchup-drill-field-label";
-  tLab.textContent = "Key targets (auto from opponent's key cards)";
-  targetsWrap.appendChild(tLab);
-  const targets = document.createElement("div");
-  targets.className = "matchup-drill-keytargets";
-  if (!matchup.keyTargets || !matchup.keyTargets.length) {
-    const hint = document.createElement("span");
-    hint.className = "matchup-drill-empty-hint";
-    hint.textContent = opp
-      ? `Mark cards as "Must stop" or "If able" in ${opp.name}'s key-card buckets to populate this.`
-      : "Pick an opponent deck first.";
-    targets.appendChild(hint);
-  } else {
-    matchup.keyTargets.forEach(nm => {
-      const chip = document.createElement("span");
-      chip.className = "matchup-drill-keytarget-chip";
-      chip.textContent = nm;
-      const card = lookupCardByName(nm);
-      if (card && card.desc) attachPreviewHover(chip, card);
-      targets.appendChild(chip);
-    });
-  }
-  targetsWrap.appendChild(targets);
-  grid.appendChild(targetsWrap);
+  // 5. Tech & counter cards
+  const counterCount = (matchup.counterCards || []).length;
+  wrap.appendChild(buildSection(
+    "Tech & counter cards",
+    (body) => {
+      const techWrap = document.createElement("div");
+      techWrap.className = "matchup-drill-field is-full";
+      techWrap.appendChild(buildMatchupTechList(format, matchup));
+      body.appendChild(techWrap);
+    },
+    true,
+    counterCount ? `${counterCount} card${counterCount === 1 ? "" : "s"}` : "what works for us, what hurts us"
+  ));
 
-  // Tech & Counter cards — what we run that's good against them,
-  // what THEY run that hurts us. Each entry: name + side + notes.
-  // E.g. "Illusion Gate · good-for-us · Blows up board, can summon
-  // Mirrorjade from their GY".
-  const techWrap = document.createElement("div");
-  techWrap.className = "matchup-drill-field";
-  techWrap.style.gridColumn = "1 / -1";
-  const techLab = document.createElement("div");
-  techLab.className = "matchup-drill-field-label";
-  techLab.textContent = "Tech & counter cards — what works for us, what hurts us";
-  techWrap.appendChild(techLab);
-  techWrap.appendChild(buildMatchupTechList(format, matchup));
-  grid.appendChild(techWrap);
-
-  // Related combos picker — checkbox list of YOUR combos
-  const comboWrap = document.createElement("div");
-  comboWrap.className = "matchup-drill-field";
-  comboWrap.style.gridColumn = "1 / -1";
-  const cLab = document.createElement("div");
-  cLab.className = "matchup-drill-field-label";
-  cLab.textContent = "Combos that solve this matchup";
-  comboWrap.appendChild(cLab);
-  const combosBox = document.createElement("div");
-  combosBox.className = "matchup-related-combos";
+  // 6. Related combos picker
   const allCombos = loadSavedCombos().filter(c => c.deckId === format.primaryDeckId);
-  if (!allCombos.length) {
-    const hint = document.createElement("div");
-    hint.className = "matchup-drill-empty-hint";
-    hint.textContent = format.primaryDeckId
-      ? "No combos extracted for your deck yet. Use the Chrome extension on a replay first."
-      : "Pick your primary deck above first.";
-    combosBox.appendChild(hint);
-  } else {
-    matchup.relatedComboIds = matchup.relatedComboIds || [];
-    allCombos.forEach(c => {
-      const row = document.createElement("label");
-      row.className = "matchup-related-combo";
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      const key = comboKey(c);
-      cb.checked = matchup.relatedComboIds.includes(key);
-      cb.onchange = () => {
-        if (cb.checked) {
-          if (!matchup.relatedComboIds.includes(key)) matchup.relatedComboIds.push(key);
-        } else {
-          matchup.relatedComboIds = matchup.relatedComboIds.filter(k => k !== key);
-        }
-        persistFormat(format);
-      };
-      const txt = document.createElement("span");
-      txt.textContent = getComboDisplayTitle(c);
-      row.appendChild(cb);
-      row.appendChild(txt);
-      combosBox.appendChild(row);
-    });
-  }
-  comboWrap.appendChild(combosBox);
-  grid.appendChild(comboWrap);
+  const linkedCount = (matchup.relatedComboIds || []).filter(k =>
+    allCombos.some(c => comboKey(c) === k)
+  ).length;
+  wrap.appendChild(buildSection(
+    "Combos that solve this matchup",
+    (body) => {
+      const comboWrap = document.createElement("div");
+      comboWrap.className = "matchup-drill-field is-full";
+      const combosBox = document.createElement("div");
+      combosBox.className = "matchup-related-combos";
+      if (!allCombos.length) {
+        const hint = document.createElement("div");
+        hint.className = "matchup-drill-empty-hint";
+        hint.textContent = format.primaryDeckId
+          ? "No combos extracted for your deck yet. Use the Chrome extension on a replay first."
+          : "Pick your primary deck above first.";
+        combosBox.appendChild(hint);
+      } else {
+        matchup.relatedComboIds = matchup.relatedComboIds || [];
+        allCombos.forEach(c => {
+          const row = document.createElement("label");
+          row.className = "matchup-related-combo";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          const key = comboKey(c);
+          cb.checked = matchup.relatedComboIds.includes(key);
+          cb.onchange = () => {
+            if (cb.checked) {
+              if (!matchup.relatedComboIds.includes(key)) matchup.relatedComboIds.push(key);
+            } else {
+              matchup.relatedComboIds = matchup.relatedComboIds.filter(k => k !== key);
+            }
+            persistFormat(format);
+            if (typeof showSaveToast === "function") showSaveToast("Saved");
+          };
+          const txt = document.createElement("span");
+          txt.textContent = getComboDisplayTitle(c);
+          row.appendChild(cb);
+          row.appendChild(txt);
+          combosBox.appendChild(row);
+        });
+      }
+      comboWrap.appendChild(combosBox);
+      body.appendChild(comboWrap);
+    },
+    true,
+    linkedCount ? `${linkedCount} linked` : ""
+  ));
 
-  wrap.appendChild(grid);
+  // 7. Detailed notes (freeform) — collapsed by default
+  wrap.appendChild(buildSection("Detailed notes (freeform)", (body) => {
+    const fields = [
+      { key: "howTheyWin", label: "How they win", placeholder: "Their main win condition: end-board pieces, lethal lines, key triggers." },
+      { key: "gameplanFirst", label: "Plan going first (freeform)", placeholder: "What we set up, what we leave open, what we negate first." },
+      { key: "gameplanSecond", label: "Plan going second (freeform)", placeholder: "Break their board: which pieces to remove first, board breakers we lead with." },
+      { key: "freeformNotes", label: "Other notes", placeholder: "Tech that shines here, lines you've tried, things that surprised you." },
+    ];
+    fields.forEach(f => {
+      const fieldWrap = document.createElement("div");
+      fieldWrap.className = "matchup-drill-field";
+      const lab = document.createElement("div");
+      lab.className = "matchup-drill-field-label";
+      lab.textContent = f.label;
+      fieldWrap.appendChild(lab);
+      const editor = createRichTextEditor({
+        initialValue: matchup[f.key] || "",
+        placeholder: f.placeholder + " Type @ to mention a card.",
+        onChange: (html) => {
+          if (html !== (matchup[f.key] || "")) {
+            matchup[f.key] = html;
+            persistFormat(format);
+          }
+        },
+      });
+      fieldWrap.appendChild(editor.element);
+      body.appendChild(fieldWrap);
+    });
+  }, true, "structured fields cover most cases — use these for extra detail"));
+
   return wrap;
 }
 

@@ -1,7 +1,7 @@
 # HANDOFF — YDK Decoder
 
 Snapshot of the project state for whoever picks this up next (including future-me).
-Last updated: **2026-05-17**.
+Last updated: **2026-05-19**.
 
 ---
 
@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-18-phase6BC-card-picker-everywhere` |
+| Decoder | `2026-05-19-phase6E-visual-refresh` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -50,6 +50,25 @@ SW + deck-extractor builds are in their respective console logs.
 - **Manual opener-size override**: click the colored pill in the open combo's header to re-bucket between `1-card` / `2-card` / `Other`. Persists on `combo.userOpenerSize`. Auto-bucketing is by `openingHand.length` with anything 3+ folding into Other.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
+
+### Phase 6E — Visual refresh (May 19 2026, latest)
+End-to-end UI polish. Functionality unchanged; everything is visual + interaction-layer.
+
+- **Design tokens refresh.** Deeper bg layers (`--bg`, `--bg-elevated`, `--bg-card`, `--bg-card-hover`), softer borders (`--border-subtle`), brighter accent hover (`--accent-hover`), accent soft tint (`--accent-soft`). Added elevation tokens (`--shadow-sm/md/lg/glow`), radii (`--radius-sm/md/lg`), motion tokens (`--motion-fast/base/slow` with cubic-bezier easing). All legacy names preserved.
+- **Body + header.** Subtle radial gradient backgrounds (warm at 12% top-left, cool at 92% bottom-right), Inter / SF font stack with antialiasing, refined h1 weight + letter-spacing.
+- **Tab bar.** Subtler border, smoother color transition, no more loud underline — just an accent-bottom-border on active.
+- **Polish layer (CSS block at end of style).** Focus rings, dark scrollbars, modal entrance animations (`ydk-modal-fade-in` + `ydk-modal-slide-up`), elevated deck/combo/matchup tiles with hover lift, panel section shadows, RTE focus elevation + toolbar gradient, sub-view back-bar gradient.
+- **Unified `.btn` helper.** New `.btn` base + `.is-primary` / `.is-secondary` / `.is-ghost` / `.is-danger` variants. Drop-in for future components; existing buttons unchanged.
+- **Matchup drill → collapsible sections.** The 10-section vertical scroll is now grouped into 7 collapsible blocks with the most-needed sections open by default:
+  1. Quick reference (open) — chokepoints + key targets
+  2. Playbook (open) — priority playbook (going first + second)
+  3. Target end board (open)
+  4. Side-deck plan (collapsed)
+  5. Tech & counter cards (collapsed, header shows count)
+  6. Combos that solve this matchup (collapsed, header shows linked count)
+  7. Detailed notes / freeform (collapsed) — the 4 freeform RTE fields
+- **Save indicator toast.** `showSaveToast("Saved")` fires on every 200ms-debounced RTE save + on Combos-checkbox toggle. Coalesces duplicate labels within 600ms; capped to 3 visible toasts; fades in/out from bottom-right.
+- **Smoother tile selection.** Selected role-stripe expansion uses `--motion-base` (was a hard 0.12s).
 
 ### Quadruple-check audit pass (May 17 2026, post-Phase-5)
 After Phase 5 the user asked for a thorough audit. Real bugs found and fixed:
