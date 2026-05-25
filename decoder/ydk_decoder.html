@@ -633,6 +633,42 @@
   }
   .decks-tab-header strong { color: var(--text); font-weight: 600; }
 
+  /* Emergency recovery banner — appears when ydk_decks is empty but
+     ydk_decks_premigration_backup still has data. Lets the user
+     restore in one click. */
+  .deck-recovery-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    background: rgba(229,169,60,0.12);
+    border: 1px solid rgba(229,169,60,0.5);
+    border-left: 4px solid var(--warning, #e5a93c);
+    border-radius: 5px;
+    font-size: 13px;
+  }
+  .deck-recovery-message { display: flex; flex-direction: column; gap: 3px; }
+  .deck-recovery-message strong { color: var(--text); }
+  .deck-recovery-message span { color: var(--text-dim); font-size: 12px; }
+  .deck-recovery-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .deck-recovery-btn {
+    height: 32px; padding: 0 14px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .deck-recovery-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .deck-recovery-btn.is-primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .deck-recovery-btn.is-primary:hover { filter: brightness(1.1); color: white; }
+
   .decks-workspace {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -5507,7 +5543,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round4-decks-default-visible";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round5-deck-recovery-banner";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7733,6 +7769,81 @@ function upsertDeckFromYdkText(text, baseName) {
 }
 function saveDecks(arr) {
   try { localStorage.setItem(DECKS_KEY, JSON.stringify(arr)); } catch (_) {}
+}
+
+// EMERGENCY RECOVERY (May 18 — round 5):
+// If ydk_decks is empty but the one-time pre-migration backup still
+// exists, the user's library was wiped somehow (browser clear, accidental
+// reset, prior bug). We auto-detect this on init and offer restore via
+// a banner on the Decks tab. Idempotent — once restored OR dismissed,
+// the banner stops appearing.
+function detectAndOfferDeckRestore() {
+  try {
+    const current = loadDecks();
+    if (current.length > 0) return null; // not empty — nothing to recover
+    const dismissedKey = "ydk_decks_recovery_dismissed";
+    if (localStorage.getItem(dismissedKey) === "1") return null;
+    const backupRaw = localStorage.getItem(DECKS_BACKUP_KEY);
+    if (!backupRaw) return null;
+    let backup;
+    try { backup = JSON.parse(backupRaw); } catch (_) { return null; }
+    if (!Array.isArray(backup) || !backup.length) return null;
+    return backup; // recovery available
+  } catch (_) { return null; }
+}
+
+// Render the recovery banner inside the Decks tab if a backup is
+// available. Two actions: Restore (re-populates ydk_decks from backup
+// after running the v2 migration) or Dismiss (sets the dismissed flag).
+function renderDeckRecoveryBanner() {
+  const tabDecks = document.getElementById("tab-decks");
+  if (!tabDecks) return;
+  // Remove any existing banner before re-adding
+  const existing = tabDecks.querySelector(".deck-recovery-banner");
+  if (existing) existing.remove();
+  const backup = detectAndOfferDeckRestore();
+  if (!backup) return;
+  const banner = document.createElement("div");
+  banner.className = "deck-recovery-banner";
+  banner.innerHTML =
+    `<div class="deck-recovery-message">` +
+      `<strong>Your decks library is empty</strong>` +
+      `<span>but a backup of ${backup.length} deck${backup.length === 1 ? "" : "s"} is available from before the format-planner migration.</span>` +
+    `</div>` +
+    `<div class="deck-recovery-actions">` +
+      `<button type="button" class="deck-recovery-btn is-primary" data-action="restore">Restore backup</button>` +
+      `<button type="button" class="deck-recovery-btn" data-action="dismiss">Dismiss</button>` +
+    `</div>`;
+  banner.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".deck-recovery-btn");
+    if (!btn) return;
+    if (btn.dataset.action === "restore") {
+      // Restore the backup as-is, then re-run migration to bring shape up to v2.
+      saveDecks(backup);
+      localStorage.removeItem("ydk_decks_schema_version"); // re-run migration
+      migrateDecksToV2();
+      migrateCombosToDecklists();
+      banner.remove();
+      if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
+      if (typeof renderDecksTab === "function") renderDecksTab();
+      if (typeof ydkStatus === "function") ydkStatus(`Restored ${backup.length} deck${backup.length === 1 ? "" : "s"} from backup`);
+    } else if (btn.dataset.action === "dismiss") {
+      const ok = await ydkConfirm({
+        icon: "⚠",
+        title: "Dismiss the backup?",
+        message: `If you dismiss, the banner won't show again. You can still inspect the backup manually via DevTools at <code>localStorage.getItem("ydk_decks_premigration_backup")</code>.`,
+        confirmText: "Dismiss",
+      });
+      if (ok) {
+        try { localStorage.setItem("ydk_decks_recovery_dismissed", "1"); } catch (_) {}
+        banner.remove();
+      }
+    }
+  });
+  // Insert banner above the decks-tab-header so it's the first thing visible
+  const header = tabDecks.querySelector(".decks-tab-header");
+  if (header) header.parentNode.insertBefore(banner, header);
+  else tabDecks.insertBefore(banner, tabDecks.firstChild);
 }
 function getActiveDeckId() {
   try { return localStorage.getItem(ACTIVE_DECK_KEY) || null; } catch (_) { return null; }
@@ -14772,6 +14883,9 @@ renderCombos();
 // bootstrap (URL-param combo ingest, deck-injected listeners, etc.).
 try {
   if (typeof renderDecksTab === "function") renderDecksTab();
+  // Emergency recovery: if ydk_decks is empty but the pre-migration
+  // backup still has data, show a banner offering one-click restore.
+  if (typeof renderDeckRecoveryBanner === "function") renderDeckRecoveryBanner();
 } catch (e) {
   console.error("[YDK] initial renderDecksTab failed:", e);
   if (typeof ydkStatus === "function") {
