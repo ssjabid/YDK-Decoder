@@ -1438,9 +1438,13 @@
     color: var(--text-faint);
     font-weight: 600;
   }
+  /* Phase 6A bug-fix (May 18): uniform sized textareas with a max-height
+     so long notes scroll instead of pushing the layout. min-height 100px
+     fixed so all fields in the grid line up visually regardless of content. */
   .matchup-drill-textarea {
     width: 100%;
-    min-height: 70px;
+    min-height: 100px;
+    max-height: 220px;
     background: var(--bg);
     color: var(--text);
     border: 1px solid var(--border);
@@ -1451,9 +1455,14 @@
     line-height: 1.5;
     resize: vertical;
     outline: none;
+    box-sizing: border-box;
   }
   .matchup-drill-textarea:focus { border-color: var(--accent); }
   .matchup-drill-textarea::placeholder { color: var(--text-faint); font-style: italic; }
+  /* When the user expands the textarea (resize handle), allow it to go
+     beyond the cap. Auto-uniform until they manually expand. */
+  .matchup-drill-field { display: flex; flex-direction: column; }
+  .matchup-drill-field .matchup-drill-textarea { flex: 1; }
   .matchup-drill-keytargets {
     background: var(--bg);
     border: 1px solid var(--border);
@@ -1885,6 +1894,30 @@
     opacity: 0.6;
   }
   .sideboard-chip-del:hover { opacity: 1; color: var(--warning); }
+  /* Zone chip steppers: − and + buttons that adjust copies in/out
+     without going back to the pool. */
+  .sideboard-chip-step {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sideboard-chip-step:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .sideboard-chip.is-zone-chip {
+    gap: 3px;
+  }
   .sideboard-zone-empty {
     font-size: 10px;
     color: var(--text-faint);
@@ -2094,34 +2127,53 @@
      Cards and Combos are no longer top-level destinations. When the
      user enters either via the Decks panel, this bar sits at the top
      showing "← Back to {deck name}" so they always know how to return.
+     Polished May 18: tighter padding, no background card (cleaner),
+     accent-colored deck name, integrated rather than floating bar.
      ════════════════════════════════════════════════════════════════ */
   .subview-back-bar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 14px;
-    margin-bottom: 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 0 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
     font-size: 12px;
   }
   .subview-back-bar:empty { display: none; }
   .subview-back-bar .subview-back-btn {
-    background: transparent;
-    color: var(--text-faint);
+    background: var(--bg-card);
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 4px 10px;
+    padding: 5px 12px;
     font: inherit;
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
-    transition: color 0.12s, border-color 0.12s;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
-  .subview-back-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .subview-back-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
   .subview-back-trail {
     color: var(--text-faint);
-    font-size: 11px;
+    font-size: 12px;
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .subview-back-trail strong { color: var(--text); font-weight: 600; }
+  .subview-back-trail strong { color: var(--accent); font-weight: 600; }
+  .subview-back-trail-tag {
+    display: inline-block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    margin-left: 6px;
+    font-weight: 700;
+  }
 
   /* Cards / Combos entry buttons in the Decks panel header */
   .deck-panel-subview-actions {
@@ -5343,8 +5395,8 @@
           <!-- Phase 6A: two-state toggle (was three). "All" was confusing —
                every deck is either yours or a matchup. -->
           <div class="decks-role-filter" id="decks-role-filter">
-            <button type="button" class="decks-role-btn active" data-role="primary">Mine</button>
-            <button type="button" class="decks-role-btn" data-role="matchup">Matchup</button>
+            <button type="button" class="decks-role-btn active" data-role="primary">My Decks</button>
+            <button type="button" class="decks-role-btn" data-role="matchup">Matchup Decks</button>
           </div>
         </div>
         <div class="decks-list" id="decks-list-panel"></div>
@@ -5430,7 +5482,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-tab-restructure+filter-simplify+sideboard-tiles+ydk-picker";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round1";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7703,13 +7755,40 @@ let _subviewSourceDeckId = null;
 
 // Open Cards or Combos sub-view scoped to a specific deck. Sets the
 // active deck (so the view reads its data) and switches top-level tab.
-// Renders the back-bar at the top of the sub-view.
-function openDeckSubview(deck, view) {
+// Renders the back-bar at the top of the sub-view AND forces the
+// destination view to re-render with the new deck's data (without this,
+// Cards/Combos showed whatever was last rendered — usually a stale
+// primary deck rather than the matchup deck the user just clicked).
+async function openDeckSubview(deck, view) {
   if (!deck) return;
   _subviewSourceDeckId = deck.deckId;
   setActiveDeckId(deck.deckId);
   setActiveTab(view); // "cards" or "combos"
   renderSubviewBackBars();
+  if (view === "cards") {
+    // Cards tab content is rendered by loadDeckFromText. Without this,
+    // it'd still show the previously-active deck's cards.
+    const dl = getDeckPrimaryDecklist(deck);
+    const ydkText = (dl && dl.ydkContent) || deck.ydkContent || "";
+    if (ydkText) {
+      try {
+        await loadDeckFromText(ydkText, (deck.name || "deck") + ".ydk", { persist: false });
+      } catch (e) {
+        console.warn("[YDK] loadDeckFromText in openDeckSubview failed:", e);
+      }
+    } else {
+      // No card content — clear the output so the user doesn't see a
+      // stale deck under a name that doesn't have cards.
+      const out = document.getElementById("output");
+      if (out) out.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-faint);font-style:italic;">This deck has no card list yet. It might be a notes-only matchup deck.</div>`;
+      const filenameEl = document.getElementById("filename");
+      if (filenameEl) filenameEl.textContent = (deck.name || "deck") + " (no cards)";
+    }
+  } else if (view === "combos") {
+    // Combos tab respects activeDeckId via renderCombos. Re-render so
+    // the picker shows the selected deck's combos.
+    if (typeof renderCombos === "function") renderCombos();
+  }
 }
 
 // Render the "← Back to <deck name>" bar at the top of Cards/Combos
@@ -7726,7 +7805,8 @@ function renderSubviewBackBars() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "subview-back-btn";
-    btn.textContent = "← Back to deck";
+    btn.textContent = "← Back to " + deck.name;
+    btn.title = "Return to the deck panel";
     btn.onclick = () => {
       _decksTabSelectedId = _subviewSourceDeckId;
       _subviewSourceDeckId = null;
@@ -7735,7 +7815,8 @@ function renderSubviewBackBars() {
     };
     const trail = document.createElement("span");
     trail.className = "subview-back-trail";
-    trail.innerHTML = `Viewing <strong>${escapeHtml(deck.name)}</strong>'s ${id === "cards-back-bar" ? "cards" : "combos"}`;
+    const label = id === "cards-back-bar" ? "Cards" : "Combos";
+    trail.innerHTML = `<strong>${escapeHtml(deck.name)}</strong><span class="subview-back-trail-tag">${label}</span>`;
     bar.appendChild(btn);
     bar.appendChild(trail);
   });
@@ -7762,7 +7843,7 @@ function renderDecksTab() {
     const matchup = decks.filter(d => d.role === "matchup").length;
     header.innerHTML =
       `<strong>${decks.length}</strong> deck${decks.length === 1 ? "" : "s"} · ` +
-      `<strong>${primary}</strong> yours · ` +
+      `<strong>${primary}</strong> mine · ` +
       `<strong>${matchup}</strong> matchup`;
   }
 
@@ -7818,7 +7899,7 @@ function buildDeckTile(deck) {
     `<span class="deck-tile-body">` +
       `<span class="deck-tile-name">${escapeHtml(deck.name || "Untitled deck")}</span>` +
       `<span class="deck-tile-meta">` +
-        `<span class="deck-tile-role-badge">${isMatchup ? "Matchup" : "Mine"}</span>` +
+        `<span class="deck-tile-role-badge">${isMatchup ? "Matchup" : "My deck"}</span>` +
         `<span>${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s${variantBadge}</span>` +
       `</span>` +
     `</span>`;
@@ -9131,32 +9212,42 @@ function renderFormatTab() {
   body.appendChild(buildTournamentsSection(activeFormat));
 }
 
-// Phase 6A: file-picker helper. Resolves to the .ydk text content (string)
-// or null if the user cancelled. Reusable from any flow that needs to
-// ingest a deck file — matchup creation, "+ New deck", future imports.
+// Phase 6A (May 18 bug fix): file-picker helper. Resolves to the .ydk
+// text content (string) or null if the user cancelled. Reusable from
+// any flow that needs to ingest a deck file.
+//
+// The PRIOR version used a window focus event to detect cancel, which
+// fired prematurely in some browsers and resolved null even when a file
+// WAS picked — bug: matchup deck creation silently failed and the
+// flow fell into the "notes only" branch. This version uses the modern
+// `cancel` event (Chrome 113+, FF 108+, Safari 16.4+) which is the
+// reliable signal. The resolved flag guarantees idempotency.
 function pickYdkFile() {
   return new Promise((resolve) => {
     const f = document.createElement("input");
     f.type = "file";
     f.accept = ".ydk,text/plain";
-    f.onchange = () => {
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      resolve(result);
+    };
+    f.addEventListener("change", () => {
       const file = f.files && f.files[0];
-      if (!file) { resolve(null); return; }
+      if (!file) { finish(null); return; }
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => resolve(null);
+      reader.onload = () => finish(String(reader.result || ""));
+      reader.onerror = () => finish(null);
       reader.readAsText(file);
-    };
-    // Cancel detection: the browser doesn't fire change on cancel, so
-    // we listen on the body's focus event — when the picker closes,
-    // body regains focus. We give onchange a chance to fire first.
-    const onFocus = () => {
-      window.removeEventListener("focus", onFocus);
-      setTimeout(() => {
-        if (!f.files || !f.files.length) resolve(null);
-      }, 300);
-    };
-    window.addEventListener("focus", onFocus);
+    });
+    // Modern cancel event — fires when the user dismisses the file picker
+    // without selecting anything. Single reliable signal across modern browsers.
+    f.addEventListener("cancel", () => finish(null));
+    // Safety net: if neither change nor cancel fires within 90s, give up.
+    // (Some older browsers don't support `cancel`; this stops the flow
+    // from getting stuck waiting forever.)
+    setTimeout(() => finish(null), 90000);
     f.click();
   });
 }
@@ -10064,8 +10155,7 @@ function buildSideboardRow(opts) {
       zoneCopies.forEach(n => zCounts.set(n, (zCounts.get(n) || 0) + 1));
       zCounts.forEach((n, name) => {
         const chip = document.createElement("span");
-        chip.className = "sideboard-chip";
-        chip.title = "Click × to remove";
+        chip.className = "sideboard-chip is-zone-chip";
         const labelSpan = document.createElement("span");
         labelSpan.textContent = n > 1 ? `${name} ×${n}` : name;
         chip.appendChild(labelSpan);
@@ -10074,11 +10164,13 @@ function buildSideboardRow(opts) {
           chip.onmouseenter = () => showPreview(chip, card);
           chip.onmouseleave = () => hidePreview();
         }
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "sideboard-chip-del";
-        del.textContent = "×";
-        del.onclick = (e) => {
+        // − stepper: decrement by 1
+        const minus = document.createElement("button");
+        minus.type = "button";
+        minus.className = "sideboard-chip-step";
+        minus.textContent = "−";
+        minus.title = "Remove one copy";
+        minus.onclick = (e) => {
           e.stopPropagation();
           const idx = sb[zoneKey].indexOf(name);
           if (idx >= 0) sb[zoneKey].splice(idx, 1);
@@ -10086,7 +10178,24 @@ function buildSideboardRow(opts) {
           updateCounter();
           rerender();
         };
-        chip.appendChild(del);
+        // + stepper: increment by 1 (capped at deck count)
+        const plus = document.createElement("button");
+        plus.type = "button";
+        plus.className = "sideboard-chip-step";
+        plus.textContent = "+";
+        plus.title = "Add one more copy";
+        plus.onclick = (e) => {
+          e.stopPropagation();
+          const cap = poolNames.filter(p => p === name).length;
+          const have = sb[zoneKey].filter(p => p === name).length;
+          if (have >= cap) return;
+          sb[zoneKey].push(name);
+          persistFormat(format);
+          updateCounter();
+          rerender();
+        };
+        chip.appendChild(minus);
+        chip.appendChild(plus);
         zoneChips.appendChild(chip);
       });
     }
@@ -10707,6 +10816,12 @@ async function addMatchupFlow(format) {
     format.matchups.push(matchup);
     persistFormat(format);
     _formatActiveDrillId = matchup.matchupId;
+    // Status confirmation — tells the user the deck was actually created
+    // and how many cards landed. Surfaces silent failures.
+    const counts = deck.counts || { main: 0, extra: 0, side: 0 };
+    if (typeof ydkStatus === "function") {
+      ydkStatus(`Matchup deck "${deck.name}" created · ${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s`);
+    }
     renderFormatTab();
   } else if (choice === false && available.length) {
     // Pick from existing — simple prompt with comma-separated index
@@ -11862,19 +11977,10 @@ function renderPhaseBullets(phase) {
       li.appendChild(viaSpan);
     }
 
-    // Per-step "?" info chip — surfaces the primary card's effect text
-    // so the user can verify what this step actually does. Reuses the
-    // same preview pane as card-pill hovers. Only shown when we have
-    // card data with effect text — otherwise the chip is just clutter.
-    const primary = getStepPrimaryCard(step);
-    if (primary && primary.desc) {
-      const info = document.createElement("span");
-      info.className = "bullet-info-chip";
-      info.textContent = "?";
-      info.title = "Hover for " + (primary.name || "card") + "'s text";
-      attachPreviewHover(info, primary);
-      li.appendChild(info);
-    }
+    // Phase 6A (May 18 2026): removed the per-step "?" info chip. The
+    // card pills already wired to hover-preview cover this need without
+    // the extra visual clutter. The "(via X's effect)" annotation keeps
+    // its hover for the trigger-card explanation.
 
     if (Array.isArray(step.cards) && step.cards.some(Boolean)) {
       const pills = document.createElement("span");
@@ -12019,15 +12125,7 @@ function renderPhaseCompact(phase, pIdx) {
       }
       li.appendChild(viaSpan);
     }
-    const primary = getStepPrimaryCard(step);
-    if (primary && primary.desc) {
-      const info = document.createElement("span");
-      info.className = "bullet-info-chip";
-      info.textContent = "?";
-      info.title = "Hover for " + (primary.name || "card") + "'s text";
-      attachPreviewHover(info, primary);
-      li.appendChild(info);
-    }
+    // ? info chip removed (May 18) — hover the card pill instead.
     if (Array.isArray(step.cards) && step.cards.some(Boolean)) {
       const pills = document.createElement("span");
       pills.className = "phase-bullet-pills";
@@ -12210,17 +12308,8 @@ function renderStep(s) {
     narrative.appendChild(viaSpan);
   }
 
-  // Per-step "?" info chip — surfaces the primary card's effect text on
-  // hover. Same chip as Cluster view so behavior is consistent.
-  const primary = getStepPrimaryCard(s);
-  if (primary && primary.desc) {
-    const info = document.createElement("span");
-    info.className = "bullet-info-chip";
-    info.textContent = "?";
-    info.title = "Hover for " + (primary.name || "card") + "'s text";
-    attachPreviewHover(info, primary);
-    narrative.appendChild(info);
-  }
+  // ? info chip removed (May 18) — the card pills below already
+  // hover-preview the same content, and the chip was adding clutter.
 
   content.appendChild(narrative);
 
