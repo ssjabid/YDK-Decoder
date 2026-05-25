@@ -749,6 +749,14 @@
     font-style: italic;
     text-align: center;
   }
+  /* Phase 6A bug fix (May 18 round 9): selection state no longer uses
+     an orange border around the tile — that clashed visually with the
+     green/red role badge inside. Now selection is:
+     - A subtle background tint
+     - A WIDER left-stripe (still in role color, so colors stay
+       coherent: green for Mine, red for Matchup)
+     - A small dot on the right edge as a positive selection indicator
+     The orange accent is reserved for ACTION items (buttons, links). */
   .deck-tile {
     display: flex; align-items: stretch;
     background: var(--bg-card);
@@ -758,19 +766,37 @@
     cursor: pointer;
     text-align: left;
     font: inherit;
-    transition: border-color 0.12s, background 0.12s;
+    transition: background 0.12s, transform 0.08s;
     position: relative;
   }
-  .deck-tile:hover { border-color: var(--accent); }
+  .deck-tile:hover { background: rgba(255,255,255,0.02); }
   .deck-tile.active {
-    border-color: var(--accent);
-    background: rgba(229,116,60,0.06);
+    background: rgba(125,168,110,0.06);   /* greenish tint for Mine */
+  }
+  .deck-tile.active.is-matchup {
+    background: rgba(196,95,95,0.06);     /* reddish tint for Matchup */
+  }
+  /* Right-edge selection indicator — a soft glowing dot in the role color */
+  .deck-tile.active::after {
+    content: "";
+    position: absolute;
+    right: 10px; top: 50%; transform: translateY(-50%);
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--role-engine);
+    box-shadow: 0 0 0 3px rgba(125,168,110,0.18);
+  }
+  .deck-tile.active.is-matchup::after {
+    background: var(--role-handtrap, #c45f5f);
+    box-shadow: 0 0 0 3px rgba(196,95,95,0.18);
   }
   .deck-tile-role-stripe {
     width: 3px;
     flex-shrink: 0;
     background: var(--role-engine);
+    transition: width 0.12s;
   }
+  .deck-tile.active .deck-tile-role-stripe { width: 5px; }
   .deck-tile.is-matchup .deck-tile-role-stripe { background: var(--role-handtrap, #c45f5f); }
   .deck-tile-body {
     padding: 8px 10px;
@@ -2274,6 +2300,185 @@
   .deck-panel-subview-btn:hover {
     background: var(--accent);
     color: white;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     PHASE 6B — RICH-TEXT EDITOR
+     A reusable contenteditable + toolbar component. Replaces every
+     plain textarea used for notes in the app. Supports:
+       B / I / bullet list / numbered list / H3 / H4 / link / @mention
+     Stores as HTML; auto-wraps legacy plain text in <p> on first load.
+     ════════════════════════════════════════════════════════════════ */
+  .rt-editor {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    transition: border-color 0.12s;
+    display: flex; flex-direction: column;
+  }
+  .rt-editor:focus-within { border-color: var(--accent); }
+  .rt-editor-toolbar {
+    display: flex; gap: 2px; align-items: center;
+    padding: 4px 6px;
+    background: rgba(0,0,0,0.10);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .rt-editor-toolbar-divider {
+    width: 1px; height: 18px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .rt-editor-btn {
+    height: 26px;
+    min-width: 26px;
+    padding: 0 6px;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, color 0.1s;
+  }
+  .rt-editor-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+  .rt-editor-btn.is-active { background: var(--accent); color: white; }
+  .rt-editor-btn.is-bold { font-weight: 700; }
+  .rt-editor-btn.is-italic { font-style: italic; }
+  .rt-editor-content {
+    padding: 10px 12px;
+    min-height: 90px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text);
+    outline: none;
+    overflow-y: auto;
+    max-height: 320px;
+  }
+  .rt-editor-content[contenteditable="true"]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-faint);
+    font-style: italic;
+    pointer-events: none;
+  }
+  .rt-editor-content p { margin: 0 0 8px; }
+  .rt-editor-content p:last-child { margin-bottom: 0; }
+  .rt-editor-content ul, .rt-editor-content ol { margin: 0 0 8px; padding-left: 22px; }
+  .rt-editor-content ul li, .rt-editor-content ol li { margin-bottom: 2px; }
+  .rt-editor-content h3 {
+    font-size: 14px; font-weight: 700;
+    margin: 4px 0 6px; color: var(--text);
+  }
+  .rt-editor-content h4 {
+    font-size: 13px; font-weight: 600;
+    margin: 4px 0 4px; color: var(--text-dim);
+  }
+  .rt-editor-content a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+  .rt-editor-content a:hover { filter: brightness(1.1); }
+  .rt-editor-content strong { color: var(--text); }
+
+  /* @cardname mention chip — inline span with card name + tiny art.
+     data-card holds the card name for serialization round-trips. */
+  .rt-card-mention {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(229,116,60,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(229,116,60,0.4);
+    border-radius: 3px;
+    padding: 1px 6px 1px 4px;
+    font-weight: 600;
+    font-size: 11px;
+    text-decoration: none;
+    cursor: default;
+    margin: 0 1px;
+    user-select: all;
+  }
+  .rt-card-mention img {
+    width: 14px;
+    height: 20px;
+    object-fit: cover;
+    object-position: center 28%;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+  .rt-card-mention-fallback {
+    width: 14px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.05);
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  /* @mention autocomplete dropdown */
+  .rt-mention-dropdown {
+    position: absolute;
+    background: var(--bg-elevated, var(--bg-card));
+    border: 1px solid var(--border-strong, var(--border));
+    border-radius: 5px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.4);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 100;
+    min-width: 260px;
+  }
+  .rt-mention-item {
+    display: flex; align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+  }
+  .rt-mention-item:hover,
+  .rt-mention-item.is-active {
+    background: rgba(229,116,60,0.14);
+    color: var(--text);
+  }
+  .rt-mention-item img {
+    width: 24px; height: 34px;
+    object-fit: cover;
+    object-position: center 28%;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .rt-mention-item-fallback {
+    width: 24px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    color: var(--text-faint);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .rt-mention-item-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rt-mention-item-meta { color: var(--text-faint); font-size: 10px; }
+  .rt-mention-empty {
+    padding: 10px;
+    font-size: 11px;
+    color: var(--text-faint);
+    font-style: italic;
   }
 
   /* Combos workspace — left sidebar (combo list) + right content (open
@@ -5563,7 +5768,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round8-syntax-error";
+const YDK_BUILD = "2026-05-18-phase6B-rich-text-editor+at-mentions-on-combo-notes";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7437,6 +7642,386 @@ function ydkConfirm(opts) {
 }
 function ydkAlert(opts) {
   return ydkModal({ ...(opts || {}), alert: true });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PHASE 6B — RICH-TEXT EDITOR
+//
+// A reusable contenteditable + toolbar component. Replaces plain
+// textareas across the app for any "notes" field. Supports:
+//   B / I / bullet list / numbered list / H3 / H4 / link / @cardname
+// Stores content as an HTML string in the underlying entity field.
+// Auto-wraps legacy plain text in <p> tags on first load.
+//
+// Usage:
+//   const editor = createRichTextEditor({
+//     initialValue: combo.userNotes || "",
+//     placeholder: "Type notes…",
+//     onChange: (html) => { combo.userNotes = html; saveSavedCombos(...); },
+//   });
+//   container.appendChild(editor.element);
+//
+// Implementation note: uses document.execCommand for formatting. It's
+// "deprecated" but every browser still supports it and there's no
+// realistic replacement that works without a heavy library. We do not
+// rely on its return value for state — we re-query selection ourselves.
+// ════════════════════════════════════════════════════════════════════════
+function createRichTextEditor(opts) {
+  opts = opts || {};
+  const wrap = document.createElement("div");
+  wrap.className = "rt-editor";
+
+  // Toolbar
+  const toolbar = document.createElement("div");
+  toolbar.className = "rt-editor-toolbar";
+  wrap.appendChild(toolbar);
+
+  // Editor body
+  const body = document.createElement("div");
+  body.className = "rt-editor-content";
+  body.contentEditable = "true";
+  body.dataset.placeholder = opts.placeholder || "Type here…";
+  // Normalize: wrap plain text initial value in <p>, leave HTML alone.
+  const initial = String(opts.initialValue || "");
+  body.innerHTML = normalizeNotesHtml(initial);
+  wrap.appendChild(body);
+
+  // ── Toolbar buttons ──
+  const makeBtn = (label, title, className, onClick) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "rt-editor-btn" + (className ? " " + className : "");
+    b.textContent = label;
+    b.title = title;
+    b.addEventListener("mousedown", (e) => e.preventDefault()); // keep selection
+    b.addEventListener("click", (e) => { e.preventDefault(); onClick(); fireChange(); });
+    return b;
+  };
+  const makeDivider = () => {
+    const d = document.createElement("span");
+    d.className = "rt-editor-toolbar-divider";
+    return d;
+  };
+  // execCommand wrapper so we always pass through document.execCommand
+  // with no third-arg surprises. Returns nothing.
+  const exec = (cmd, arg) => {
+    body.focus();
+    try { document.execCommand(cmd, false, arg == null ? null : arg); } catch (_) {}
+  };
+
+  toolbar.appendChild(makeBtn("B", "Bold (Ctrl+B)", "is-bold", () => exec("bold")));
+  toolbar.appendChild(makeBtn("I", "Italic (Ctrl+I)", "is-italic", () => exec("italic")));
+  toolbar.appendChild(makeDivider());
+  toolbar.appendChild(makeBtn("•", "Bullet list", "", () => exec("insertUnorderedList")));
+  toolbar.appendChild(makeBtn("1.", "Numbered list", "", () => exec("insertOrderedList")));
+  toolbar.appendChild(makeDivider());
+  toolbar.appendChild(makeBtn("H3", "Heading", "", () => exec("formatBlock", "<h3>")));
+  toolbar.appendChild(makeBtn("H4", "Sub-heading", "", () => exec("formatBlock", "<h4>")));
+  toolbar.appendChild(makeBtn("¶", "Paragraph", "", () => exec("formatBlock", "<p>")));
+  toolbar.appendChild(makeDivider());
+  toolbar.appendChild(makeBtn("🔗", "Insert link", "", async () => {
+    const url = await ydkPrompt({ title: "Insert link", message: "URL:", value: "https://" });
+    if (!url) return;
+    exec("createLink", url);
+  }));
+  toolbar.appendChild(makeBtn("@", "Mention a card by name", "", () => {
+    // Insert "@" at caret and open the picker. The picker will track
+    // the user's typing and complete to a card chip.
+    body.focus();
+    exec("insertText", "@");
+    openMentionPicker(body, onChange);
+  }));
+
+  // ── Change handling ──
+  let debounceTimer = null;
+  function fireChange() {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const html = body.innerHTML;
+      if (typeof opts.onChange === "function") opts.onChange(html);
+    }, 200);
+  }
+  // Trigger change on user input
+  body.addEventListener("input", fireChange);
+  // Also fire on blur — guarantees a save even if the user closes the
+  // tab during the debounce window.
+  body.addEventListener("blur", () => {
+    if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+    const html = body.innerHTML;
+    if (typeof opts.onChange === "function") opts.onChange(html);
+  });
+  // Prevent global handlers (modal Escape, etc.) from stealing typed keys
+  body.addEventListener("keydown", (e) => e.stopPropagation());
+
+  // @ triggers mention picker when typed (not just via toolbar)
+  body.addEventListener("keyup", (e) => {
+    if (e.key === "@") {
+      openMentionPicker(body, opts.onChange);
+    }
+  });
+
+  const onChange = (html) => {
+    if (typeof opts.onChange === "function") opts.onChange(html);
+  };
+
+  return {
+    element: wrap,
+    body,
+    getHtml: () => body.innerHTML,
+    setHtml: (html) => { body.innerHTML = normalizeNotesHtml(html || ""); },
+    focus: () => body.focus(),
+  };
+}
+
+// If a stored notes value is plain text (no HTML tags), wrap it in <p>.
+// Otherwise leave the HTML alone. Idempotent.
+function normalizeNotesHtml(raw) {
+  if (!raw) return "";
+  // If it already contains any tags, trust it (was previously saved as HTML)
+  if (/<[a-z][^>]*>/i.test(raw)) return raw;
+  // Otherwise treat as plain text; preserve line breaks as <br>
+  const escaped = String(raw)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const paras = escaped.split(/\n{2,}/).map(p => "<p>" + p.replace(/\n/g, "<br>") + "</p>");
+  return paras.join("");
+}
+
+// Plain-text extractor for places that need the readable form (search
+// indexes, tooltips). Strips tags.
+function notesHtmlToText(html) {
+  if (!html) return "";
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+}
+
+// ── @cardname mention picker ──
+// When invoked, this listens for the user's typing AFTER the @ caret
+// position, queries NAME_INDEX for matches, and shows a floating
+// dropdown. Selecting (Enter or click) replaces the @query with an
+// inline chip. Escape closes without inserting.
+let _activeMentionPicker = null;
+function closeMentionPicker() {
+  if (!_activeMentionPicker) return;
+  _activeMentionPicker.cleanup();
+  _activeMentionPicker = null;
+}
+function openMentionPicker(body, onChangeCb) {
+  // Don't stack; close any existing picker first
+  closeMentionPicker();
+
+  // Record the caret position right after the @
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0).cloneRange();
+  // Anchor for positioning
+  const rect = range.getBoundingClientRect();
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "rt-mention-dropdown";
+  dropdown.style.left = (rect.left + window.scrollX) + "px";
+  dropdown.style.top  = (rect.bottom + window.scrollY + 4) + "px";
+  document.body.appendChild(dropdown);
+
+  let query = "";
+  let activeIdx = 0;
+  let visibleItems = [];
+
+  const renderItems = () => {
+    dropdown.innerHTML = "";
+    visibleItems = searchCardsForMention(query, 10);
+    if (!visibleItems.length) {
+      const empty = document.createElement("div");
+      empty.className = "rt-mention-empty";
+      empty.textContent = query
+        ? `No cards match "@${query}". Keep typing or press Esc.`
+        : `Start typing a card name…`;
+      dropdown.appendChild(empty);
+      return;
+    }
+    visibleItems.forEach((card, i) => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "rt-mention-item" + (i === activeIdx ? " is-active" : "");
+      item.dataset.idx = String(i);
+      const imgWrap = card.id
+        ? `<img alt="${escapeHtml(card.name)}" loading="lazy">`
+        : `<span class="rt-mention-item-fallback">?</span>`;
+      const meta = card.type || "";
+      item.innerHTML =
+        imgWrap +
+        `<span class="rt-mention-item-name">${escapeHtml(card.name)}</span>` +
+        (meta ? `<span class="rt-mention-item-meta">${escapeHtml(meta.split(" ")[0])}</span>` : "");
+      // Lazy-load image
+      if (card.id) {
+        const img = item.querySelector("img");
+        const urls = (typeof getImageUrls === "function") ? getImageUrls(card.id) : [];
+        if (img && urls.length) img.src = urls[0];
+      }
+      item.addEventListener("mousedown", (e) => e.preventDefault());
+      item.addEventListener("click", () => commitMention(card));
+      dropdown.appendChild(item);
+    });
+  };
+
+  // Walk backward from caret to find the @ that triggered us, then
+  // capture everything typed after it as the query.
+  const computeQuery = () => {
+    const sel2 = window.getSelection();
+    if (!sel2 || sel2.rangeCount === 0) return null;
+    const r = sel2.getRangeAt(0);
+    if (!body.contains(r.endContainer)) return null;
+    const node = r.endContainer;
+    if (node.nodeType !== 3) return null; // text node only
+    const text = node.textContent.slice(0, r.endOffset);
+    const at = text.lastIndexOf("@");
+    if (at < 0) return null;
+    const slice = text.slice(at + 1);
+    // Abort the picker if a space or newline was typed — mentions are
+    // single-token from "@" to the next break.
+    if (/\s/.test(slice)) return null;
+    return { node, atOffset: at, query: slice };
+  };
+
+  const commitMention = (card) => {
+    const ctx = computeQuery();
+    if (!ctx) { closeMentionPicker(); return; }
+    // Replace the @query text with a chip element
+    const node = ctx.node;
+    const before = node.textContent.slice(0, ctx.atOffset);
+    const after = node.textContent.slice(ctx.atOffset + 1 + ctx.query.length);
+    // Create the chip span
+    const chip = document.createElement("span");
+    chip.className = "rt-card-mention";
+    chip.dataset.card = card.name;
+    chip.contentEditable = "false";
+    chip.title = card.name;
+    const urls = (card.id && typeof getImageUrls === "function") ? getImageUrls(card.id) : [];
+    if (urls.length) {
+      const img = document.createElement("img");
+      img.src = urls[0];
+      img.alt = card.name;
+      img.loading = "lazy";
+      chip.appendChild(img);
+    } else {
+      const fb = document.createElement("span");
+      fb.className = "rt-card-mention-fallback";
+      fb.textContent = "?";
+      chip.appendChild(fb);
+    }
+    const label = document.createTextNode(card.name);
+    chip.appendChild(label);
+    // Hover-preview when card data is available
+    if (typeof attachPreviewHover === "function" && card.desc) {
+      attachPreviewHover(chip, card);
+    }
+
+    // Replace the text node with: before + chip + spaceText + after
+    const beforeNode = before ? document.createTextNode(before) : null;
+    const afterText = " " + after;
+    const afterNode = document.createTextNode(afterText);
+    const parent = node.parentNode;
+    parent.insertBefore(afterNode, node);
+    parent.insertBefore(chip, afterNode);
+    if (beforeNode) parent.insertBefore(beforeNode, chip);
+    parent.removeChild(node);
+
+    // Place caret just after the chip
+    const newRange = document.createRange();
+    newRange.setStart(afterNode, 1);
+    newRange.collapse(true);
+    const sel3 = window.getSelection();
+    sel3.removeAllRanges();
+    sel3.addRange(newRange);
+
+    closeMentionPicker();
+    if (typeof onChangeCb === "function") onChangeCb(body.innerHTML);
+  };
+
+  // Live update on body input
+  const onInput = () => {
+    const ctx = computeQuery();
+    if (!ctx) { closeMentionPicker(); return; }
+    query = ctx.query;
+    activeIdx = 0;
+    renderItems();
+  };
+  body.addEventListener("input", onInput);
+
+  // Keyboard navigation
+  const onKey = (e) => {
+    if (!visibleItems.length && (e.key === "Enter")) {
+      closeMentionPicker();
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      activeIdx = Math.min(visibleItems.length - 1, activeIdx + 1);
+      renderItems();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      activeIdx = Math.max(0, activeIdx - 1);
+      renderItems();
+    } else if (e.key === "Enter" && visibleItems[activeIdx]) {
+      e.preventDefault();
+      commitMention(visibleItems[activeIdx]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      closeMentionPicker();
+    }
+  };
+  body.addEventListener("keydown", onKey, true);
+
+  // Click outside closes
+  const onDocClick = (e) => {
+    if (dropdown.contains(e.target) || body.contains(e.target)) return;
+    closeMentionPicker();
+  };
+  setTimeout(() => document.addEventListener("click", onDocClick), 0);
+
+  _activeMentionPicker = {
+    cleanup: () => {
+      body.removeEventListener("input", onInput);
+      body.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("click", onDocClick);
+      if (dropdown.parentNode) dropdown.parentNode.removeChild(dropdown);
+    },
+  };
+
+  // Initial render
+  renderItems();
+}
+
+// Card search for the @ picker. Pulls from NAME_INDEX and ranks
+// prefix matches above substring matches. Limited to `limit` results.
+function searchCardsForMention(query, limit) {
+  if (typeof NAME_INDEX !== "object" || !NAME_INDEX) return [];
+  const q = (query || "").toLowerCase().trim();
+  // Deduplicate by name — NAME_INDEX is keyed by both original and lowercase
+  const seen = new Set();
+  const results = [];
+  // Two passes: prefix matches first, then substring matches
+  for (const key in NAME_INDEX) {
+    if (key !== key.toLowerCase()) continue; // skip duplicate entries
+    const card = NAME_INDEX[key];
+    if (!card || !card.name || seen.has(card.name)) continue;
+    if (!q) {
+      // No query — surface popular / cached cards (just take first N)
+      results.push(card);
+      seen.add(card.name);
+      if (results.length >= limit) break;
+      continue;
+    }
+    const lc = card.name.toLowerCase();
+    if (lc.startsWith(q)) {
+      results.unshift(card);
+      seen.add(card.name);
+    } else if (lc.includes(q)) {
+      results.push(card);
+      seen.add(card.name);
+    }
+  }
+  return results.slice(0, limit);
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -13325,17 +13910,29 @@ function renderComboNotesCollapse(combo) {
 
   const body = document.createElement("div");
   body.className = "combo-notes-collapse-body";
-  const ta = document.createElement("textarea");
-  ta.className = "combo-notes-collapse-textarea";
-  ta.value = combo.userNotes || "";
-  ta.placeholder = "What's the goal of this line? Key plays? Mistakes to avoid?";
-  body.appendChild(ta);
+  // Phase 6B: rich-text editor replaces the plain textarea here.
+  // initialValue is the stored notes (HTML or plain text — normalized
+  // on render). onChange persists incrementally as the user types.
+  const editor = createRichTextEditor({
+    initialValue: combo.userNotes || "",
+    placeholder: "What's the goal of this line? Key plays? Mistakes to avoid? Type @ to mention a card.",
+    onChange: (html) => {
+      if (html !== (combo.userNotes || "")) {
+        combo.userNotes = html;
+        upsertSavedCombo(combo);
+        saved.classList.add("show");
+        setTimeout(() => saved.classList.remove("show"), 1400);
+        refreshPreview();
+      }
+    },
+  });
+  body.appendChild(editor.element);
   wrap.appendChild(body);
 
   // Refresh the summary preview from the latest combo.userNotes.
   // Called after a save so the collapsed state shows the new text.
   function refreshPreview() {
-    const trimmed = (combo.userNotes || "").trim();
+    const trimmed = notesHtmlToText(combo.userNotes || "").trim();
     if (!trimmed) {
       preview.classList.add("combo-notes-collapse-empty");
       preview.textContent = "Click to add a note";
@@ -13345,40 +13942,16 @@ function renderComboNotesCollapse(combo) {
     }
   }
 
-  // Save the textarea's current value if it differs. Idempotent — safe
-  // to call from multiple places (blur, click-outside, escape, etc.)
-  function commit() {
-    const newNotes = ta.value;
-    if (newNotes !== (combo.userNotes || "")) {
-      combo.userNotes = newNotes;
-      upsertSavedCombo(combo);
-      saved.classList.add("show");
-      setTimeout(() => saved.classList.remove("show"), 1400);
-    }
-    refreshPreview();
-  }
+  // No-op commit (rich-text editor saves incrementally) but kept for
+  // the toggle / outside-click chains that expected a commit hook.
+  function commit() { refreshPreview(); }
 
-  // Auto-focus the textarea when the user opens the panel
+  // Auto-focus the editor when the user opens the panel
   wrap.addEventListener("toggle", () => {
     if (wrap.open) {
-      ta.focus();
-      ta.setSelectionRange(ta.value.length, ta.value.length);
+      editor.focus();
     } else {
-      // Closing → commit any pending edits
       commit();
-    }
-  });
-
-  ta.addEventListener("blur", commit);
-  ta.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault(); ta.blur();
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      ta.value = combo.userNotes || "";  // discard pending edits
-      wrap.open = false;
-    } else {
-      e.stopPropagation();
     }
   });
 
@@ -13392,6 +13965,13 @@ function renderComboNotesCollapse(combo) {
     outsideClickHandler = (ev) => {
       if (!wrap.open) return;
       if (wrap.contains(ev.target)) return;
+      // Phase 6B: ignore clicks on the @cardname mention dropdown
+      // (it lives in document.body for absolute positioning, NOT
+      // inside the notes panel). Otherwise picking a card from the
+      // dropdown would close the panel.
+      if (ev.target.closest && ev.target.closest(".rt-mention-dropdown")) return;
+      // Also ignore clicks on the hover-preview pane / modal backdrops
+      if (ev.target.closest && (ev.target.closest("#hover-preview") || ev.target.closest("#ydk-modal-backdrop"))) return;
       commit();
       wrap.open = false;
       detachOutsideListener();
