@@ -5343,7 +5343,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-17-phase5+audit-fixes-cleanup-cross-refs";
+const YDK_BUILD = "2026-05-17-pre-test-final";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -8634,6 +8634,9 @@ function persistDeck(deck) {
             if (deck) {
               _decksTabSelectedId = deck.deckId;
               renderDecksTab();
+              // Keep the header deck-switcher in sync so the new deck
+              // is selectable from there too.
+              if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
             }
           };
           reader.readAsText(file);
@@ -10904,7 +10907,11 @@ function refreshDeckSwitcher() {
 function renderDeckSwitcherList() {
   const list = document.getElementById("deck-switcher-list");
   if (!list) return;
-  const decks = loadDecks();
+  // Only "your" decks are eligible for activation — matchup decks
+  // (opponents) shouldn't be activatable as the user's active deck.
+  // Decks without an explicit role default to "primary" for back-compat.
+  const allDecks = loadDecks();
+  const decks = allDecks.filter(d => (d.role || "primary") === "primary");
   const activeId = getActiveDeckId();
 
   if (!decks.length) {
