@@ -5503,7 +5503,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round2-add-flows";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round3-render-decks-on-load";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -14759,6 +14759,11 @@ drop.addEventListener("drop", e => {
 });
 
 renderCombos();
+// Phase 6A bug fix (May 18): Decks is now the default landing tab.
+// renderDecksTab is only called by setActiveTab("decks") — which doesn't
+// fire on initial page load. Without this, the Decks tab is visible
+// but empty until the user clicks it. Render once on startup.
+if (typeof renderDecksTab === "function") renderDecksTab();
 
 function focusComboByKey(key, name) {
   setActiveTab("combos");
