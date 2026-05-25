@@ -5343,7 +5343,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-17-phase5-sideboard+chokepoints+priority+target-endboard+tournaments";
+const YDK_BUILD = "2026-05-17-phase5+audit-fixes-cleanup-cross-refs";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -6318,12 +6318,50 @@ function upsertSavedCombo(combo) {
 function deleteSavedCombo(idx) {
   const all = loadSavedCombos();
   if (idx < 0 || idx >= all.length) return;
+  const removed = all[idx];
   all.splice(idx, 1);
   saveSavedCombos(all);
+  // Sweep matchup.relatedComboIds for the removed combo's key — otherwise
+  // the matchup carries an orphan reference that surfaces nowhere but
+  // wastes storage and could confuse future cross-link diagnostics.
+  if (removed) cleanupComboReferences(comboKey(removed));
 }
 
 function clearAllSavedCombos() {
   saveSavedCombos([]);
+  // Wipe every matchup's relatedComboIds since there are no combos left.
+  try {
+    const formats = loadFormats();
+    let changes = 0;
+    for (const f of formats) {
+      for (const m of (f.matchups || [])) {
+        if (Array.isArray(m.relatedComboIds) && m.relatedComboIds.length) {
+          m.relatedComboIds = [];
+          changes++;
+        }
+      }
+    }
+    if (changes) saveFormats(formats);
+  } catch (e) { console.warn("[YDK] cleanup all combo refs failed:", e); }
+}
+
+// When a single combo is deleted, sweep every matchup's relatedComboIds
+// to remove the orphan key. Called from deleteSavedCombo.
+function cleanupComboReferences(removedKey) {
+  if (!removedKey) return;
+  try {
+    const formats = loadFormats();
+    let changes = 0;
+    for (const f of formats) {
+      for (const m of (f.matchups || [])) {
+        if (!Array.isArray(m.relatedComboIds)) continue;
+        const before = m.relatedComboIds.length;
+        m.relatedComboIds = m.relatedComboIds.filter(k => k !== removedKey);
+        if (m.relatedComboIds.length !== before) changes++;
+      }
+    }
+    if (changes) saveFormats(formats);
+  } catch (e) { console.warn("[YDK] cleanup combo refs failed:", e); }
 }
 
 // Persistent card cache — survives refreshes / new tabs so thumbnails work
@@ -8135,11 +8173,20 @@ function buildMethodologySection(deck) {
       nameInput.className = "methodology-field-input is-single";
       nameInput.value = tc.name || "";
       nameInput.placeholder = "Card name";
+      // Hover-preview on the name input — same pattern as the matchup
+      // tech-card list. Re-wires on blur if the name changes.
+      const wireTechHover = () => {
+        const fresh = lookupCardByName(nameInput.value);
+        nameInput.onmouseenter = (fresh && fresh.desc) ? () => showPreview(nameInput, fresh) : null;
+        nameInput.onmouseleave = (fresh && fresh.desc) ? () => hidePreview() : null;
+      };
       nameInput.addEventListener("blur", () => {
         deck.methodology.techCards[i].name = nameInput.value;
         persistDeck(deck);
+        wireTechHover();
       });
       nameInput.addEventListener("keydown", (e) => e.stopPropagation());
+      wireTechHover();
       const reasonInput = document.createElement("input");
       reasonInput.type = "text";
       reasonInput.className = "methodology-field-input is-single";
@@ -8290,14 +8337,15 @@ function buildDecklistsSection(deck) {
         const ok = await ydkConfirm({
           icon: "🗑",
           title: `Delete build "${dl.name || "Untitled"}"?`,
-          message: `This build will be removed from <strong>${escapeHtml(deck.name)}</strong>. The deck's other builds and combos stay.`,
+          message: `This build will be removed from <strong>${escapeHtml(deck.name)}</strong>. Combos tied to this build move under the new primary build; tournament rounds played on this variant lose the variant tag.`,
           confirmText: "Delete build",
           danger: true,
         });
         if (!ok) return;
-        const i = deck.decklists.findIndex(x => x.decklistId === dl.decklistId);
+        const deletedId = dl.decklistId;
+        const i = deck.decklists.findIndex(x => x.decklistId === deletedId);
         if (i >= 0) deck.decklists.splice(i, 1);
-        if (deck.primaryDecklistId === dl.decklistId) {
+        if (deck.primaryDecklistId === deletedId) {
           const fallback = deck.decklists[0];
           deck.primaryDecklistId = fallback.decklistId;
           deck.ydkContent = fallback.ydkContent;
@@ -8307,6 +8355,7 @@ function buildDecklistsSection(deck) {
           deck.side = fallback.side;
         }
         persistDeck(deck);
+        cleanupDecklistReferences(deck.deckId, deletedId, deck.primaryDecklistId);
         renderDecksTab();
       };
       actions.appendChild(del);
@@ -8498,6 +8547,9 @@ function startRenameDeckPanel(titleEl, deck) {
       deck.name = newName;
       persistDeck(deck);
       if (deck.deckId === getActiveDeckId()) updateTabTitle();
+      // Refresh the header deck-switcher button + any open switcher list
+      // so the new name shows up everywhere it's visible.
+      if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
     }
     renderDecksTab();
   };
@@ -9789,8 +9841,13 @@ function buildSideboardRow(opts) {
           chip.classList.remove("is-dragging");
           zone.classList.remove("is-drop-target");
         });
-        // Also: click to add (keyboard / fast workflow)
+        // Also: click to add (keyboard / fast workflow). Apply the same
+        // count-cap check as the drop handler so spamming click can't
+        // exceed the deck's copy count for this card.
         chip.addEventListener("click", () => {
+          const cap = poolNames.filter(n => n === name).length;
+          const have = sb[zoneKey].filter(n => n === name).length;
+          if (have >= cap) return;
           sb[zoneKey].push(name);
           persistFormat(format);
           updateCounter();
@@ -10057,7 +10114,10 @@ function buildTournamentDrill(format, t) {
   name.addEventListener("blur", () => {
     if (name.value !== t.name) { t.name = name.value; persistFormat(format); }
   });
-  name.addEventListener("keydown", (e) => e.stopPropagation());
+  name.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); name.blur(); }
+    e.stopPropagation();
+  });
   head.appendChild(name);
 
   // Editable date
@@ -10660,16 +10720,93 @@ async function deleteDeck(deck) {
   const ok = await ydkConfirm({
     icon: "🗑",
     title: `Delete "${deck.name}"?`,
-    message: `The deck and its card list will be removed from your library. <strong>This cannot be undone.</strong> Combos linked to this deck will become unassigned.`,
+    message: `The deck and its card list will be removed from your library. <strong>This cannot be undone.</strong> Combos linked to this deck become unassigned. Formats with this deck as primary clear their primary-deck pick.`,
     confirmText: "Delete deck",
     danger: true,
   });
   if (!ok) return;
+  cleanupDeckReferences(deck.deckId);
   const decks = loadDecks().filter(d => d.deckId !== deck.deckId);
   saveDecks(decks);
   if (getActiveDeckId() === deck.deckId) setActiveDeckId(null);
   renderDecksLibrary();
   refreshDeckSwitcher();
+  if (typeof renderDecksTab === "function") renderDecksTab();
+  if (typeof renderFormatTab === "function") renderFormatTab();
+}
+
+// When a decklist (build) is deleted from within a deck, sweep
+// combos / tournament rounds that pointed at it. Combos get re-assigned
+// to the deck's new primary decklist so they don't disappear; tournament
+// rounds lose the variant tag.
+function cleanupDecklistReferences(deckId, deletedDecklistId, fallbackDecklistId) {
+  if (!deletedDecklistId) return;
+  // 1. Combos with this decklistId → move to the new primary
+  try {
+    const combos = loadSavedCombos();
+    let changes = 0;
+    for (const c of combos) {
+      if (c && c.deckId === deckId && c.decklistId === deletedDecklistId) {
+        c.decklistId = fallbackDecklistId || null;
+        changes++;
+      }
+    }
+    if (changes) saveSavedCombos(combos);
+  } catch (e) { console.warn("[YDK] cleanup combos by decklist failed:", e); }
+
+  // 2. Tournament rounds with this deckVariantId → null it out
+  try {
+    const formats = loadFormats();
+    let changes = 0;
+    for (const f of formats) {
+      for (const t of (f.tournaments || [])) {
+        if (t.deckVariantId === deletedDecklistId) {
+          t.deckVariantId = null;
+          changes++;
+        }
+      }
+    }
+    if (changes) saveFormats(formats);
+  } catch (e) { console.warn("[YDK] cleanup tournaments by decklist failed:", e); }
+}
+
+// Reusable cleanup: when a deck is deleted, sweep every entity that
+// references it. Called from both deleteDeck and any future delete path
+// (e.g. a future "delete matchup deck" button in the Decks tab).
+//   - combos with deckId === deletedId → null out deckId + decklistId
+//   - formats with primaryDeckId === deletedId → null out primaryDeckId
+//   - matchups with opponentDeckId === deletedId → leave (UI shows
+//     "opponent deck missing" gracefully; user can re-link via Add matchup)
+//   - tournament rounds with opponentDeckId === deletedId → leave
+//     (history is preserved; deleted-deck name reads as "Unknown")
+function cleanupDeckReferences(deletedDeckId) {
+  if (!deletedDeckId) return;
+  // 1. Combos
+  try {
+    const combos = loadSavedCombos();
+    let comboChanges = 0;
+    for (const c of combos) {
+      if (c && c.deckId === deletedDeckId) {
+        c.deckId = null;
+        c.decklistId = null;
+        comboChanges++;
+      }
+    }
+    if (comboChanges) saveSavedCombos(combos);
+  } catch (e) { console.warn("[YDK] cleanup combos failed:", e); }
+
+  // 2. Formats — null out primaryDeckId if it pointed at the deleted deck
+  try {
+    const formats = loadFormats();
+    let formatChanges = 0;
+    for (const f of formats) {
+      if (f && f.primaryDeckId === deletedDeckId) {
+        f.primaryDeckId = null;
+        formatChanges++;
+      }
+    }
+    if (formatChanges) saveFormats(formats);
+  } catch (e) { console.warn("[YDK] cleanup formats failed:", e); }
 }
 
 function startRenameDeck(rowEl, deck) {

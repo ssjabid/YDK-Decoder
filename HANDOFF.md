@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-17-phase5-sideboard+chokepoints+priority+target-endboard+tournaments` |
+| Decoder | `2026-05-17-phase5+audit-fixes-cleanup-cross-refs` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -50,6 +50,17 @@ SW + deck-extractor builds are in their respective console logs.
 - **Manual opener-size override**: click the colored pill in the open combo's header to re-bucket between `1-card` / `2-card` / `Other`. Persists on `combo.userOpenerSize`. Auto-bucketing is by `openingHand.length` with anything 3+ folding into Other.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
+
+### Quadruple-check audit pass (May 17 2026, post-Phase-5)
+After Phase 5 the user asked for a thorough audit. Real bugs found and fixed:
+
+- ✅ **`deleteDeck` was a half-promise.** Modal said "combos linked become unassigned" but didn't actually null out `combo.deckId` / `combo.decklistId`, and didn't clear `format.primaryDeckId` on formats that pointed at the deleted deck. New `cleanupDeckReferences(deletedDeckId)` sweeps both.
+- ✅ **Deleting a decklist orphaned combos.** Combos with `decklistId === deleted` would be hidden under all other decklists (filter mismatched). New `cleanupDecklistReferences(deckId, deletedId, fallbackId)` re-assigns those combos to the new primary decklist and clears stale `t.deckVariantId` on tournament rounds.
+- ✅ **Deleting a combo left stale `relatedComboIds`** in every matchup that linked to it. New `cleanupComboReferences(removedKey)` sweeps every format's matchups. Bulk `clearAllSavedCombos` also wipes all relatedComboIds.
+- ✅ **Sideboard click-to-add bypassed count-cap.** Spamming click could exceed the deck's copy count. Applied the same cap check as the drop handler.
+- ✅ **Renaming a deck in Decks panel didn't refresh the header switcher.** Added `refreshDeckSwitcher()` call on commit.
+- ✅ **Tournament name input didn't save on Enter** (was blur-only). Added Enter handler.
+- ✅ **Methodology tech-card name input had no hover-preview.** Wired `showPreview` / `hidePreview` like the matchup tech-list does.
 
 ### Format planner — Phase 5: tournament-prep upgrades (May 17 2026, latest)
 After the user asked for deeper tournament-prep tooling, five new pillars landed inside the matchup drill view + a new Tournament journal section.
