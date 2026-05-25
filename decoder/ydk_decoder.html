@@ -1921,6 +1921,18 @@
     outline: none;
   }
   .target-endboard-input:focus { border-color: var(--accent); }
+  .target-endboard-add {
+    margin-top: 6px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px dashed var(--border-strong);
+    border-radius: 3px;
+    padding: 5px 12px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .target-endboard-add:hover { color: var(--accent); border-color: var(--accent); }
 
   /* Sideboard planner — two directions (going first / going second),
      each with two pool→target rows (side→In, main→Out). */
@@ -5442,6 +5454,80 @@
   .ydk-modal-input:focus { border-color: var(--accent); }
   .ydk-modal-input::placeholder { color: var(--text-faint); font-style: italic; }
 
+  /* Reusable card-name picker modal body (used by pickCardByName). */
+  .card-picker-body {
+    display: flex; flex-direction: column;
+    gap: 8px;
+  }
+  .card-picker-hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .card-picker-input {
+    height: 36px;
+    padding: 0 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+  .card-picker-input:focus { border-color: var(--accent); }
+  .card-picker-results {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg);
+  }
+  .card-picker-item {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+  }
+  .card-picker-item:last-child { border-bottom: none; }
+  .card-picker-item:hover,
+  .card-picker-item.is-active {
+    background: rgba(229,116,60,0.10);
+  }
+  .card-picker-item img {
+    width: 28px; height: 40px;
+    object-fit: cover;
+    object-position: center 26%;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .card-picker-item-fallback {
+    width: 28px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    color: var(--text-faint);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .card-picker-item-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-picker-item-meta { color: var(--text-faint); font-size: 11px; flex-shrink: 0; }
+  .card-picker-empty {
+    padding: 24px 16px;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-style: italic;
+    text-align: center;
+  }
+
   /* Tournament type picker grid (used in pickTournamentType) */
   .tourn-type-grid {
     display: grid;
@@ -5872,7 +5958,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6B-refinement-pass-1";
+const YDK_BUILD = "2026-05-18-phase6BC-card-picker-everywhere";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -9274,17 +9360,20 @@ function buildKeyCardBucket(deck, category) {
   addBtn.textContent = "+ Add card";
   addBtn.title = "Add a card to this bucket manually";
   addBtn.onclick = async () => {
-    const name = await ydkPrompt({
+    // Phase 6B refinement pass 2: use the autocomplete card picker so
+    // the user can find the EXACT card (with art + correct spelling)
+    // instead of typing into a blind text box.
+    const picked = await pickCardByName({
       icon: "+",
-      title: "Add card to " + category + " bucket",
-      message: `Type the card's exact name. Use the @ picker in any notes field if you need to find the spelling.`,
-      placeholder: "Card name",
+      title: "Add a card to " + category,
+      message: `Search by name. Pick from the list, or type a new name and press Enter to add free-form.`,
+      placeholder: "Type to search…",
     });
-    if (!name) return;
-    const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!picked) return;
+    const finalName = picked.name;
+    if (!finalName) return;
     // Skip duplicate (case-insensitive name match)
-    const existing = (deck.keyCards || []).find(kc => kc && kc.name.toLowerCase() === trimmed.toLowerCase());
+    const existing = (deck.keyCards || []).find(kc => kc && kc.name.toLowerCase() === finalName.toLowerCase());
     if (existing) {
       if (existing.category !== category) {
         existing.category = category;
@@ -9294,12 +9383,10 @@ function buildKeyCardBucket(deck, category) {
       }
       return;
     }
-    // Resolve the card to grab its id for image (if available)
-    const cardData = lookupCardByName(trimmed);
     deck.keyCards = deck.keyCards || [];
     deck.keyCards.push({
-      name: cardData ? cardData.name : trimmed,
-      cardId: cardData ? cardData.id : null,
+      name: finalName,
+      cardId: picked.id || null,
       category,
       stopPriority: "none",
       stopWith: "",
@@ -9534,7 +9621,9 @@ function buildMethodologySection(deck) {
     { key: "howItWins", label: "How it wins", placeholder: "Lethal lines, win conditions.", multi: true },
     { key: "strengths", label: "Strengths", placeholder: "1-card combos, multi-negate, going first/second flex…", multi: true },
     { key: "weaknesses", label: "Weaknesses", placeholder: "Handtraps that hurt most, bricks, weak matchups.", multi: true },
-    { key: "keyRatios", label: "Key ratios", placeholder: "e.g. 3× Amalthe, 2× Drastea, 1× Elara, 3× Ash, …", multi: false },
+    // Phase 6B refinement pass 2: keyRatios is now an RTE — auto-fill
+    // embeds card-mention chips with hover preview instead of plain text.
+    { key: "keyRatios", label: "Key ratios", placeholder: "e.g. 3× Amalthe, 2× Drastea, 1× Elara, 3× Ash, …", multi: true, withAutoFill: true },
   ];
 
   for (const f of fields) {
@@ -9544,70 +9633,77 @@ function buildMethodologySection(deck) {
     labelEl.className = "methodology-field-label";
     labelEl.textContent = f.label;
     fieldWrap.appendChild(labelEl);
-    if (f.multi) {
-      // Phase 6B: rich-text editor for multi-line methodology fields.
-      // keyRatios stays as a plain single-line input (just numbers/ratios).
-      const editor = createRichTextEditor({
-        initialValue: deck.methodology[f.key] || "",
-        placeholder: f.placeholder + " Type @ to mention a card.",
-        onChange: (html) => {
-          if (html !== (deck.methodology[f.key] || "")) {
-            deck.methodology[f.key] = html;
-            persistDeck(deck);
-          }
-        },
-      });
-      fieldWrap.appendChild(editor.element);
-    } else {
-      const input = document.createElement("textarea");
-      input.className = "methodology-field-input is-single";
-      input.value = deck.methodology[f.key] || "";
-      input.placeholder = f.placeholder;
-      input.rows = 1;
-      input.addEventListener("blur", () => {
-        if (input.value !== (deck.methodology[f.key] || "")) {
-          deck.methodology[f.key] = input.value;
+    // Phase 6B refinement pass 2: every methodology field is now RTE
+    // (keyRatios included). Auto-fill button is attached when the field
+    // descriptor has `withAutoFill: true` — currently only Key ratios.
+    const editor = createRichTextEditor({
+      initialValue: deck.methodology[f.key] || "",
+      placeholder: f.placeholder + " Type @ to mention a card.",
+      onChange: (html) => {
+        if (html !== (deck.methodology[f.key] || "")) {
+          deck.methodology[f.key] = html;
           persistDeck(deck);
         }
-      });
-      input.addEventListener("keydown", (e) => e.stopPropagation());
-      fieldWrap.appendChild(input);
-      // Phase 6B refresh: "Auto-fill from active build" button for Key ratios.
-      // Generates "3× Amalthe, 2× Drastea, …" from the decklist's actual
-      // counts. Skip cards with count 1 unless they're singletons that
-      // matter (we just list everything; user can prune).
-      if (f.key === "keyRatios") {
-        const auto = document.createElement("button");
-        auto.type = "button";
-        auto.className = "tech-cards-add";
-        auto.style.marginTop = "4px";
-        auto.textContent = "Auto-fill from active build";
-        auto.title = "Generate ratios from the current decklist (main deck)";
-        auto.onclick = () => {
-          const dl = getDeckPrimaryDecklist(deck);
-          const main = (dl && dl.main) || [];
-          if (!main.length) {
-            ydkAlert({ title: "Auto-fill failed", message: "The active build has no main-deck cards. Import a .ydk first." });
-            return;
+      },
+    });
+    fieldWrap.appendChild(editor.element);
+
+    if (f.withAutoFill) {
+      const auto = document.createElement("button");
+      auto.type = "button";
+      auto.className = "tech-cards-add";
+      auto.style.marginTop = "4px";
+      auto.textContent = "↺ Auto-fill from active build";
+      auto.title = "Generate ratios from the current decklist (main deck) — each card becomes a hoverable @ chip";
+      auto.onclick = () => {
+        const dl = getDeckPrimaryDecklist(deck);
+        const main = (dl && dl.main) || [];
+        if (!main.length) {
+          ydkAlert({ title: "Auto-fill failed", message: "The active build has no main-deck cards. Import a .ydk first." });
+          return;
+        }
+        // Count by name. Cards we resolve get a card-mention chip;
+        // unresolved fall back to plain text.
+        const counts = new Map();
+        const cardByName = new Map();
+        for (const id of main) {
+          const card = lookupCardById(id);
+          const name = (card && card.name) || ("#" + id);
+          counts.set(name, (counts.get(name) || 0) + 1);
+          if (card && !cardByName.has(name)) cardByName.set(name, card);
+        }
+        // Sort by count desc, then alphabetically
+        const entries = Array.from(counts.entries())
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+        // Build HTML: each entry is "Nx <chip>" — chip is a card-mention
+        // span so it gets hover-preview and the @ visual treatment.
+        const pieces = entries.map(([name, n]) => {
+          const card = cardByName.get(name);
+          if (card) {
+            const urls = (card.id && typeof getImageUrls === "function") ? getImageUrls(card.id) : [];
+            const imgHtml = urls.length
+              ? `<img src="${escapeHtml(urls[0])}" alt="${escapeHtml(name)}" loading="lazy">`
+              : `<span class="rt-card-mention-fallback">?</span>`;
+            return `${n}× <span class="rt-card-mention" data-card="${escapeHtml(name)}" contenteditable="false" title="${escapeHtml(name)}">${imgHtml}${escapeHtml(name)}</span>`;
           }
-          // Count by name (resolved); fall back to raw id string if no data
-          const counts = new Map();
-          for (const id of main) {
-            const card = lookupCardById(id);
-            const name = (card && card.name) || ("#" + id);
-            counts.set(name, (counts.get(name) || 0) + 1);
+          return `${n}× ${escapeHtml(name)}`;
+        });
+        const html = `<p>${pieces.join(", ")}</p>`;
+        editor.setHtml(html);
+        deck.methodology[f.key] = html;
+        persistDeck(deck);
+        // Re-attach hover-preview to the newly inserted chips
+        editor.body.querySelectorAll(".rt-card-mention[data-card]").forEach(chip => {
+          const cardName = chip.dataset.card;
+          const card = lookupCardByName(cardName);
+          if (card && card.desc && typeof attachPreviewHover === "function") {
+            attachPreviewHover(chip, card);
           }
-          // Sort by count desc, then alphabetically
-          const entries = Array.from(counts.entries())
-            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-          const formatted = entries.map(([n, c]) => `${c}× ${n}`).join(", ");
-          input.value = formatted;
-          deck.methodology[f.key] = formatted;
-          persistDeck(deck);
-          if (typeof ydkStatus === "function") ydkStatus(`Auto-filled Key ratios from ${entries.length} unique cards`);
-        };
-        fieldWrap.appendChild(auto);
-      }
+        });
+        if (typeof ydkStatus === "function") ydkStatus(`Auto-filled Key ratios from ${entries.length} unique cards`);
+      };
+      fieldWrap.appendChild(auto);
     }
     body.appendChild(fieldWrap);
   }
@@ -9677,11 +9773,26 @@ function buildMethodologySection(deck) {
   addBtn.type = "button";
   addBtn.className = "tech-cards-add";
   addBtn.textContent = "+ Add tech card";
-  addBtn.onclick = () => {
+  addBtn.onclick = async () => {
+    // Phase 6C: open card picker first so the row is pre-populated
+    // with the correct name. User can still type freeform.
+    const picked = await pickCardByName({
+      icon: "🛠",
+      title: "Add a tech card",
+      message: "Pick which card is the tech slot. You'll fill in the reason after.",
+    });
+    if (!picked || !picked.name) return;
     deck.methodology.techCards = deck.methodology.techCards || [];
-    deck.methodology.techCards.push({ name: "", reason: "" });
+    deck.methodology.techCards.push({ name: picked.name, reason: "" });
     persistDeck(deck);
     renderTechRows();
+    // Focus the reason input on the new row so the user can immediately type why
+    setTimeout(() => {
+      const rows = techList.querySelectorAll(".tech-card-row");
+      const last = rows[rows.length - 1];
+      const reasonInput = last && last.querySelectorAll("input")[1];
+      if (reasonInput) reasonInput.focus();
+    }, 50);
   };
   body.appendChild(addBtn);
 
@@ -10504,6 +10615,151 @@ function pickYdkFile() {
 
 // Lightweight prompt — uses ydkConfirm/ydkAlert primitives if a richer
 // prompt isn't available. Returns the entered string or null on cancel.
+// Phase 6B refinement pass 2 (May 18): reusable card-name picker.
+// Modal with a search input + live-filtered card list (uses the same
+// indexed search as the @ mention picker). Returns the picked card
+// object, or null on cancel. Use for any "type a card name" input
+// where we want art + autocomplete instead of free-text.
+function pickCardByName(opts) {
+  opts = opts || {};
+  return new Promise((resolve) => {
+    const backdrop = document.getElementById("ydk-modal-backdrop");
+    const titleEl = document.getElementById("ydk-modal-title");
+    const msgEl = document.getElementById("ydk-modal-message");
+    const iconEl = document.getElementById("ydk-modal-icon");
+    const inputRow = document.getElementById("ydk-modal-input-row");
+    const cancelBtn = document.getElementById("ydk-modal-cancel");
+    const confirmBtn = document.getElementById("ydk-modal-confirm");
+    if (!backdrop) {
+      // Fallback to plain prompt with no autocomplete
+      const name = window.prompt(opts.message || "Card name:", "");
+      resolve(name ? { name, id: null } : null);
+      return;
+    }
+
+    titleEl.textContent = opts.title || "Pick a card";
+    iconEl.textContent = opts.icon || "🃏";
+    if (inputRow) inputRow.hidden = true;
+
+    // Render picker body: search field + result grid
+    msgEl.innerHTML =
+      `<div class="card-picker-body">` +
+        (opts.message ? `<div class="card-picker-hint">${opts.message}</div>` : "") +
+        `<input type="text" class="card-picker-input" placeholder="${escapeHtml(opts.placeholder || "Type to search…")}" autocomplete="off" spellcheck="false">` +
+        `<div class="card-picker-results"></div>` +
+      `</div>`;
+    const search = msgEl.querySelector(".card-picker-input");
+    const results = msgEl.querySelector(".card-picker-results");
+
+    let activeIdx = 0;
+    let items = [];
+
+    const renderResults = () => {
+      results.innerHTML = "";
+      items = searchCardsForMention(search.value || "", 30);
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "card-picker-empty";
+        empty.textContent = search.value
+          ? `No cards match "${search.value}". Try a different name or use free-form below.`
+          : "Start typing a card name to search…";
+        results.appendChild(empty);
+        confirmBtn.disabled = !search.value.trim();
+        confirmBtn.textContent = search.value.trim() ? "Use as plain text" : "Pick a card";
+        return;
+      }
+      items.forEach((card, i) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "card-picker-item" + (i === activeIdx ? " is-active" : "");
+        const urls = (card.id && typeof getImageUrls === "function") ? getImageUrls(card.id) : [];
+        const imgHtml = urls.length
+          ? `<img alt="${escapeHtml(card.name)}" src="${urls[0]}" loading="lazy">`
+          : `<span class="card-picker-item-fallback">?</span>`;
+        const meta = (card.type || "").split(" ")[0];
+        item.innerHTML =
+          imgHtml +
+          `<span class="card-picker-item-name">${escapeHtml(card.name)}</span>` +
+          (meta ? `<span class="card-picker-item-meta">${escapeHtml(meta)}</span>` : "");
+        item.addEventListener("click", () => commit(card));
+        results.appendChild(item);
+      });
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Pick " + items[activeIdx].name;
+    };
+
+    const commit = (card) => cleanup(card);
+    const commitFreeText = () => {
+      const val = (search.value || "").trim();
+      if (!val) { cleanup(null); return; }
+      cleanup({ name: val, id: null, freeText: true });
+    };
+
+    let inputDebounce = null;
+    search.addEventListener("input", () => {
+      if (inputDebounce) clearTimeout(inputDebounce);
+      inputDebounce = setTimeout(() => {
+        activeIdx = 0;
+        renderResults();
+      }, 80);
+    });
+    search.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (items.length) {
+          activeIdx = Math.min(items.length - 1, activeIdx + 1);
+          renderResults();
+        }
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (items.length) {
+          activeIdx = Math.max(0, activeIdx - 1);
+          renderResults();
+        }
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (items.length) commit(items[activeIdx]);
+        else commitFreeText();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        cleanup(null);
+      }
+      e.stopPropagation();
+    });
+
+    confirmBtn.textContent = "Pick a card";
+    cancelBtn.textContent = "Cancel";
+    confirmBtn.classList.remove("is-danger");
+    confirmBtn.disabled = true;
+    backdrop.hidden = false;
+    setTimeout(() => search.focus(), 60);
+
+    const onConfirm = () => {
+      if (items.length) commit(items[activeIdx]);
+      else commitFreeText();
+    };
+    const onCancel = () => cleanup(null);
+    const onBackdropClick = (e) => { if (e.target === backdrop) cleanup(null); };
+
+    const cleanup = (result) => {
+      backdrop.hidden = true;
+      confirmBtn.disabled = false;
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+      backdrop.removeEventListener("click", onBackdropClick);
+      msgEl.innerHTML = "";
+      resolve(result);
+    };
+
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    backdrop.addEventListener("click", onBackdropClick);
+
+    // Pre-populate with initial empty render
+    renderResults();
+  });
+}
+
 async function ydkPrompt(opts) {
   // Phase 6B: styled modal-based prompt — replaces the ugly browser
   // window.prompt() that clashed with the app's design language.
@@ -11213,23 +11469,24 @@ function buildMatchupTargetEndboard(format, matchup) {
   renderChips();
   wrap.appendChild(chips);
 
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "target-endboard-input";
-  input.placeholder = `Type a card name and press Enter (e.g. "Drastrius", "Vidria")…`;
-  input.addEventListener("keydown", (e) => {
-    e.stopPropagation();
-    if (e.key === "Enter") {
-      const v = (input.value || "").trim();
-      if (v) {
-        matchup.targetEndboard.push(v);
-        persistFormat(format);
-        renderChips();
-        input.value = "";
-      }
-    }
-  });
-  wrap.appendChild(input);
+  // Phase 6C: card picker button (replaces plain "type and press Enter")
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "target-endboard-add";
+  addBtn.textContent = "+ Add card";
+  addBtn.title = "Pick from your card database";
+  addBtn.onclick = async () => {
+    const picked = await pickCardByName({
+      icon: "🎯",
+      title: "Add a target end-board card",
+      message: "Card you want on the field against this matchup.",
+    });
+    if (!picked || !picked.name) return;
+    matchup.targetEndboard.push(picked.name);
+    persistFormat(format);
+    renderChips();
+  };
+  wrap.appendChild(addBtn);
   return wrap;
 }
 
@@ -11620,11 +11877,12 @@ async function addTournamentFlow(format) {
   });
   if (!dateStr) return;
 
-  // Build the auto-name. User can rename later via the drill view input.
-  const parts = [eventType];
-  if (venue && venue.trim()) parts.push(venue.trim());
-  parts.push(dateStr);
-  const autoName = parts.join(" · ");
+  // Build the auto-name as "Type - Venue: Date" (user's preferred format).
+  // If venue is empty, fall back to "Type: Date".
+  const trimmedVenue = (venue || "").trim();
+  const autoName = trimmedVenue
+    ? `${eventType} - ${trimmedVenue}: ${dateStr}`
+    : `${eventType}: ${dateStr}`;
 
   const t = makeTournament(autoName);
   t.date = dateStr;
@@ -12106,8 +12364,16 @@ function buildMatchupTechList(format, matchup) {
   addGood.type = "button";
   addGood.className = "matchup-tech-add";
   addGood.textContent = "+ Card that's good for us";
-  addGood.onclick = () => {
-    matchup.counterCards.push({ name: "", side: "good", notes: "" });
+  // Phase 6C: card picker on add buttons — pre-populates the new row
+  // with the picked card so the user doesn't have to type the name.
+  addGood.onclick = async () => {
+    const picked = await pickCardByName({
+      icon: "✓",
+      title: "Pick a card that's good for us",
+      message: "Cards from our deck (or out-of-deck options) that swing this matchup.",
+    });
+    if (!picked || !picked.name) return;
+    matchup.counterCards.push({ name: picked.name, side: "good", notes: "" });
     persistFormat(format);
     renderRows();
   };
@@ -12115,8 +12381,14 @@ function buildMatchupTechList(format, matchup) {
   addBad.type = "button";
   addBad.className = "matchup-tech-add";
   addBad.textContent = "+ Card that hurts us";
-  addBad.onclick = () => {
-    matchup.counterCards.push({ name: "", side: "bad", notes: "" });
+  addBad.onclick = async () => {
+    const picked = await pickCardByName({
+      icon: "✗",
+      title: "Pick a card that hurts us",
+      message: "Cards the opponent runs that punish our gameplan.",
+    });
+    if (!picked || !picked.name) return;
+    matchup.counterCards.push({ name: picked.name, side: "bad", notes: "" });
     persistFormat(format);
     renderRows();
   };
