@@ -1834,22 +1834,42 @@
     margin-bottom: 4px;
     display: flex; justify-content: space-between;
   }
+  /* Phase 6A: chips render in a fixed-width grid so In and Out columns
+     read as orderly tiles instead of ragged label-fit pills. Long card
+     names truncate with ellipsis; the full name is still in title attr +
+     hover-preview. */
   .sideboard-zone-chips {
-    display: flex; flex-wrap: wrap; gap: 3px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 4px;
   }
   .sideboard-chip {
     background: var(--bg);
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 3px;
-    padding: 2px 6px;
+    padding: 4px 6px;
     font-size: 10px;
     cursor: grab;
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 4px;
     user-select: none;
     transition: border-color 0.12s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0;
+    height: 24px;
+    box-sizing: border-box;
+  }
+  .sideboard-chip > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
   }
   .sideboard-chip:hover { border-color: var(--accent); }
   .sideboard-chip:active { cursor: grabbing; }
@@ -2067,6 +2087,64 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     PHASE 6A — sub-view back bar
+     Cards and Combos are no longer top-level destinations. When the
+     user enters either via the Decks panel, this bar sits at the top
+     showing "← Back to {deck name}" so they always know how to return.
+     ════════════════════════════════════════════════════════════════ */
+  .subview-back-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .subview-back-bar:empty { display: none; }
+  .subview-back-bar .subview-back-btn {
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .subview-back-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .subview-back-trail {
+    color: var(--text-faint);
+    font-size: 11px;
+  }
+  .subview-back-trail strong { color: var(--text); font-weight: 600; }
+
+  /* Cards / Combos entry buttons in the Decks panel header */
+  .deck-panel-subview-actions {
+    display: flex; gap: 6px;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+  .deck-panel-subview-btn {
+    height: 28px;
+    padding: 0 12px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .deck-panel-subview-btn:hover {
+    background: var(--accent);
+    color: white;
   }
 
   /* Combos workspace — left sidebar (combo list) + right content (open
@@ -5103,17 +5181,22 @@
        tab (May 2026 format-planner phase 1) — methodology editor, multiple
        decklists per deck, opponent decks for matchup planning. The header
        deck-switcher still picks the active deck. -->
+  <!-- Phase 6A (May 2026): consolidated to 3 working tabs. Cards and
+       Combos are no longer top-level destinations — they're accessed
+       per-deck via the Decks panel header. -->
   <div class="tabs">
-    <button class="tab active" data-tab="cards">Cards</button>
-    <button class="tab" data-tab="combos">Combos</button>
-    <button class="tab" data-tab="decks">Decks</button>
+    <button class="tab active" data-tab="decks">Decks</button>
     <button class="tab" data-tab="format">Format</button>
     <button class="tab" data-tab="practice">Practice</button>
     <span class="tab-spacer"></span>
     <button class="tab tab-icon" data-tab="settings" title="Settings">⚙</button>
   </div>
 
-  <div id="tab-cards">
+  <!-- CARDS VIEW — no longer a top-level tab destination. Reached
+       via the Decks panel's "Cards ↗" button. A "← Back to <deck>"
+       header sits at the top so the user always knows how to return. -->
+  <div id="tab-cards" class="hidden">
+    <div class="subview-back-bar" id="cards-back-bar"></div>
     <!-- Drop-zone is now hidden when a deck is active (loaded via header
          switcher). Stays for the empty state — first time user has no
          deck and we show the dropzone as the call-to-action. -->
@@ -5128,7 +5211,10 @@
     <div id="output"></div>
   </div>
 
+  <!-- COMBOS VIEW — same story as Cards. Entered via the Decks panel
+       "Combos ↗" button; back-bar at top returns to the deck. -->
   <div id="tab-combos" class="hidden">
+    <div class="subview-back-bar" id="combos-back-bar"></div>
     <div class="combos-header" id="combos-header">
       <span id="combos-header-count"></span>
     </div>
@@ -5254,9 +5340,10 @@
     <div class="decks-workspace">
       <aside class="decks-sidebar">
         <div class="decks-sidebar-tools">
+          <!-- Phase 6A: two-state toggle (was three). "All" was confusing —
+               every deck is either yours or a matchup. -->
           <div class="decks-role-filter" id="decks-role-filter">
-            <button type="button" class="decks-role-btn active" data-role="all">All</button>
-            <button type="button" class="decks-role-btn" data-role="primary">Mine</button>
+            <button type="button" class="decks-role-btn active" data-role="primary">Mine</button>
             <button type="button" class="decks-role-btn" data-role="matchup">Matchup</button>
           </div>
         </div>
@@ -5343,7 +5430,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-17-pre-test-final";
+const YDK_BUILD = "2026-05-18-phase6A-tab-restructure+filter-simplify+sideboard-tiles+ydk-picker";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7126,6 +7213,13 @@ function setActiveTab(tabName) {
   if (tabName === "settings" && typeof refreshSettingsTab === "function") refreshSettingsTab();
   if (tabName === "decks" && typeof renderDecksTab === "function") renderDecksTab();
   if (tabName === "format" && typeof renderFormatTab === "function") renderFormatTab();
+  // Phase 6A: clear the sub-view return path if the user navigates to
+  // a destination other than the sub-view itself. (Decks counts because
+  // that IS the return target — handled by the back-bar btn directly.)
+  if (tabName !== "cards" && tabName !== "combos" && tabName !== "decks") {
+    _subviewSourceDeckId = null;
+  }
+  if (typeof renderSubviewBackBars === "function") renderSubviewBackBars();
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -7600,7 +7694,52 @@ function updateTabTitle() {
 // (e.g. when a deck is renamed elsewhere).
 // ════════════════════════════════════════════════════════════════════════
 let _decksTabSelectedId = null;
-let _decksTabRoleFilter = "all"; // "all" | "primary" | "matchup"
+let _decksTabRoleFilter = "primary"; // Phase 6A: dropped "all", default Mine
+
+// Phase 6A: track the deck the user came FROM when they entered the
+// Cards or Combos sub-view, so the back-bar can return them to that
+// deck's panel even if the active deck has since changed.
+let _subviewSourceDeckId = null;
+
+// Open Cards or Combos sub-view scoped to a specific deck. Sets the
+// active deck (so the view reads its data) and switches top-level tab.
+// Renders the back-bar at the top of the sub-view.
+function openDeckSubview(deck, view) {
+  if (!deck) return;
+  _subviewSourceDeckId = deck.deckId;
+  setActiveDeckId(deck.deckId);
+  setActiveTab(view); // "cards" or "combos"
+  renderSubviewBackBars();
+}
+
+// Render the "← Back to <deck name>" bar at the top of Cards/Combos
+// when the user entered via the Decks panel. Hides itself when there's
+// no source context.
+function renderSubviewBackBars() {
+  ["cards-back-bar", "combos-back-bar"].forEach(id => {
+    const bar = document.getElementById(id);
+    if (!bar) return;
+    bar.innerHTML = "";
+    if (!_subviewSourceDeckId) return; // hidden when nothing to return to
+    const deck = (loadDecks() || []).find(d => d.deckId === _subviewSourceDeckId);
+    if (!deck) { _subviewSourceDeckId = null; return; }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "subview-back-btn";
+    btn.textContent = "← Back to deck";
+    btn.onclick = () => {
+      _decksTabSelectedId = _subviewSourceDeckId;
+      _subviewSourceDeckId = null;
+      setActiveTab("decks");
+      renderSubviewBackBars();
+    };
+    const trail = document.createElement("span");
+    trail.className = "subview-back-trail";
+    trail.innerHTML = `Viewing <strong>${escapeHtml(deck.name)}</strong>'s ${id === "cards-back-bar" ? "cards" : "combos"}`;
+    bar.appendChild(btn);
+    bar.appendChild(trail);
+  });
+}
 
 function renderDecksTab() {
   const decks = loadDecks();
@@ -7627,18 +7766,16 @@ function renderDecksTab() {
       `<strong>${matchup}</strong> matchup`;
   }
 
-  // Sidebar: filtered deck list
+  // Sidebar: filtered deck list. Phase 6A: simplified to Mine / Matchup
+  // only — every deck has a role and the user knows which one they're in.
   list.innerHTML = "";
-  const filtered = decks.filter(d => {
-    if (_decksTabRoleFilter === "all") return true;
-    return (d.role || "primary") === _decksTabRoleFilter;
-  });
+  const filtered = decks.filter(d => (d.role || "primary") === _decksTabRoleFilter);
   if (!filtered.length) {
     const empty = document.createElement("div");
     empty.className = "decks-list-empty";
     empty.textContent = _decksTabRoleFilter === "matchup"
-      ? "No matchup decks yet — add one from Format planner (coming next phase)."
-      : "No decks. Drop a .ydk in Cards tab or click + New deck.";
+      ? "No matchup decks yet — add one from the Format tab → + Add matchup."
+      : "No decks yet — click + New deck to import a .ydk file.";
     list.appendChild(empty);
   } else {
     for (const deck of filtered) {
@@ -7721,6 +7858,28 @@ function buildDeckPanel(deck) {
   countsEl.className = "deck-panel-counts";
   countsEl.textContent = `${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s`;
   head.appendChild(countsEl);
+
+  // Phase 6A: Cards / Combos entry buttons. Cards and Combos are no
+  // longer top-level tabs — they're sub-views of a selected deck. The
+  // back-bar in those views returns to this deck.
+  const subActions = document.createElement("div");
+  subActions.className = "deck-panel-subview-actions";
+  const cardsBtn = document.createElement("button");
+  cardsBtn.type = "button";
+  cardsBtn.className = "deck-panel-subview-btn";
+  cardsBtn.textContent = "Cards ↗";
+  cardsBtn.title = "Open the card grid for this deck's active build";
+  cardsBtn.onclick = () => openDeckSubview(deck, "cards");
+  subActions.appendChild(cardsBtn);
+  const combosBtn = document.createElement("button");
+  combosBtn.type = "button";
+  combosBtn.className = "deck-panel-subview-btn";
+  combosBtn.textContent = "Combos ↗";
+  combosBtn.title = "Open the combos workspace for this deck";
+  combosBtn.onclick = () => openDeckSubview(deck, "combos");
+  subActions.appendChild(combosBtn);
+  head.appendChild(subActions);
+
   wrap.appendChild(head);
 
   // ── Methodology section ──
@@ -8972,6 +9131,36 @@ function renderFormatTab() {
   body.appendChild(buildTournamentsSection(activeFormat));
 }
 
+// Phase 6A: file-picker helper. Resolves to the .ydk text content (string)
+// or null if the user cancelled. Reusable from any flow that needs to
+// ingest a deck file — matchup creation, "+ New deck", future imports.
+function pickYdkFile() {
+  return new Promise((resolve) => {
+    const f = document.createElement("input");
+    f.type = "file";
+    f.accept = ".ydk,text/plain";
+    f.onchange = () => {
+      const file = f.files && f.files[0];
+      if (!file) { resolve(null); return; }
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => resolve(null);
+      reader.readAsText(file);
+    };
+    // Cancel detection: the browser doesn't fire change on cancel, so
+    // we listen on the body's focus event — when the picker closes,
+    // body regains focus. We give onchange a chance to fire first.
+    const onFocus = () => {
+      window.removeEventListener("focus", onFocus);
+      setTimeout(() => {
+        if (!f.files || !f.files.length) resolve(null);
+      }, 300);
+    };
+    window.addEventListener("focus", onFocus);
+    f.click();
+  });
+}
+
 // Lightweight prompt — uses ydkConfirm/ydkAlert primitives if a richer
 // prompt isn't available. Returns the entered string or null on cancel.
 async function ydkPrompt({ title, message, value }) {
@@ -9075,7 +9264,8 @@ function buildFormatPrimaryDeckSection(format, primaryDecks) {
     goBtn.textContent = "Edit in Decks ↗";
     goBtn.onclick = () => {
       _decksTabSelectedId = current.deckId;
-      _decksTabRoleFilter = "all";
+      // Primary deck → land on the Mine filter so it's visible in the sidebar.
+      _decksTabRoleFilter = "primary";
       setActiveTab("decks");
     };
     wrap.appendChild(goBtn);
@@ -9252,9 +9442,8 @@ function buildMatchupDrill(format, matchup) {
     goOpp.textContent = "Edit opponent's deck ↗";
     goOpp.onclick = () => {
       _decksTabSelectedId = opp.deckId;
-      // Make sure the opponent deck is actually visible in the sidebar
-      // — switch role filter to All so the user sees what they jumped to.
-      _decksTabRoleFilter = "all";
+      // Opponent deck → land on Matchup filter so it's visible in sidebar
+      _decksTabRoleFilter = "matchup";
       setActiveTab("decks");
     };
     head.appendChild(goOpp);
@@ -9826,8 +10015,12 @@ function buildSideboardRow(opts) {
       counts.forEach((n, name) => {
         const chip = document.createElement("span");
         chip.className = "sideboard-chip";
-        chip.textContent = n > 1 ? `${name} ×${n}` : name;
-        chip.title = "Drag to " + zoneLabel;
+        // Wrap label in a span so the truncation CSS (`.sideboard-chip > span`)
+        // can give us proper ellipsis on long names without breaking flex.
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = n > 1 ? `${name} ×${n}` : name;
+        chip.appendChild(labelSpan);
+        chip.title = name + " — drag to " + zoneLabel;
         chip.draggable = true;
         chip.dataset.name = name;
         chip.dataset.source = "pool";
@@ -10466,10 +10659,12 @@ async function addMatchupFlow(format) {
     cancelText: available.length ? "Pick from existing" : "Cancel",
   });
   if (choice === true) {
-    // Add new flow — prompt for name + .ydk paste
+    // Phase 6A: file picker instead of paste box. Two steps:
+    //   1. Ask for the deck name
+    //   2. Open a file picker for the .ydk (cancel = notes-only deck)
     const name = await ydkPrompt({ title: "Opponent deck name", message: "Deck name (e.g. \"Branded Despia\"):" });
     if (!name) return;
-    const ydkText = await ydkPrompt({ title: "Paste opponent .ydk", message: `Paste the opponent's .ydk contents (or leave blank to track ${name} by notes only):` });
+    const ydkText = await pickYdkFile();
     let deck;
     if (ydkText && ydkText.trim()) {
       // Always create a NEW deck for matchups — never reuse via dedup,
