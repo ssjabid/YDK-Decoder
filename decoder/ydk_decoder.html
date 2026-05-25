@@ -5408,7 +5408,11 @@
        methodology editor (collapsible sections), multi-decklist picker,
        and combos filtered to the selected decklist. Opposing meta decks
        (role: "matchup") live here too once added via Format planner. -->
-  <div id="tab-decks" class="hidden">
+  <!-- Phase 6A (May 18): Decks is the new default landing tab, so its
+       container starts visible. The OTHER tab containers (cards, combos,
+       format, practice, settings) start hidden — setActiveTab toggles
+       hidden on every container as the user clicks tabs. -->
+  <div id="tab-decks">
     <div class="decks-tab-header" id="decks-tab-header"></div>
     <div class="decks-workspace">
       <aside class="decks-sidebar">
@@ -5503,7 +5507,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round3-render-decks-on-load";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round4-decks-default-visible";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -14759,11 +14763,21 @@ drop.addEventListener("drop", e => {
 });
 
 renderCombos();
-// Phase 6A bug fix (May 18): Decks is now the default landing tab.
-// renderDecksTab is only called by setActiveTab("decks") — which doesn't
-// fire on initial page load. Without this, the Decks tab is visible
-// but empty until the user clicks it. Render once on startup.
-if (typeof renderDecksTab === "function") renderDecksTab();
+// Phase 6A bug fix (May 18, round 4 — quadruple-check):
+// Decks is now the default landing tab. Both pieces of activation are
+// needed on initial load:
+//   1. tab-decks div must NOT have class="hidden" — handled in HTML.
+//   2. renderDecksTab() must run to populate sidebar + panel — done here.
+// Wrapped in try/catch so a render error doesn't kill the rest of
+// bootstrap (URL-param combo ingest, deck-injected listeners, etc.).
+try {
+  if (typeof renderDecksTab === "function") renderDecksTab();
+} catch (e) {
+  console.error("[YDK] initial renderDecksTab failed:", e);
+  if (typeof ydkStatus === "function") {
+    ydkStatus("Decks tab render failed — check console for details");
+  }
+}
 
 function focusComboByKey(key, name) {
   setActiveTab("combos");
