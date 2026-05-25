@@ -1153,6 +1153,37 @@
   }
   .key-card-row.stop-high  .key-card-row-priority-dot { background: var(--role-handtrap, #c45f5f); }
   .key-card-row.stop-medium .key-card-row-priority-dot { background: var(--warning, #e5a93c); }
+  /* Phase 6B refresh: quick × delete on each key-card row */
+  .key-card-row-del {
+    background: transparent;
+    color: var(--text-faint);
+    border: none;
+    width: 18px; height: 18px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.12s, color 0.12s;
+    flex-shrink: 0;
+  }
+  .key-card-row:hover .key-card-row-del { opacity: 0.7; }
+  .key-card-row-del:hover { opacity: 1; color: var(--warning); }
+  /* "+ Add card" button at the bottom of each bucket list */
+  .key-cards-add-card {
+    margin: 4px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px dashed var(--border-strong);
+    border-radius: 3px;
+    padding: 4px 8px;
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+    width: calc(100% - 8px);
+    text-align: center;
+  }
+  .key-cards-add-card:hover { color: var(--accent); border-color: var(--accent); }
 
   /* Inline editor that expands below a clicked key-card row */
   .key-card-editor {
@@ -2388,41 +2419,58 @@
   .rt-editor-content a:hover { filter: brightness(1.1); }
   .rt-editor-content strong { color: var(--text); }
 
-  /* @cardname mention chip — inline span with card name + tiny art.
-     data-card holds the card name for serialization round-trips. */
+  /* Phase 6B refresh (May 18): card-mention chip — subtle inline pill
+     that matches the rest of the app's card-pill aesthetic. NOT a
+     loud orange button. Same height as a line of text so it flows
+     inline without disrupting layout. */
   .rt-card-mention {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: rgba(229,116,60,0.12);
-    color: var(--accent);
-    border: 1px solid rgba(229,116,60,0.4);
+    gap: 5px;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
     border-radius: 3px;
-    padding: 1px 6px 1px 4px;
-    font-weight: 600;
+    padding: 1px 6px 1px 3px;
+    font-weight: 500;
     font-size: 11px;
+    line-height: 16px;
     text-decoration: none;
     cursor: default;
     margin: 0 1px;
     user-select: all;
+    vertical-align: baseline;
+    transition: border-color 0.12s;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rt-card-mention:hover { border-color: var(--accent); }
+  .rt-card-mention::before {
+    content: "@";
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 10px;
+    margin-right: 1px;
   }
   .rt-card-mention img {
     width: 14px;
-    height: 20px;
+    height: 18px;
     object-fit: cover;
-    object-position: center 28%;
+    object-position: center 26%;
     border-radius: 1px;
     flex-shrink: 0;
   }
   .rt-card-mention-fallback {
     width: 14px;
-    height: 20px;
+    height: 18px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 9px;
-    color: rgba(255,255,255,0.5);
-    background: rgba(255,255,255,0.05);
+    color: var(--text-faint);
+    background: rgba(255,255,255,0.04);
     border-radius: 1px;
     flex-shrink: 0;
   }
@@ -5372,6 +5420,58 @@
     margin-bottom: 8px;
     line-height: 1.3;
   }
+  /* Phase 6B: optional input row inside the modal (used by ydkPrompt). */
+  .ydk-modal-input-row {
+    margin: 6px 0 4px;
+  }
+  .ydk-modal-input-row[hidden] { display: none; }
+  .ydk-modal-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.12s;
+    box-sizing: border-box;
+  }
+  .ydk-modal-input:focus { border-color: var(--accent); }
+  .ydk-modal-input::placeholder { color: var(--text-faint); font-style: italic; }
+
+  /* Tournament type picker grid (used in pickTournamentType) */
+  .tourn-type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 4px 0 2px;
+  }
+  .tourn-type-opt {
+    display: flex; flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 10px 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .tourn-type-opt strong { font-size: 13px; font-weight: 600; }
+  .tourn-type-opt span { font-size: 11px; color: var(--text-faint); }
+  .tourn-type-opt:hover { border-color: var(--accent); }
+  .tourn-type-opt.is-active {
+    border-color: var(--accent);
+    background: rgba(229,116,60,0.08);
+  }
+  .tourn-type-opt.is-active strong { color: var(--accent); }
+
   .ydk-modal-message {
     font-size: 13px;
     color: var(--text-dim);
@@ -5746,6 +5846,10 @@
     <div class="ydk-modal-icon" id="ydk-modal-icon"></div>
     <div class="ydk-modal-title" id="ydk-modal-title"></div>
     <div class="ydk-modal-message" id="ydk-modal-message"></div>
+    <!-- Phase 6B: optional input row for ydkPrompt — hidden by default -->
+    <div class="ydk-modal-input-row" id="ydk-modal-input-row" hidden>
+      <input type="text" class="ydk-modal-input" id="ydk-modal-input" autocomplete="off" spellcheck="false">
+    </div>
     <div class="ydk-modal-actions">
       <button type="button" class="ydk-modal-btn ydk-modal-cancel" id="ydk-modal-cancel">Cancel</button>
       <button type="button" class="ydk-modal-btn ydk-modal-confirm" id="ydk-modal-confirm">Confirm</button>
@@ -5768,7 +5872,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6B-step2-rte-everywhere";
+const YDK_BUILD = "2026-05-18-phase6B-refinement-pass-1";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7594,8 +7698,11 @@ function ydkModal(opts) {
     const iconEl = document.getElementById("ydk-modal-icon");
     const cancelBtn = document.getElementById("ydk-modal-cancel");
     const confirmBtn = document.getElementById("ydk-modal-confirm");
+    const inputRow = document.getElementById("ydk-modal-input-row");
+    const inputEl  = document.getElementById("ydk-modal-input");
     if (!backdrop || !modal || !titleEl || !msgEl || !cancelBtn || !confirmBtn) {
       // Fallback to native if our modal DOM is missing for any reason
+      if (o.prompt) { resolve(window.prompt(o.message || o.title || "", o.value || "")); return; }
       resolve(o.alert ? true : window.confirm(o.message || o.title || ""));
       return;
     }
@@ -7607,28 +7714,54 @@ function ydkModal(opts) {
     cancelBtn.textContent = o.cancelText || "Cancel";
     confirmBtn.classList.toggle("is-danger", !!o.danger);
     modal.classList.toggle("is-single", !!o.alert);
+
+    // Phase 6B: optional text-input row. Shown for ydkPrompt(); hidden
+    // for confirm/alert. Pre-populated with `value`, focused on open,
+    // returned via the resolve(result) when the user clicks confirm.
+    if (inputRow && inputEl) {
+      if (o.prompt) {
+        inputRow.hidden = false;
+        inputEl.value = o.value || "";
+        inputEl.placeholder = o.placeholder || "";
+        inputEl.type = o.inputType || "text";
+      } else {
+        inputRow.hidden = true;
+      }
+    }
+
     backdrop.hidden = false;
-    // Focus the safer default — confirm for alerts, cancel for confirms
+    // Focus the safer default — input for prompt, confirm for alerts, cancel for confirms
     setTimeout(() => {
-      (o.alert ? confirmBtn : cancelBtn).focus();
+      if (o.prompt && inputEl) { inputEl.focus(); inputEl.select(); }
+      else (o.alert ? confirmBtn : cancelBtn).focus();
     }, 50);
 
     const cleanup = (result) => {
       backdrop.hidden = true;
+      if (inputRow) inputRow.hidden = true;
       confirmBtn.removeEventListener("click", onConfirm);
       cancelBtn.removeEventListener("click", onCancel);
       backdrop.removeEventListener("click", onBackdropClick);
       document.removeEventListener("keydown", onKey, true);
       resolve(result);
     };
-    const onConfirm = () => cleanup(true);
-    const onCancel = () => cleanup(false);
+    const onConfirm = () => {
+      if (o.prompt) cleanup(inputEl ? inputEl.value : "");
+      else cleanup(true);
+    };
+    const onCancel = () => cleanup(o.prompt ? null : false);
     const onBackdropClick = (e) => {
-      if (e.target === backdrop) cleanup(false);
+      if (e.target === backdrop) onCancel();
     };
     const onKey = (e) => {
-      if (e.key === "Escape") { e.preventDefault(); cleanup(false); }
-      else if (e.key === "Enter") { e.preventDefault(); cleanup(true); }
+      if (e.key === "Escape") { e.preventDefault(); onCancel(); }
+      else if (e.key === "Enter" && !e.shiftKey) {
+        // Don't intercept Enter inside textareas (none in current modal,
+        // but defensive). For the input row, Enter submits.
+        if (e.target && e.target.tagName === "TEXTAREA") return;
+        e.preventDefault();
+        onConfirm();
+      }
     };
     confirmBtn.addEventListener("click", onConfirm);
     cancelBtn.addEventListener("click", onCancel);
@@ -7938,13 +8071,19 @@ function openMentionPicker(body, onChangeCb) {
     if (typeof onChangeCb === "function") onChangeCb(body.innerHTML);
   };
 
-  // Live update on body input
+  // Phase 6B perf: debounce input handler so we don't re-render on
+  // every keystroke during fast typing. 80ms feels instant but skips
+  // most intermediate frames.
+  let inputDebounce = null;
   const onInput = () => {
-    const ctx = computeQuery();
-    if (!ctx) { closeMentionPicker(); return; }
-    query = ctx.query;
-    activeIdx = 0;
-    renderItems();
+    if (inputDebounce) clearTimeout(inputDebounce);
+    inputDebounce = setTimeout(() => {
+      const ctx = computeQuery();
+      if (!ctx) { closeMentionPicker(); return; }
+      query = ctx.query;
+      activeIdx = 0;
+      renderItems();
+    }, 80);
   };
   body.addEventListener("input", onInput);
 
@@ -7992,36 +8131,60 @@ function openMentionPicker(body, onChangeCb) {
   renderItems();
 }
 
-// Card search for the @ picker. Pulls from NAME_INDEX and ranks
-// prefix matches above substring matches. Limited to `limit` results.
-function searchCardsForMention(query, limit) {
+// Card search for the @ picker.
+//
+// Phase 6B refresh (May 18, perf): builds a sorted [lowerName, card]
+// pair array ONCE and caches it. Subsequent searches scan a flat array
+// instead of re-iterating NAME_INDEX (which has 2 entries per card from
+// the original+lowercase keying). We invalidate the cache when
+// NAME_INDEX size changes (new cards fetched from YGOPRODeck).
+let _mentionIndexCache = null;
+let _mentionIndexSize = 0;
+function getMentionIndex() {
   if (typeof NAME_INDEX !== "object" || !NAME_INDEX) return [];
-  const q = (query || "").toLowerCase().trim();
-  // Deduplicate by name — NAME_INDEX is keyed by both original and lowercase
+  const currentSize = Object.keys(NAME_INDEX).length;
+  if (_mentionIndexCache && _mentionIndexSize === currentSize) {
+    return _mentionIndexCache;
+  }
+  // Rebuild — dedupe by name
   const seen = new Set();
-  const results = [];
-  // Two passes: prefix matches first, then substring matches
+  const out = [];
   for (const key in NAME_INDEX) {
-    if (key !== key.toLowerCase()) continue; // skip duplicate entries
+    if (key !== key.toLowerCase()) continue; // skip the dual-keyed lowercase entry
     const card = NAME_INDEX[key];
     if (!card || !card.name || seen.has(card.name)) continue;
-    if (!q) {
-      // No query — surface popular / cached cards (just take first N)
-      results.push(card);
-      seen.add(card.name);
-      if (results.length >= limit) break;
-      continue;
-    }
-    const lc = card.name.toLowerCase();
-    if (lc.startsWith(q)) {
-      results.unshift(card);
-      seen.add(card.name);
-    } else if (lc.includes(q)) {
-      results.push(card);
-      seen.add(card.name);
+    seen.add(card.name);
+    out.push({ lc: card.name.toLowerCase(), card });
+  }
+  // Sort alphabetically so empty-query results are at least stable
+  out.sort((a, b) => a.lc.localeCompare(b.lc));
+  _mentionIndexCache = out;
+  _mentionIndexSize = currentSize;
+  return out;
+}
+
+function searchCardsForMention(query, limit) {
+  const idx = getMentionIndex();
+  if (!idx.length) return [];
+  const q = (query || "").toLowerCase().trim();
+  if (!q) {
+    // No query yet — show alphabetically first N as a teaser
+    return idx.slice(0, limit).map(e => e.card);
+  }
+  // Two-pass scan: prefix matches first, substring next. Break early
+  // once we have `limit` prefix matches — no need to scan further.
+  const prefix = [];
+  const sub = [];
+  for (let i = 0; i < idx.length; i++) {
+    const e = idx[i];
+    if (e.lc.startsWith(q)) {
+      prefix.push(e.card);
+      if (prefix.length >= limit) break;
+    } else if (e.lc.includes(q) && sub.length < limit) {
+      sub.push(e.card);
     }
   }
-  return results.slice(0, limit);
+  return prefix.concat(sub).slice(0, limit);
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -9101,6 +9264,53 @@ function buildKeyCardBucket(deck, category) {
   } else {
     cards.forEach(kc => list.appendChild(buildKeyCardRow(deck, kc)));
   }
+  // Phase 6B refresh (May 18): + Add card button per bucket. Lets the
+  // user manually drop any card into this bucket without going through
+  // Extract / Re-extract. Uses ydkPrompt for the name; future polish
+  // could swap to an autocomplete picker.
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "key-cards-add-card";
+  addBtn.textContent = "+ Add card";
+  addBtn.title = "Add a card to this bucket manually";
+  addBtn.onclick = async () => {
+    const name = await ydkPrompt({
+      icon: "+",
+      title: "Add card to " + category + " bucket",
+      message: `Type the card's exact name. Use the @ picker in any notes field if you need to find the spelling.`,
+      placeholder: "Card name",
+    });
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    // Skip duplicate (case-insensitive name match)
+    const existing = (deck.keyCards || []).find(kc => kc && kc.name.toLowerCase() === trimmed.toLowerCase());
+    if (existing) {
+      if (existing.category !== category) {
+        existing.category = category;
+        existing.auto = false;
+        persistDeck(deck);
+        renderDecksTab();
+      }
+      return;
+    }
+    // Resolve the card to grab its id for image (if available)
+    const cardData = lookupCardByName(trimmed);
+    deck.keyCards = deck.keyCards || [];
+    deck.keyCards.push({
+      name: cardData ? cardData.name : trimmed,
+      cardId: cardData ? cardData.id : null,
+      category,
+      stopPriority: "none",
+      stopWith: "",
+      notes: "",
+      priority: deck.keyCards.length,
+      auto: false,
+    });
+    persistDeck(deck);
+    renderDecksTab();
+  };
+  list.appendChild(addBtn);
   bucket.appendChild(list);
   return bucket;
 }
@@ -9118,9 +9328,31 @@ function buildKeyCardRow(deck, kc) {
   }
   row.innerHTML =
     `<span class="key-card-row-name" title="${escapeHtml(kc.name)}">${escapeHtml(kc.name)}</span>` +
-    `<span class="key-card-row-priority-dot"></span>`;
+    `<span class="key-card-row-priority-dot"></span>` +
+    `<button type="button" class="key-card-row-del" title="Remove from key cards">×</button>`;
+  // Phase 6B refresh: per-row × delete button — quick removal without
+  // expanding the inline editor.
+  const delQuick = row.querySelector(".key-card-row-del");
+  if (delQuick) {
+    delQuick.onclick = async (e) => {
+      e.stopPropagation();
+      const ok = await ydkConfirm({
+        icon: "🗑",
+        title: "Remove from key cards?",
+        message: `<strong>${escapeHtml(kc.name)}</strong> will be removed from this deck's key-card buckets.`,
+        confirmText: "Remove",
+        danger: true,
+      });
+      if (!ok) return;
+      const i = deck.keyCards.findIndex(x => x.name === kc.name);
+      if (i >= 0) deck.keyCards.splice(i, 1);
+      persistDeck(deck);
+      renderDecksTab();
+    };
+  }
   // Click → expand the inline editor below this row, or collapse if open.
   row.onclick = (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains("key-card-row-del")) return;
     e.stopPropagation();
     const next = row.nextElementSibling;
     if (next && next.classList && next.classList.contains("key-card-editor")) {
@@ -9340,6 +9572,42 @@ function buildMethodologySection(deck) {
       });
       input.addEventListener("keydown", (e) => e.stopPropagation());
       fieldWrap.appendChild(input);
+      // Phase 6B refresh: "Auto-fill from active build" button for Key ratios.
+      // Generates "3× Amalthe, 2× Drastea, …" from the decklist's actual
+      // counts. Skip cards with count 1 unless they're singletons that
+      // matter (we just list everything; user can prune).
+      if (f.key === "keyRatios") {
+        const auto = document.createElement("button");
+        auto.type = "button";
+        auto.className = "tech-cards-add";
+        auto.style.marginTop = "4px";
+        auto.textContent = "Auto-fill from active build";
+        auto.title = "Generate ratios from the current decklist (main deck)";
+        auto.onclick = () => {
+          const dl = getDeckPrimaryDecklist(deck);
+          const main = (dl && dl.main) || [];
+          if (!main.length) {
+            ydkAlert({ title: "Auto-fill failed", message: "The active build has no main-deck cards. Import a .ydk first." });
+            return;
+          }
+          // Count by name (resolved); fall back to raw id string if no data
+          const counts = new Map();
+          for (const id of main) {
+            const card = lookupCardById(id);
+            const name = (card && card.name) || ("#" + id);
+            counts.set(name, (counts.get(name) || 0) + 1);
+          }
+          // Sort by count desc, then alphabetically
+          const entries = Array.from(counts.entries())
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+          const formatted = entries.map(([n, c]) => `${c}× ${n}`).join(", ");
+          input.value = formatted;
+          deck.methodology[f.key] = formatted;
+          persistDeck(deck);
+          if (typeof ydkStatus === "function") ydkStatus(`Auto-filled Key ratios from ${entries.length} unique cards`);
+        };
+        fieldWrap.appendChild(auto);
+      }
     }
     body.appendChild(fieldWrap);
   }
@@ -10236,12 +10504,22 @@ function pickYdkFile() {
 
 // Lightweight prompt — uses ydkConfirm/ydkAlert primitives if a richer
 // prompt isn't available. Returns the entered string or null on cancel.
-async function ydkPrompt({ title, message, value }) {
-  // Build a small modal-ish input using browser prompt as fallback.
-  // (We could extend ydkConfirm to support input, but prompt() is fine for
-  // names — non-destructive, low-friction.)
-  const result = window.prompt(message || "Enter value:", value || "");
-  return result;
+async function ydkPrompt(opts) {
+  // Phase 6B: styled modal-based prompt — replaces the ugly browser
+  // window.prompt() that clashed with the app's design language.
+  // Returns the entered string, or null on cancel.
+  const o = opts || {};
+  return ydkModal({
+    prompt: true,
+    icon: o.icon || "✎",
+    title: o.title || "Enter a value",
+    message: o.message || "",
+    value: o.value || "",
+    placeholder: o.placeholder || "",
+    inputType: o.inputType || "text",
+    confirmText: o.confirmText || "OK",
+    cancelText: o.cancelText || "Cancel",
+  });
 }
 
 // Format-level notes — meta context that doesn't fit a specific matchup.
@@ -11239,6 +11517,7 @@ function makeTournament(name) {
   return {
     tournamentId: "t_" + Date.now() + "_" + Math.random().toString(36).slice(2, 5),
     name: name || "Untitled event",
+    type: "",                      // "Locals"|"OTS"|"Regional"|"YCS"|"Online"|"Other" (Phase 6B refresh)
     date: now.slice(0, 10),       // YYYY-MM-DD
     location: "",
     deckVariantId: null,          // optional: which decklist you played
@@ -11302,18 +11581,137 @@ function buildTournamentsSection(format) {
   addBtn.type = "button";
   addBtn.className = "tournament-add";
   addBtn.textContent = "+ Log a tournament";
-  addBtn.onclick = async () => {
-    const name = await ydkPrompt({ title: "Log a tournament", message: "Tournament name (e.g. \"Locals 2026-05-18\", \"YCS Birmingham\"):" });
-    if (!name) return;
-    const t = makeTournament(name);
-    format.tournaments.push(t);
-    persistFormat(format);
-    _formatActiveTournamentId = t.tournamentId;
-    renderFormatTab();
-  };
+  addBtn.onclick = () => addTournamentFlow(format);
   wrap.appendChild(addBtn);
 
   return wrap;
+}
+
+// Phase 6B refresh (May 18): structured tournament creation flow.
+// Replaces the single "name" prompt with three small prompts: event
+// type, venue/store name, date. Auto-builds the tournament name from
+// those (e.g. "Locals · Card Knight · 2026-05-18"). Drilling into the
+// event still lets the user override the name manually.
+async function addTournamentFlow(format) {
+  // 1. Event type — quick custom modal (radio-pill style)
+  const eventType = await pickTournamentType();
+  if (!eventType) return;
+
+  // 2. Venue / store / area name
+  const venue = await ydkPrompt({
+    icon: "📍",
+    title: "Where was the event?",
+    message: `Store, venue, city, or "Online" — whatever helps you find this event later.`,
+    placeholder: "e.g. Card Knight, Sheffield, YCS Birmingham, online…",
+    confirmText: "Next",
+  });
+  if (venue === null) return;
+
+  // 3. Date — default today
+  const today = new Date().toISOString().slice(0, 10);
+  const dateStr = await ydkPrompt({
+    icon: "📅",
+    title: "Date of the event",
+    message: "Format: YYYY-MM-DD (defaults to today).",
+    value: today,
+    placeholder: "YYYY-MM-DD",
+    inputType: "date",
+    confirmText: "Create event",
+  });
+  if (!dateStr) return;
+
+  // Build the auto-name. User can rename later via the drill view input.
+  const parts = [eventType];
+  if (venue && venue.trim()) parts.push(venue.trim());
+  parts.push(dateStr);
+  const autoName = parts.join(" · ");
+
+  const t = makeTournament(autoName);
+  t.date = dateStr;
+  t.location = venue ? venue.trim() : "";
+  t.type = eventType;
+  format.tournaments = format.tournaments || [];
+  format.tournaments.push(t);
+  persistFormat(format);
+  _formatActiveTournamentId = t.tournamentId;
+  renderFormatTab();
+}
+
+// Small picker for event type. Uses ydkModal but rebuilds the content
+// dynamically with a radio-button pattern. Returns the chosen type
+// string or null on cancel.
+const TOURNAMENT_TYPES = [
+  { value: "Locals",   label: "Locals",   hint: "Weekly store tournament" },
+  { value: "OTS",      label: "OTS",      hint: "Official Tournament Store event" },
+  { value: "Regional", label: "Regional", hint: "Regional Qualifier" },
+  { value: "YCS",      label: "YCS",      hint: "Yu-Gi-Oh! Championship Series" },
+  { value: "Online",   label: "Online",   hint: "DuelingBook, MD ladder, etc." },
+  { value: "Other",    label: "Other",    hint: "Anything else — testing, casual" },
+];
+function pickTournamentType() {
+  return new Promise((resolve) => {
+    const backdrop = document.getElementById("ydk-modal-backdrop");
+    const titleEl = document.getElementById("ydk-modal-title");
+    const msgEl = document.getElementById("ydk-modal-message");
+    const iconEl = document.getElementById("ydk-modal-icon");
+    const inputRow = document.getElementById("ydk-modal-input-row");
+    const cancelBtn = document.getElementById("ydk-modal-cancel");
+    const confirmBtn = document.getElementById("ydk-modal-confirm");
+    if (!backdrop) { resolve(null); return; }
+
+    titleEl.textContent = "Pick the event type";
+    iconEl.textContent = "🏆";
+    if (inputRow) inputRow.hidden = true;
+
+    // Render the type grid in the message area
+    let chosen = null;
+    const grid = document.createElement("div");
+    grid.className = "tourn-type-grid";
+    TOURNAMENT_TYPES.forEach(t => {
+      const opt = document.createElement("button");
+      opt.type = "button";
+      opt.className = "tourn-type-opt";
+      opt.innerHTML = `<strong>${escapeHtml(t.label)}</strong><span>${escapeHtml(t.hint)}</span>`;
+      opt.onclick = () => {
+        chosen = t.value;
+        grid.querySelectorAll(".tourn-type-opt").forEach(b => b.classList.remove("is-active"));
+        opt.classList.add("is-active");
+        confirmBtn.disabled = false;
+      };
+      grid.appendChild(opt);
+    });
+    msgEl.innerHTML = "";
+    msgEl.appendChild(grid);
+
+    confirmBtn.textContent = "Next";
+    cancelBtn.textContent = "Cancel";
+    confirmBtn.classList.remove("is-danger");
+    confirmBtn.disabled = true;
+    backdrop.hidden = false;
+
+    const cleanup = (result) => {
+      backdrop.hidden = true;
+      confirmBtn.disabled = false;
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+      backdrop.removeEventListener("click", onBackdropClick);
+      document.removeEventListener("keydown", onKey, true);
+      // Restore default message area
+      msgEl.innerHTML = "";
+      resolve(result);
+    };
+    const onConfirm = () => { if (chosen) cleanup(chosen); };
+    const onCancel = () => cleanup(null);
+    const onBackdropClick = (e) => { if (e.target === backdrop) cleanup(null); };
+    const onKey = (e) => {
+      if (e.key === "Escape") { e.preventDefault(); cleanup(null); }
+      else if (e.key === "Enter" && chosen) { e.preventDefault(); cleanup(chosen); }
+    };
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    backdrop.addEventListener("click", onBackdropClick);
+    document.addEventListener("keydown", onKey, true);
+  });
 }
 
 function buildTournamentRow(format, t) {
