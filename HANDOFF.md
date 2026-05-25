@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-19-phase6E-visual-refresh` |
+| Decoder | `2026-05-19-phase6F-archetype-type-grouping` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,28 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6E — Visual refresh (May 19 2026, latest)
+### Phase 6F — Archetype + type grouping (May 19 2026, latest)
+Bulk card lists are now ordered by what matters, not by .ydk position.
+
+**Helpers (new, top of utilities)**
+- `detectArchetypeTokens(uniqueNames)` — finds words that appear in 2+ distinct card names. Those are the deck's archetype tokens (for a DoomZ deck: `doomz`, `power`, `patron`, `command`). Skips a stop-word list (`the`, `of`, `king`, roman numerals, etc.).
+- `isEngineCard(name, archetypeTokens, tokensByName)` — true iff the card has at least one archetype token in its name. Splash 1-ofs with no shared word (e.g. Therion King Regulus) fall into Staples.
+- `classifyCardBroadType(card)` — `"Monster"` / `"Spell"` / `"Trap"` / `"Other"` from `card.type`.
+
+**Key Ratios autofill (the user-visible fix)**
+- Instead of one wrap-crammed `<p>`, output up to 8 sections, each with an `<h4>` header and a `<p>` of chips:
+  - Engine — Monsters / Spells / Traps / Other
+  - Staples — Monsters (handtraps + tech) / Spells / Traps / Other
+- Empty sections are skipped.
+- Within every leaf bucket: count desc → name asc.
+- Status bar reports which archetype tokens were detected.
+- Triggers `showSaveToast("Auto-filled")` so the user sees the save.
+
+**Side-deck planner pool order**
+- Both side pool and main pool are now sorted by broad type (Monster → Spell → Trap → Other), then by name. Raw .ydk export order is meaningless for sideboarding; this makes the drag-out workflow scannable.
+- Duplicates remain as separate chips so 3× copies are still 3 draggable instances.
+
+### Phase 6E — Visual refresh (May 19 2026)
 End-to-end UI polish. Functionality unchanged; everything is visual + interaction-layer.
 
 - **Design tokens refresh.** Deeper bg layers (`--bg`, `--bg-elevated`, `--bg-card`, `--bg-card-hover`), softer borders (`--border-subtle`), brighter accent hover (`--accent-hover`), accent soft tint (`--accent-soft`). Added elevation tokens (`--shadow-sm/md/lg/glow`), radii (`--radius-sm/md/lg`), motion tokens (`--motion-fast/base/slow` with cubic-bezier easing). All legacy names preserved.

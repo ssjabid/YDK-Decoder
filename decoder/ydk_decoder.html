@@ -6321,7 +6321,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-19-phase6E-visual-refresh";
+const YDK_BUILD = "2026-05-19-phase6F-archetype-type-grouping";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -9598,6 +9598,75 @@ function lookupCardById(id) {
   return null;
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// PHASE 6F (May 19) — DECK-WIDE GROUPING HELPERS
+// Used by Key Ratios autofill (and any future bulk-card list) to bucket
+// cards into Engine vs Staples and Monster/Spell/Trap.
+// ════════════════════════════════════════════════════════════════════════
+
+// Stop words for archetype-token detection. Anything in this set is
+// ignored when finding the deck's core archetype tokens.
+const _ARCHETYPE_STOP_WORDS = new Set([
+  "the","of","and","a","an","to","in","for","by","with","from","on","at",
+  "or","as","is","it","this","that","be","not","no","you","your",
+  // common YGO connectors / titles that aren't archetype markers
+  "i","ii","iii","iv","v","vi","vii","viii","ix","x","xi","xii",
+  "one","two","three","four","five","six","seven","eight","nine","zero",
+  "king","queen","lord","lady","sir","duke","baron",
+  // common adjectives in many archetypes — these are not deck-defining
+  "dark","light","fire","water","wind","earth","divine","chaos",
+  "the","new","old","great","grand","ancient",
+]);
+
+// Given a deck (array of unique card names), return the set of tokens
+// that appear in 2+ distinct card names. These are the "archetype tokens"
+// — the words that identify the deck's core engine (e.g. "doomz",
+// "power", "patron"). Returns Set<string> of lowercase tokens.
+function detectArchetypeTokens(uniqueNames) {
+  const tokensByName = new Map();
+  for (const name of uniqueNames) {
+    const tokens = String(name).toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(/\s+/)
+      .filter(t => t.length >= 3 && !_ARCHETYPE_STOP_WORDS.has(t));
+    tokensByName.set(name, new Set(tokens));
+  }
+  const tokenCounts = new Map();
+  for (const tokens of tokensByName.values()) {
+    for (const t of tokens) tokenCounts.set(t, (tokenCounts.get(t) || 0) + 1);
+  }
+  // Threshold = 2 distinct cards. This catches small sub-archetypes
+  // ("Command" appears in 2 DoomZ cards → archetype token). For
+  // wide-engine decks this still gives a clean engine vs staples split
+  // because true staples (Ash, Belle, Solemn) are 1-of-a-kind names
+  // with unique words.
+  const archetypeTokens = new Set();
+  for (const [t, n] of tokenCounts) {
+    if (n >= 2) archetypeTokens.add(t);
+  }
+  return { archetypeTokens, tokensByName };
+}
+
+// Is `name` part of the deck's engine? True iff any of its tokens are
+// in the archetypeTokens set.
+function isEngineCard(name, archetypeTokens, tokensByName) {
+  const tokens = tokensByName.get(name);
+  if (!tokens) return false;
+  for (const t of tokens) if (archetypeTokens.has(t)) return true;
+  return false;
+}
+
+// Classify a YGOPRODeck card object by broad type. Returns one of
+// "Monster" / "Spell" / "Trap" / "Other". Robust to missing card data.
+function classifyCardBroadType(card) {
+  if (!card || !card.type) return "Other";
+  const t = card.type;
+  if (/Spell/i.test(t)) return "Spell";
+  if (/Trap/i.test(t)) return "Trap";
+  if (/Monster/i.test(t)) return "Monster";
+  return "Other";
+}
+
 // Map classify()'s canonical roles + card type into the six key-card
 // buckets. Boss = Extra Deck monster (Xyz/Link/Synchro/Fusion). The other
 // buckets prefer the most specific tag in priority order.
@@ -10064,8 +10133,7 @@ function buildMethodologySection(deck) {
           ydkAlert({ title: "Auto-fill failed", message: "The active build has no main-deck cards. Import a .ydk first." });
           return;
         }
-        // Count by name. Cards we resolve get a card-mention chip;
-        // unresolved fall back to plain text.
+        // ── Step 1: count copies + resolve card data, keyed by name ──
         const counts = new Map();
         const cardByName = new Map();
         for (const id of main) {
@@ -10074,24 +10142,72 @@ function buildMethodologySection(deck) {
           counts.set(name, (counts.get(name) || 0) + 1);
           if (card && !cardByName.has(name)) cardByName.set(name, card);
         }
-        // Sort by count desc, then alphabetically
-        const entries = Array.from(counts.entries())
-          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        const uniqueNames = Array.from(counts.keys());
 
-        // Build HTML: each entry is "Nx <chip>" — chip is a card-mention
-        // span so it gets hover-preview and the @ visual treatment.
-        const pieces = entries.map(([name, n]) => {
+        // ── Step 2: detect deck archetype tokens ──
+        // Any token appearing in 2+ distinct card names is treated as
+        // part of the deck's core engine. Cards containing any such
+        // token are Engine; everything else is Staples (handtraps +
+        // generic tech + splash 1-ofs).
+        const { archetypeTokens, tokensByName } = detectArchetypeTokens(uniqueNames);
+
+        // ── Step 3: bucket each entry by engine? + broad type ──
+        const buckets = {
+          engine:  { Monster: [], Spell: [], Trap: [], Other: [] },
+          staples: { Monster: [], Spell: [], Trap: [], Other: [] },
+        };
+        for (const name of uniqueNames) {
           const card = cardByName.get(name);
+          const broadType = classifyCardBroadType(card);
+          const isEng = isEngineCard(name, archetypeTokens, tokensByName);
+          buckets[isEng ? "engine" : "staples"][broadType].push({
+            name,
+            count: counts.get(name),
+            card,
+          });
+        }
+        // Within each leaf bucket: count desc, then name asc.
+        const sortLeaf = (a, b) => b.count - a.count || a.name.localeCompare(b.name);
+        ["engine","staples"].forEach(g => {
+          ["Monster","Spell","Trap","Other"].forEach(t => buckets[g][t].sort(sortLeaf));
+        });
+
+        // ── Step 4: render an entry as an inline chip ──
+        const chipFor = ({ name, count, card }) => {
           if (card) {
             const urls = (card.id && typeof getImageUrls === "function") ? getImageUrls(card.id) : [];
             const imgHtml = urls.length
               ? `<img src="${escapeHtml(urls[0])}" alt="${escapeHtml(name)}" loading="lazy">`
               : `<span class="rt-card-mention-fallback">?</span>`;
-            return `${n}× <span class="rt-card-mention" data-card="${escapeHtml(name)}" contenteditable="false" title="${escapeHtml(name)}">${imgHtml}${escapeHtml(name)}</span>`;
+            return `${count}× <span class="rt-card-mention" data-card="${escapeHtml(name)}" contenteditable="false" title="${escapeHtml(name)}">${imgHtml}${escapeHtml(name)}</span>`;
           }
-          return `${n}× ${escapeHtml(name)}`;
-        });
-        const html = `<p>${pieces.join(", ")}</p>`;
+          return `${count}× ${escapeHtml(name)}`;
+        };
+
+        // ── Step 5: emit multi-section HTML ──
+        // Each non-empty (group, type) pair gets its own <h4> header and
+        // a <p> of comma-separated chips. Empty pairs are skipped.
+        const sectionDefs = [
+          { group: "engine",  type: "Monster", label: "Engine — Monsters" },
+          { group: "engine",  type: "Spell",   label: "Engine — Spells" },
+          { group: "engine",  type: "Trap",    label: "Engine — Traps" },
+          { group: "engine",  type: "Other",   label: "Engine — Other" },
+          { group: "staples", type: "Monster", label: "Staples — Monsters (handtraps + tech)" },
+          { group: "staples", type: "Spell",   label: "Staples — Spells" },
+          { group: "staples", type: "Trap",    label: "Staples — Traps" },
+          { group: "staples", type: "Other",   label: "Staples — Other" },
+        ];
+        const htmlParts = [];
+        let totalEntries = 0;
+        for (const def of sectionDefs) {
+          const entries = buckets[def.group][def.type];
+          if (!entries.length) continue;
+          totalEntries += entries.length;
+          const chipsHtml = entries.map(chipFor).join(", ");
+          htmlParts.push(`<h4>${escapeHtml(def.label)}</h4>`);
+          htmlParts.push(`<p>${chipsHtml}</p>`);
+        }
+        const html = htmlParts.join("");
         editor.setHtml(html);
         deck.methodology[f.key] = html;
         persistDeck(deck);
@@ -10103,7 +10219,11 @@ function buildMethodologySection(deck) {
             attachPreviewHover(chip, card);
           }
         });
-        if (typeof ydkStatus === "function") ydkStatus(`Auto-filled Key ratios from ${entries.length} unique cards`);
+        if (typeof ydkStatus === "function") {
+          const tokensList = Array.from(archetypeTokens).slice(0, 4).join(", ");
+          ydkStatus(`Auto-filled Key ratios — ${totalEntries} unique cards · archetype: ${tokensList || "(none detected)"}`);
+        }
+        if (typeof showSaveToast === "function") showSaveToast("Auto-filled");
       };
       fieldWrap.appendChild(auto);
     }
@@ -11935,14 +12055,33 @@ function buildMatchupSideboardPlanner(format, matchup) {
   const sidePool = (primaryDl && primaryDl.side) || [];
   const mainPool = (primaryDl && primaryDl.main) || [];
 
-  // Resolve IDs to names. If an ID can't be resolved (card cache cold),
-  // fall back to the ID itself so the user at least sees something.
+  // Phase 6F.2: order pool chips by broad type (Monster → Spell → Trap
+  // → Other), then by name within each type. Raw .ydk order is whatever
+  // the user happened to have when they exported — meaningless for
+  // sideboarding. A deterministic by-type order makes it much easier to
+  // scan for "swap this monster for that spell".
+  //
+  // We keep duplicates as separate chips so "× 2" copies still show as
+  // two draggable instances (the underlying drag handler relies on
+  // per-name match for capacity, not on the pool order itself).
   const idToName = (id) => {
     const c = lookupCardById(id);
     return (c && c.name) || ("#" + id);
   };
-  const sideNames = sidePool.map(idToName);
-  const mainNames = mainPool.map(idToName);
+  const sortByTypeThenName = (ids) => {
+    const TYPE_ORDER = { Monster: 0, Spell: 1, Trap: 2, Other: 3 };
+    return ids
+      .map(id => ({ id, name: idToName(id), card: lookupCardById(id) }))
+      .sort((a, b) => {
+        const ta = TYPE_ORDER[classifyCardBroadType(a.card)];
+        const tb = TYPE_ORDER[classifyCardBroadType(b.card)];
+        if (ta !== tb) return ta - tb;
+        return a.name.localeCompare(b.name);
+      })
+      .map(x => x.name);
+  };
+  const sideNames = sortByTypeThenName(sidePool);
+  const mainNames = sortByTypeThenName(mainPool);
 
   const wrap = document.createElement("div");
 
