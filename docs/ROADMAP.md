@@ -6,7 +6,7 @@ current build. The "In progress / next" section is the active queue.
 "Backlog" is everything that's been triaged but isn't being worked on yet.
 
 Build markers (use these to verify a fresh load):
-- Decoder: `YDK_BUILD = "2026-05-17-format-planner-complete+notes-everywhere+matchup-tech-cards"` (top of `decoder/ydk_decoder.html`, surfaced in the status bar)
+- Decoder: `YDK_BUILD = "2026-05-17-phase5-sideboard+chokepoints+priority+target-endboard+tournaments"` (top of `decoder/ydk_decoder.html`, surfaced in the status bar)
 - Service worker: `YDK_SW_BUILD = "sw-build-2026-04-26-combo-deckid-stamp"` (logged on SW startup)
 - Extension manifest: `version: 1.5.0`
 
@@ -97,6 +97,17 @@ Build markers (use these to verify a fresh load):
 - ✅ Tooltip lists all matchups a combo solves.
 - ✅ Sidebar search includes vs-linkage so "branded" surfaces every combo linked to that matchup.
 - ✅ Card chips throughout Format UI wired to hover-preview.
+
+### N5 — Tournament-prep upgrades  (DONE 2026-05-17, latest)
+After Phase 4 the app could plan matchups but couldn't actually side-board, prioritize, or track tournament outcomes. N5 closes that loop end-to-end.
+
+- ✅ **Side-deck planner per matchup** (drag-and-drop). `matchup.sideboard.{goingFirst,goingSecond}.{in,out}` arrays. Pool subtraction (deck minus zone), live in/out counter, hover-preview on chips, click-or-drag to add, × to remove.
+- ✅ **Chokepoints** — symmetric `chokepointTheirs` / `chokepointOurs` fields, top of every drill.
+- ✅ **Priority playbook** — ordered `priorityFirst` / `prioritySecond` arrays with drag-reorder (circle-num handles), per-step `{ text }`, freeform gameplan textareas kept alongside for prose-style notes.
+- ✅ **Target end board** per matchup — `matchup.targetEndboard` chip list with type-and-Enter input.
+- ✅ **Tournament journal** — `format.tournaments[]` with rounds, opponent dropdown (incl. "Unknown / rogue" sentinel), going first/second, W/L/D, per-round + event-wide notes. Date-sortable. Most-recent-first list.
+- ✅ **Per-matchup W-L badge** — `aggregateMatchupRecord()` computes across all tournaments in the format; renders bottom-right of each matchup card (green / red / neutral).
+- ✅ All Phase 5 fields backfilled by `ensureMatchupPhase5Fields()` + `ensureFormatPhase5Fields()` so matchups/formats created earlier in the day don't blow up the UI.
 
 ### N4 — Late-patch completion  (DONE 2026-05-17)
 Triple-check pass + notes audit + the Illusion-Gate-vs-Branded feature.

@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-17-format-planner-complete+notes-everywhere+matchup-tech-cards` |
+| Decoder | `2026-05-17-phase5-sideboard+chokepoints+priority+target-endboard+tournaments` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -50,6 +50,32 @@ SW + deck-extractor builds are in their respective console logs.
 - **Manual opener-size override**: click the colored pill in the open combo's header to re-bucket between `1-card` / `2-card` / `Other`. Persists on `combo.userOpenerSize`. Auto-bucketing is by `openingHand.length` with anything 3+ folding into Other.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
+
+### Format planner — Phase 5: tournament-prep upgrades (May 17 2026, latest)
+After the user asked for deeper tournament-prep tooling, five new pillars landed inside the matchup drill view + a new Tournament journal section.
+
+**A. Side-deck planner per matchup (drag-and-drop)**
+- `matchup.sideboard.{goingFirst,goingSecond}.{in,out}: [cardNames]`
+- Per direction: two rows — side-deck pool → "Bring in" zone, main-deck pool → "Take out" zone
+- Drag chips from pool to zone (or click to add). Each zone chip has × to remove. Live counter (`In 3 / Out 3 ✓` green when balanced, amber when not).
+- Validates: can't drag more copies of a card than the deck holds.
+- Card chips have hover-preview wired.
+- Requires a primary deck on the format (otherwise shows a hint).
+
+**B+C. Chokepoints + priority playbook**
+- `matchup.chokepointTheirs` + `matchup.chokepointOurs` — two 1–2 line fields at the top of every drill. Red border for theirs (what we stop), amber for ours (what they stop). The most critical call-outs in the matchup, visible at a glance.
+- `matchup.priorityFirst` + `matchup.prioritySecond` — ordered arrays of `{ text }` action lines per direction. Each step has a circle-numbered drag handle for reorder + delete button. Replaces freeform prose for the user who wants a tournament-pressure checklist (the existing `gameplanFirst` / `gameplanSecond` textareas stay for freeform notes; user picks per-matchup which they prefer).
+
+**D. Target end board per matchup**
+- `matchup.targetEndboard: [cardNames]` — what we want on the field against THIS specific opponent. Different from `methodology.endboard` (your generic plan).
+- Chip editor with hover-preview per chip; type a name + Enter to add.
+
+**E. Tournament journal**
+- `format.tournaments[]` with `{ tournamentId, name, date, location, deckVariantId, rounds[], notes }`.
+- Each round: `{ opponentDeckId, going: "first"|"second", result: "W"|"L"|"D", notes }`.
+- New collapsible section below the matchup grid. List shows date, name, record summary, ×. Click → drill view with editable name, date, deck-variant selector (when the deck has multiple builds), rounds editor (round number badge, opponent dropdown including "Unknown / rogue", going first/second, W/L/D toggle, notes), event-wide notes textarea.
+- **Auto-aggregated per-matchup record** rendered as a badge on every matchup card (`4-2-0`, green if positive / red if negative / neutral if even). Computed by `aggregateMatchupRecord(format, matchup)` across all this format's tournaments.
+- Cloning a format does NOT carry tournaments forward — events are tied to the format they happened in.
 
 ### Format planner — completion patch (May 17 2026, late)
 After phases 1–4 landed, a triple-check pass + notes audit surfaced three bugs and three missing notes surfaces. All resolved in this patch.
@@ -334,7 +360,32 @@ The May 2026 round shipped the **complete Format Planner** (phases 1–4), plus 
           { name, side: "good"|"bad", notes }
         ],
         relatedComboIds: [comboKey, …], // your combos that solve this matchup
-        freeformNotes
+        freeformNotes,
+        // ── Phase 5 (May 2026 latest) ──
+        chokepointTheirs: "",          // what they MUST NOT do
+        chokepointOurs:   "",          // what they MUST stop us doing
+        priorityFirst:    [{ text }],  // ordered playbook going first
+        prioritySecond:   [{ text }],  // ordered playbook going second
+        targetEndboard:   [cardNames], // what we want on field vs THIS deck
+        sideboard: {
+          goingFirst:  { in: [cardNames], out: [cardNames] },
+          goingSecond: { in: [cardNames], out: [cardNames] }
+        }
+      }
+    ],
+    tournaments: [                      // Phase 5 tournament journal
+      {
+        tournamentId, name, date, location,
+        deckVariantId,                  // which decklistId was played
+        rounds: [
+          {
+            roundId, opponentDeckId,     // matches a matchup; "__unknown__" for rogue
+            going: "first"|"second",
+            result: "W"|"L"|"D",
+            notes
+          }
+        ],
+        notes, createdAt, updatedAt
       }
     ],
     notes, createdAt, updatedAt

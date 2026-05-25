@@ -1589,6 +1589,464 @@
   }
   .matchup-tech-add:hover { color: var(--accent); border-color: var(--accent); }
 
+  /* ════════════════════════════════════════════════════════════════
+     PHASE 5 — TOURNAMENT-PREP UPGRADES
+     Sideboard planner, chokepoints, priority playbooks, target end
+     board, tournament journal. All live inside the matchup drill view
+     except the journal which gets its own collapsible in the Format tab.
+     ════════════════════════════════════════════════════════════════ */
+
+  /* Chokepoint single-line fields — sit at the top of the matchup
+     drill so the user sees the most important call-out first. */
+  .matchup-chokepoint-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    grid-column: 1 / -1;
+  }
+  @media (max-width: 700px) {
+    .matchup-chokepoint-row { grid-template-columns: 1fr; }
+  }
+  .matchup-chokepoint-field {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 10px;
+    display: flex; flex-direction: column;
+    gap: 4px;
+  }
+  .matchup-chokepoint-field.is-theirs { border-left: 3px solid var(--role-handtrap, #c45f5f); }
+  .matchup-chokepoint-field.is-ours   { border-left: 3px solid var(--warning, #e5a93c); }
+  .matchup-chokepoint-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+  .matchup-chokepoint-field.is-theirs .matchup-chokepoint-label { color: var(--role-handtrap, #c45f5f); }
+  .matchup-chokepoint-field.is-ours   .matchup-chokepoint-label { color: var(--warning, #e5a93c); }
+  .matchup-chokepoint-input {
+    background: transparent;
+    color: var(--text);
+    border: none;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.4;
+    outline: none;
+    width: 100%;
+    resize: none;
+    padding: 0;
+    min-height: 28px;
+  }
+  .matchup-chokepoint-input::placeholder { color: var(--text-faint); font-style: italic; }
+
+  /* Priority playbook — numbered list of action lines. Each row is
+     drag-reorderable; click to edit; × to remove. Going-first and
+     going-second sit side-by-side. */
+  .priority-playbook-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    grid-column: 1 / -1;
+  }
+  @media (max-width: 700px) {
+    .priority-playbook-grid { grid-template-columns: 1fr; }
+  }
+  .priority-playbook {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .priority-playbook-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .priority-step {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 6px;
+    align-items: center;
+  }
+  .priority-step.is-dragging { opacity: 0.4; }
+  .priority-step.is-drop-above::before,
+  .priority-step.is-drop-below::after {
+    content: ""; height: 2px; background: var(--accent); border-radius: 1px;
+    grid-column: 1 / -1; margin: -1px 0;
+  }
+  .priority-step-num {
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab;
+    user-select: none;
+  }
+  .priority-step-num:active { cursor: grabbing; }
+  .priority-step-text {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid transparent;
+    border-bottom: 1px dashed var(--border);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 4px 6px;
+    outline: none;
+    border-radius: 3px;
+  }
+  .priority-step-text:focus { border-color: var(--accent); border-bottom-style: solid; background: var(--bg-card); }
+  .priority-step-del {
+    width: 22px; height: 22px;
+    background: transparent; color: var(--text-faint);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px; line-height: 1;
+  }
+  .priority-step-del:hover { color: var(--warning); border-color: var(--warning); }
+  .priority-add {
+    align-self: flex-start;
+    margin-top: 4px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px dashed var(--border-strong);
+    border-radius: 3px;
+    padding: 3px 10px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .priority-add:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Target end board chip editor */
+  .target-endboard-wrap {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 10px;
+  }
+  .target-endboard-chips {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    min-height: 30px;
+    align-items: flex-start;
+    align-content: flex-start;
+  }
+  .target-endboard-chip {
+    background: rgba(125,168,110,0.16);
+    color: var(--role-engine, #7da86e);
+    border: 1px solid rgba(125,168,110,0.4);
+    border-radius: 3px;
+    padding: 3px 6px 3px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+  }
+  .target-endboard-chip-del {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0.6;
+  }
+  .target-endboard-chip-del:hover { opacity: 1; }
+  .target-endboard-input {
+    width: 100%;
+    margin-top: 6px;
+    height: 26px;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 11px;
+    outline: none;
+  }
+  .target-endboard-input:focus { border-color: var(--accent); }
+
+  /* Sideboard planner — two directions (going first / going second),
+     each with two pool→target rows (side→In, main→Out). */
+  .sideboard-direction {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .sideboard-direction-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .sideboard-direction-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  .sideboard-counter {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: "SF Mono", Menlo, monospace;
+    color: var(--text-faint);
+  }
+  .sideboard-counter.is-balanced { color: var(--role-engine, #7da86e); }
+  .sideboard-counter.is-unbalanced { color: var(--warning, #e5a93c); }
+  .sideboard-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  @media (max-width: 700px) {
+    .sideboard-row { grid-template-columns: 1fr; }
+  }
+  .sideboard-zone {
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    min-height: 40px;
+  }
+  .sideboard-zone.is-drop-target { border-color: var(--accent); background: rgba(229,116,60,0.06); }
+  .sideboard-zone-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex; justify-content: space-between;
+  }
+  .sideboard-zone-chips {
+    display: flex; flex-wrap: wrap; gap: 3px;
+  }
+  .sideboard-chip {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+    transition: border-color 0.12s;
+  }
+  .sideboard-chip:hover { border-color: var(--accent); }
+  .sideboard-chip:active { cursor: grabbing; }
+  .sideboard-chip.is-dragging { opacity: 0.4; }
+  .sideboard-chip-del {
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    font-size: 11px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0.6;
+  }
+  .sideboard-chip-del:hover { opacity: 1; color: var(--warning); }
+  .sideboard-zone-empty {
+    font-size: 10px;
+    color: var(--text-faint);
+    font-style: italic;
+    padding: 4px;
+  }
+  .sideboard-zone.is-in    .sideboard-chip { background: rgba(125,168,110,0.10); border-color: rgba(125,168,110,0.4); }
+  .sideboard-zone.is-out   .sideboard-chip { background: rgba(196,95,95,0.10);   border-color: rgba(196,95,95,0.4); }
+
+  /* Tournament journal — collapsible section in Format tab, list of
+     tournaments, click → drill into rounds editor. */
+  .tournaments-section { margin-bottom: 18px; }
+  .tournament-list { display: flex; flex-direction: column; gap: 6px; }
+  .tournament-row {
+    display: grid;
+    grid-template-columns: 110px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.12s;
+  }
+  .tournament-row:hover { border-color: var(--accent); }
+  .tournament-row-date {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .tournament-row-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tournament-row-record {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .tournament-row-del {
+    width: 22px; height: 22px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .tournament-row-del:hover { color: var(--warning); border-color: var(--warning); }
+  .tournament-add {
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: 5px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-faint);
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .tournament-add:hover { color: var(--accent); border-color: var(--accent); }
+
+  .tournament-drill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .tournament-drill-head {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .tournament-drill-input {
+    height: 28px;
+    padding: 0 8px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+  }
+  .tournament-drill-input:focus { border-color: var(--accent); }
+  .tournament-rounds {
+    display: flex; flex-direction: column;
+    gap: 6px;
+  }
+  .tournament-round {
+    display: grid;
+    grid-template-columns: 28px 1fr 90px 90px 1fr 22px;
+    gap: 6px;
+    align-items: center;
+    padding: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+  @media (max-width: 700px) {
+    .tournament-round {
+      grid-template-columns: 28px 1fr 80px 22px;
+    }
+    .tournament-round .going-cell,
+    .tournament-round .notes-cell { grid-column: 1 / -1; }
+  }
+  .tournament-round-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-faint);
+    text-align: center;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .tournament-round-select,
+  .tournament-round-input {
+    height: 26px;
+    padding: 0 6px;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font: inherit;
+    font-size: 11px;
+    outline: none;
+    min-width: 0;
+  }
+  .tournament-round-result {
+    height: 26px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .tournament-round-result.is-W { background: rgba(125,168,110,0.18); color: var(--role-engine, #7da86e); border-color: rgba(125,168,110,0.4); }
+  .tournament-round-result.is-L { background: rgba(196,95,95,0.18); color: var(--role-handtrap, #c45f5f); border-color: rgba(196,95,95,0.4); }
+  .tournament-round-result.is-D { background: rgba(125,125,125,0.18); color: var(--text-dim); border-color: rgba(125,125,125,0.4); }
+  .tournament-round-del {
+    width: 22px; height: 22px;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px; line-height: 1;
+  }
+  .tournament-round-del:hover { color: var(--warning); border-color: var(--warning); }
+  .tournament-add-round {
+    align-self: flex-start;
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px dashed var(--border-strong);
+    border-radius: 3px;
+    padding: 4px 12px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .tournament-add-round:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Record badge on matchup card */
+  .matchup-card-record {
+    position: absolute;
+    bottom: 8px; right: 10px;
+    background: var(--bg);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-weight: 700;
+  }
+  .matchup-card-record.is-positive { color: var(--role-engine, #7da86e); border-color: rgba(125,168,110,0.4); }
+  .matchup-card-record.is-negative { color: var(--role-handtrap, #c45f5f); border-color: rgba(196,95,95,0.4); }
+
   /* "vs Branded" / "vs Kewl Tune" badge on combo tiles (Phase 4 polish) */
   .combo-card-tile-vs-badge {
     position: absolute;
@@ -4885,7 +5343,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-17-format-planner-complete+notes-everywhere+matchup-tech-cards";
+const YDK_BUILD = "2026-05-17-phase5-sideboard+chokepoints+priority+target-endboard+tournaments";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -8191,10 +8649,35 @@ function makeFormat(name, opts) {
     endDate: null,
     primaryDeckId: (opts && opts.primaryDeckId) || null,
     matchups: (opts && opts.matchups) || [],
+    tournaments: [],              // Phase 5 — per-event journal
     notes: "",
     createdAt: now,
     updatedAt: now,
   };
+}
+
+// Ensure Phase-5 fields exist on formats created before this patch.
+// Idempotent. Called at the top of renderFormatTab.
+function ensureFormatPhase5Fields(format) {
+  if (!format) return;
+  if (!Array.isArray(format.tournaments)) format.tournaments = [];
+}
+
+// Per-matchup record aggregated across every tournament in this format.
+// Returns { wins, losses, draws } or null if there are no rounds.
+function aggregateMatchupRecord(format, matchup) {
+  if (!format || !Array.isArray(format.tournaments)) return null;
+  let w = 0, l = 0, d = 0, any = false;
+  for (const t of format.tournaments) {
+    for (const r of (t.rounds || [])) {
+      if (r.opponentDeckId !== matchup.opponentDeckId) continue;
+      any = true;
+      if (r.result === "W") w++;
+      else if (r.result === "L") l++;
+      else if (r.result === "D") d++;
+    }
+  }
+  return any ? { wins: w, losses: l, draws: d } : null;
 }
 
 function makeMatchup(opponentDeckId) {
@@ -8207,10 +8690,42 @@ function makeMatchup(opponentDeckId) {
     gameplanSecond: "",
     keyTargets: [],             // populated from opponent's keyCards (stop-priority)
     techCardsThatShine: [],     // legacy slot — kept for back-compat
-    counterCards: [],            // [{ name, side: "good"|"bad", notes }] — Phase 4
+    counterCards: [],            // [{ name, side: "good"|"bad", notes }]
     relatedComboIds: [],         // combos in primary deck that solve this
     freeformNotes: "",
+    // ── Phase 5 additions (May 2026 late-late) ──
+    chokepointTheirs: "",        // 1-2 line: "What they MUST NOT do" — we focus to stop
+    chokepointOurs: "",          // 1-2 line: "What they MUST stop us doing"
+    priorityFirst: [],           // [{ text }] — ordered playbook going first
+    prioritySecond: [],          // [{ text }] — ordered playbook going second
+    targetEndboard: [],          // [card names] — what we want on field vs THIS deck
+    sideboard: {                 // in/out per direction; arrays of card names (duplicates allowed)
+      goingFirst:  { in: [], out: [] },
+      goingSecond: { in: [], out: [] },
+    },
   };
+}
+
+// Backfill Phase-5 fields on matchups created before this patch. Called
+// at the top of every matchup render so old data doesn't blow up the UI.
+// Idempotent — only sets fields that are missing.
+function ensureMatchupPhase5Fields(matchup) {
+  if (!matchup) return;
+  if (typeof matchup.chokepointTheirs !== "string") matchup.chokepointTheirs = "";
+  if (typeof matchup.chokepointOurs   !== "string") matchup.chokepointOurs   = "";
+  if (!Array.isArray(matchup.priorityFirst))  matchup.priorityFirst  = [];
+  if (!Array.isArray(matchup.prioritySecond)) matchup.prioritySecond = [];
+  if (!Array.isArray(matchup.targetEndboard)) matchup.targetEndboard = [];
+  if (!matchup.sideboard || typeof matchup.sideboard !== "object") {
+    matchup.sideboard = { goingFirst: { in: [], out: [] }, goingSecond: { in: [], out: [] } };
+  } else {
+    if (!matchup.sideboard.goingFirst)  matchup.sideboard.goingFirst  = { in: [], out: [] };
+    if (!matchup.sideboard.goingSecond) matchup.sideboard.goingSecond = { in: [], out: [] };
+    ["goingFirst", "goingSecond"].forEach(dir => {
+      if (!Array.isArray(matchup.sideboard[dir].in))  matchup.sideboard[dir].in  = [];
+      if (!Array.isArray(matchup.sideboard[dir].out)) matchup.sideboard[dir].out = [];
+    });
+  }
 }
 
 // Sync keyTargets from the opponent deck's keyCards (high/medium stopPriority).
@@ -8237,6 +8752,7 @@ function persistFormat(format) {
 
 // Module-level selection state for the Format tab
 let _formatActiveDrillId = null; // matchupId of currently-drilled matchup
+let _formatActiveTournamentId = null; // tournamentId of currently-drilled tournament
 
 // Returns { short, title } for the "vs Opponent" badge on a combo tile,
 // or null if this combo isn't linked from any matchup in the active
@@ -8296,6 +8812,7 @@ function renderFormatTab() {
   // ── Header: format picker + actions ──
   header.innerHTML = "";
   const activeFormat = getActiveFormat();
+  ensureFormatPhase5Fields(activeFormat);
   const picker = document.createElement("select");
   picker.className = "format-picker-select";
   formats.forEach(f => {
@@ -8395,6 +8912,9 @@ function renderFormatTab() {
   addTile.onclick = () => addMatchupFlow(activeFormat);
   grid.appendChild(addTile);
   body.appendChild(grid);
+
+  // ── Tournament journal (collapsible) ──
+  body.appendChild(buildTournamentsSection(activeFormat));
 }
 
 // Lightweight prompt — uses ydkConfirm/ydkAlert primitives if a richer
@@ -8596,6 +9116,20 @@ function buildMatchupCard(format, matchup) {
     card.appendChild(tgWrap);
   }
 
+  // Per-matchup record from tournament journal (if any rounds played)
+  const record = aggregateMatchupRecord(format, matchup);
+  if (record) {
+    const recordEl = document.createElement("span");
+    let cls = "";
+    if (record.wins > record.losses) cls = "is-positive";
+    else if (record.losses > record.wins) cls = "is-negative";
+    recordEl.className = "matchup-card-record " + cls;
+    const drawSuffix = record.draws > 0 ? `-${record.draws}` : "";
+    recordEl.textContent = `${record.wins}-${record.losses}${drawSuffix}`;
+    recordEl.title = `Record across this format's tournaments: ${record.wins}W ${record.losses}L${record.draws ? " " + record.draws + "D" : ""}`;
+    card.appendChild(recordEl);
+  }
+
   card.onclick = () => {
     _formatActiveDrillId = matchup.matchupId;
     renderFormatTab();
@@ -8617,6 +9151,7 @@ function buildMatchupCard(format, matchup) {
 function buildMatchupDrill(format, matchup) {
   const decks = loadDecks();
   const opp = decks.find(d => d.deckId === matchup.opponentDeckId);
+  ensureMatchupPhase5Fields(matchup);
   syncMatchupKeyTargets(matchup, opp);
 
   const wrap = document.createElement("div");
@@ -8675,10 +9210,38 @@ function buildMatchupDrill(format, matchup) {
   const grid = document.createElement("div");
   grid.className = "matchup-drill-grid";
 
+  // ── Phase 5: Chokepoints (the ONE thing each side must stop) ──
+  grid.appendChild(buildMatchupChokepoints(format, matchup));
+
+  // ── Phase 5: Priority playbook (ordered list of plays) ──
+  grid.appendChild(buildMatchupPriorityPlaybook(format, matchup));
+
+  // ── Phase 5: Target end board for THIS matchup ──
+  const tebWrap = document.createElement("div");
+  tebWrap.className = "matchup-drill-field";
+  tebWrap.style.gridColumn = "1 / -1";
+  const tebLab = document.createElement("div");
+  tebLab.className = "matchup-drill-field-label";
+  tebLab.textContent = "Target end board (what we want on the field vs THIS deck)";
+  tebWrap.appendChild(tebLab);
+  tebWrap.appendChild(buildMatchupTargetEndboard(format, matchup));
+  grid.appendChild(tebWrap);
+
+  // ── Phase 5: Side-deck planner (going first / second) ──
+  const sbWrap = document.createElement("div");
+  sbWrap.className = "matchup-drill-field";
+  sbWrap.style.gridColumn = "1 / -1";
+  const sbLab = document.createElement("div");
+  sbLab.className = "matchup-drill-field-label";
+  sbLab.textContent = "Side-deck plan (drag cards from pool to bring in / take out)";
+  sbWrap.appendChild(sbLab);
+  sbWrap.appendChild(buildMatchupSideboardPlanner(format, matchup));
+  grid.appendChild(sbWrap);
+
   const fields = [
     { key: "howTheyWin", label: "How they win", placeholder: "Their main win condition: end-board pieces, lethal lines, key triggers." },
-    { key: "gameplanFirst", label: "Our plan going first", placeholder: "What we set up, what we leave open, what we negate first." },
-    { key: "gameplanSecond", label: "Our plan going second", placeholder: "Break their board: which pieces to remove first, board breakers we lead with." },
+    { key: "gameplanFirst", label: "Our plan going first (freeform — the playbook above is the structured version)", placeholder: "What we set up, what we leave open, what we negate first." },
+    { key: "gameplanSecond", label: "Our plan going second (freeform)", placeholder: "Break their board: which pieces to remove first, board breakers we lead with." },
     { key: "freeformNotes", label: "Other notes", placeholder: "Tech that shines here, lines you've tried, things that surprised you in the matchup." },
   ];
   fields.forEach(f => {
@@ -8846,6 +9409,861 @@ function createMatchupDeck(ydkText, name) {
   all.push(deck);
   saveDecks(all);
   return deck;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PHASE 5 — TOURNAMENT PREP UPGRADES
+// Chokepoints + priority playbook + target end board + sideboard planner
+// ════════════════════════════════════════════════════════════════════════
+
+// Two-field chokepoint editor: "what they MUST NOT do" + "what they MUST
+// stop us doing". 1-2 line answers, persists on blur.
+function buildMatchupChokepoints(format, matchup) {
+  const wrap = document.createElement("div");
+  wrap.className = "matchup-chokepoint-row";
+
+  const make = (key, sideClass, label, placeholder) => {
+    const field = document.createElement("div");
+    field.className = "matchup-chokepoint-field " + sideClass;
+    const lab = document.createElement("div");
+    lab.className = "matchup-chokepoint-label";
+    lab.textContent = label;
+    field.appendChild(lab);
+    const ta = document.createElement("textarea");
+    ta.className = "matchup-chokepoint-input";
+    ta.value = matchup[key] || "";
+    ta.placeholder = placeholder;
+    ta.rows = 2;
+    ta.addEventListener("blur", () => {
+      if (ta.value !== (matchup[key] || "")) {
+        matchup[key] = ta.value;
+        persistFormat(format);
+      }
+    });
+    ta.addEventListener("keydown", (e) => e.stopPropagation());
+    field.appendChild(ta);
+    return field;
+  };
+
+  wrap.appendChild(make("chokepointTheirs", "is-theirs", "What they MUST NOT do (where we focus our handtraps / removal)", "e.g. \"Resolve Aluber search — that's their whole engine.\""));
+  wrap.appendChild(make("chokepointOurs",   "is-ours",   "What they MUST stop us doing (where they'll point their handtraps)", "e.g. \"Drastea equipping ADRASTEIA — without this we have no Xyz line.\""));
+  return wrap;
+}
+
+// Priority playbook — ordered list of action lines per direction.
+// Each row drag-reorderable via the number badge (HTML5 DnD on the row).
+function buildMatchupPriorityPlaybook(format, matchup) {
+  const wrap = document.createElement("div");
+  wrap.className = "priority-playbook-grid";
+  wrap.appendChild(buildPriorityList(format, matchup, "priorityFirst", "Priority going first (numbered playbook)"));
+  wrap.appendChild(buildPriorityList(format, matchup, "prioritySecond", "Priority going second (numbered playbook)"));
+  return wrap;
+}
+
+function buildPriorityList(format, matchup, key, titleText) {
+  const wrap = document.createElement("div");
+  wrap.className = "priority-playbook";
+  const title = document.createElement("div");
+  title.className = "priority-playbook-title";
+  title.textContent = titleText;
+  wrap.appendChild(title);
+  const list = document.createElement("div");
+
+  const renderRows = () => {
+    list.innerHTML = "";
+    const arr = matchup[key] || [];
+    arr.forEach((step, i) => {
+      const row = document.createElement("div");
+      row.className = "priority-step";
+      row.dataset.idx = String(i);
+
+      const num = document.createElement("span");
+      num.className = "priority-step-num";
+      num.textContent = String(i + 1);
+      num.draggable = true;
+      num.title = "Drag to reorder";
+      num.addEventListener("dragstart", (e) => {
+        row.classList.add("is-dragging");
+        try { e.dataTransfer.setData("text/plain", String(i)); e.dataTransfer.effectAllowed = "move"; } catch (_) {}
+      });
+      num.addEventListener("dragend", () => {
+        row.classList.remove("is-dragging");
+        list.querySelectorAll(".priority-step.is-drop-above, .priority-step.is-drop-below")
+          .forEach(el => el.classList.remove("is-drop-above", "is-drop-below"));
+      });
+      row.appendChild(num);
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "priority-step-text";
+      input.value = step.text || "";
+      input.placeholder = `Step ${i + 1} — e.g. "Ash on Aluber's search"`;
+      input.addEventListener("blur", () => {
+        if (input.value !== (step.text || "")) {
+          step.text = input.value;
+          persistFormat(format);
+        }
+      });
+      input.addEventListener("keydown", (e) => e.stopPropagation());
+      row.appendChild(input);
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "priority-step-del";
+      del.textContent = "×";
+      del.title = "Remove this step";
+      del.onclick = () => {
+        matchup[key].splice(i, 1);
+        persistFormat(format);
+        renderRows();
+      };
+      row.appendChild(del);
+
+      // Drop target on the whole row
+      row.addEventListener("dragover", (e) => {
+        if (!row.classList.contains("is-dragging") && list.querySelector(".is-dragging")) {
+          e.preventDefault();
+          const rect = row.getBoundingClientRect();
+          const isAbove = (e.clientY - rect.top) < (rect.height / 2);
+          row.classList.toggle("is-drop-above", isAbove);
+          row.classList.toggle("is-drop-below", !isAbove);
+        }
+      });
+      row.addEventListener("dragleave", (e) => {
+        if (e.currentTarget === row && !row.contains(e.relatedTarget)) {
+          row.classList.remove("is-drop-above", "is-drop-below");
+        }
+      });
+      row.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const draggingIdx = parseInt(e.dataTransfer.getData("text/plain") || "-1", 10);
+        if (draggingIdx < 0 || draggingIdx === i) return;
+        const rect = row.getBoundingClientRect();
+        const isAbove = (e.clientY - rect.top) < (rect.height / 2);
+        const arr = matchup[key];
+        const [moved] = arr.splice(draggingIdx, 1);
+        let target = i;
+        if (draggingIdx < i) target = isAbove ? i - 1 : i;
+        else target = isAbove ? i : i + 1;
+        arr.splice(target, 0, moved);
+        persistFormat(format);
+        renderRows();
+      });
+
+      list.appendChild(row);
+    });
+  };
+  renderRows();
+  wrap.appendChild(list);
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "priority-add";
+  addBtn.textContent = "+ Add step";
+  addBtn.onclick = () => {
+    matchup[key] = matchup[key] || [];
+    matchup[key].push({ text: "" });
+    persistFormat(format);
+    renderRows();
+    // Focus the new input
+    setTimeout(() => {
+      const inputs = list.querySelectorAll(".priority-step-text");
+      const last = inputs[inputs.length - 1];
+      if (last) last.focus();
+    }, 0);
+  };
+  wrap.appendChild(addBtn);
+  return wrap;
+}
+
+// Target end board chip list — what we want on the field vs THIS matchup.
+// Input box accepts a card name on Enter, pushes to matchup.targetEndboard.
+function buildMatchupTargetEndboard(format, matchup) {
+  const wrap = document.createElement("div");
+  wrap.className = "target-endboard-wrap";
+
+  const chips = document.createElement("div");
+  chips.className = "target-endboard-chips";
+
+  const renderChips = () => {
+    chips.innerHTML = "";
+    if (!matchup.targetEndboard.length) {
+      const empty = document.createElement("span");
+      empty.className = "sideboard-zone-empty";
+      empty.textContent = "No targets yet — type a card name below.";
+      chips.appendChild(empty);
+      return;
+    }
+    matchup.targetEndboard.forEach((name, i) => {
+      const chip = document.createElement("span");
+      chip.className = "target-endboard-chip";
+      chip.textContent = name;
+      const card = lookupCardByName(name);
+      if (card && card.desc) attachPreviewHover(chip, card);
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "target-endboard-chip-del";
+      del.textContent = "×";
+      del.title = "Remove";
+      del.onclick = () => {
+        matchup.targetEndboard.splice(i, 1);
+        persistFormat(format);
+        renderChips();
+      };
+      chip.appendChild(del);
+      chips.appendChild(chip);
+    });
+  };
+  renderChips();
+  wrap.appendChild(chips);
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "target-endboard-input";
+  input.placeholder = `Type a card name and press Enter (e.g. "Drastrius", "Vidria")…`;
+  input.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter") {
+      const v = (input.value || "").trim();
+      if (v) {
+        matchup.targetEndboard.push(v);
+        persistFormat(format);
+        renderChips();
+        input.value = "";
+      }
+    }
+  });
+  wrap.appendChild(input);
+  return wrap;
+}
+
+// Side-deck planner — drag-and-drop. For each direction, two rows:
+//   side[] pool   →  Bring in zone
+//   main[] pool   →  Take out zone
+// Each chip is draggable. Dropping in the matching zone adds the card
+// to matchup.sideboard[dir][in|out]. Click × inside a zone chip removes.
+function buildMatchupSideboardPlanner(format, matchup) {
+  const decks = loadDecks();
+  const primaryDeck = decks.find(d => d.deckId === format.primaryDeckId);
+  if (!primaryDeck) {
+    const wrap = document.createElement("div");
+    wrap.className = "matchup-drill-empty-hint";
+    wrap.textContent = "Pick your primary deck (top of Format tab) first to see your side and main decks.";
+    return wrap;
+  }
+  const primaryDl = getDeckPrimaryDecklist(primaryDeck);
+  const sidePool = (primaryDl && primaryDl.side) || [];
+  const mainPool = (primaryDl && primaryDl.main) || [];
+
+  // Resolve IDs to names. If an ID can't be resolved (card cache cold),
+  // fall back to the ID itself so the user at least sees something.
+  const idToName = (id) => {
+    const c = lookupCardById(id);
+    return (c && c.name) || ("#" + id);
+  };
+  const sideNames = sidePool.map(idToName);
+  const mainNames = mainPool.map(idToName);
+
+  const wrap = document.createElement("div");
+
+  ["goingFirst", "goingSecond"].forEach(dir => {
+    const dirLabel = dir === "goingFirst" ? "Going first" : "Going second";
+    const sb = matchup.sideboard[dir];
+    const container = document.createElement("div");
+    container.className = "sideboard-direction";
+
+    // Header with title + live counter
+    const head = document.createElement("div");
+    head.className = "sideboard-direction-header";
+    const title = document.createElement("span");
+    title.className = "sideboard-direction-title";
+    title.textContent = dirLabel;
+    head.appendChild(title);
+    const counter = document.createElement("span");
+    counter.className = "sideboard-counter";
+    const updateCounter = () => {
+      const inCount = sb.in.length;
+      const outCount = sb.out.length;
+      counter.textContent = `In ${inCount} / Out ${outCount} ${inCount === outCount ? "✓" : "⚠ unbalanced"}`;
+      counter.classList.toggle("is-balanced", inCount === outCount && inCount > 0);
+      counter.classList.toggle("is-unbalanced", inCount !== outCount);
+    };
+    updateCounter();
+    head.appendChild(counter);
+    container.appendChild(head);
+
+    // Row 1: side pool → "In" zone
+    container.appendChild(buildSideboardRow({
+      poolLabel: "Side deck (drag in →)",
+      poolNames: sideNames,
+      zoneLabel: "Bring in",
+      zoneKey: "in",
+      zoneClass: "is-in",
+      sb, matchup, format, dir, updateCounter,
+    }));
+    // Row 2: main pool → "Out" zone
+    container.appendChild(buildSideboardRow({
+      poolLabel: "Main deck (drag out →)",
+      poolNames: mainNames,
+      zoneLabel: "Take out",
+      zoneKey: "out",
+      zoneClass: "is-out",
+      sb, matchup, format, dir, updateCounter,
+    }));
+
+    wrap.appendChild(container);
+  });
+
+  return wrap;
+}
+
+function buildSideboardRow(opts) {
+  const { poolLabel, poolNames, zoneLabel, zoneKey, zoneClass, sb, matchup, format, dir, updateCounter } = opts;
+  const row = document.createElement("div");
+  row.className = "sideboard-row";
+
+  // Pool: shows cards from the deck minus the ones already in the zone.
+  // Each chip is draggable; drop on the zone moves it.
+  const pool = document.createElement("div");
+  pool.className = "sideboard-zone";
+  const poolHeader = document.createElement("div");
+  poolHeader.className = "sideboard-zone-label";
+  poolHeader.innerHTML = `<span>${escapeHtml(poolLabel)}</span><span></span>`;
+  pool.appendChild(poolHeader);
+  const poolChips = document.createElement("div");
+  poolChips.className = "sideboard-zone-chips";
+  pool.appendChild(poolChips);
+
+  // Target zone (bring in / take out)
+  const zone = document.createElement("div");
+  zone.className = "sideboard-zone " + zoneClass;
+  const zoneHeader = document.createElement("div");
+  zoneHeader.className = "sideboard-zone-label";
+  zoneHeader.innerHTML = `<span>${escapeHtml(zoneLabel)}</span><span class="zone-count"></span>`;
+  zone.appendChild(zoneHeader);
+  const zoneChips = document.createElement("div");
+  zoneChips.className = "sideboard-zone-chips";
+  zone.appendChild(zoneChips);
+
+  // Re-rendering function — recomputes pool (deck cards minus what's in
+  // the zone) and the zone chips. Called after every change.
+  const rerender = () => {
+    poolChips.innerHTML = "";
+    zoneChips.innerHTML = "";
+
+    // Subtract zone copies from pool — by exact name match, preserving
+    // duplicates. e.g., deck has 3 Ash, zone has 2 Ash → pool shows 1.
+    const zoneCopies = sb[zoneKey].slice();
+    const remaining = poolNames.slice();
+    for (const name of zoneCopies) {
+      const idx = remaining.indexOf(name);
+      if (idx >= 0) remaining.splice(idx, 1);
+    }
+    // Group remaining by name with counts for compact display
+    const counts = new Map();
+    remaining.forEach(n => counts.set(n, (counts.get(n) || 0) + 1));
+    if (!counts.size) {
+      const empty = document.createElement("span");
+      empty.className = "sideboard-zone-empty";
+      empty.textContent = remaining.length === 0 && poolNames.length === 0 ? "Pool empty." : "All copies placed.";
+      poolChips.appendChild(empty);
+    } else {
+      counts.forEach((n, name) => {
+        const chip = document.createElement("span");
+        chip.className = "sideboard-chip";
+        chip.textContent = n > 1 ? `${name} ×${n}` : name;
+        chip.title = "Drag to " + zoneLabel;
+        chip.draggable = true;
+        chip.dataset.name = name;
+        chip.dataset.source = "pool";
+        const card = lookupCardByName(name);
+        if (card && card.desc) {
+          chip.onmouseenter = () => showPreview(chip, card);
+          chip.onmouseleave = () => hidePreview();
+        }
+        chip.addEventListener("dragstart", (e) => {
+          chip.classList.add("is-dragging");
+          try { e.dataTransfer.setData("text/plain", name); e.dataTransfer.effectAllowed = "move"; } catch (_) {}
+        });
+        chip.addEventListener("dragend", () => {
+          chip.classList.remove("is-dragging");
+          zone.classList.remove("is-drop-target");
+        });
+        // Also: click to add (keyboard / fast workflow)
+        chip.addEventListener("click", () => {
+          sb[zoneKey].push(name);
+          persistFormat(format);
+          updateCounter();
+          rerender();
+        });
+        poolChips.appendChild(chip);
+      });
+    }
+
+    // Zone chips — what's been placed. Each has an × to remove.
+    if (!zoneCopies.length) {
+      const empty = document.createElement("span");
+      empty.className = "sideboard-zone-empty";
+      empty.textContent = "Drag cards here from the pool.";
+      zoneChips.appendChild(empty);
+    } else {
+      const zCounts = new Map();
+      zoneCopies.forEach(n => zCounts.set(n, (zCounts.get(n) || 0) + 1));
+      zCounts.forEach((n, name) => {
+        const chip = document.createElement("span");
+        chip.className = "sideboard-chip";
+        chip.title = "Click × to remove";
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = n > 1 ? `${name} ×${n}` : name;
+        chip.appendChild(labelSpan);
+        const card = lookupCardByName(name);
+        if (card && card.desc) {
+          chip.onmouseenter = () => showPreview(chip, card);
+          chip.onmouseleave = () => hidePreview();
+        }
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "sideboard-chip-del";
+        del.textContent = "×";
+        del.onclick = (e) => {
+          e.stopPropagation();
+          const idx = sb[zoneKey].indexOf(name);
+          if (idx >= 0) sb[zoneKey].splice(idx, 1);
+          persistFormat(format);
+          updateCounter();
+          rerender();
+        };
+        chip.appendChild(del);
+        zoneChips.appendChild(chip);
+      });
+    }
+    zoneHeader.querySelector(".zone-count").textContent = zoneCopies.length ? `(${zoneCopies.length})` : "";
+  };
+
+  // Drop handler on zone
+  zone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    zone.classList.add("is-drop-target");
+  });
+  zone.addEventListener("dragleave", (e) => {
+    if (e.currentTarget === zone && !zone.contains(e.relatedTarget)) {
+      zone.classList.remove("is-drop-target");
+    }
+  });
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    zone.classList.remove("is-drop-target");
+    const name = e.dataTransfer.getData("text/plain");
+    if (!name) return;
+    // Validate: the dragged card must be in the pool's name list (not
+    // some random external drop)
+    if (poolNames.indexOf(name) < 0) {
+      // Allow dropping from the OTHER side's pool if the user is moving
+      // a card around within the same matchup — generous behavior.
+      // But for safety, only accept names we know exist in either pool.
+      return;
+    }
+    // Don't exceed pool count
+    const inDeck = poolNames.filter(n => n === name).length;
+    const inZone = sb[zoneKey].filter(n => n === name).length;
+    if (inZone >= inDeck) return;
+    sb[zoneKey].push(name);
+    persistFormat(format);
+    updateCounter();
+    rerender();
+  });
+
+  rerender();
+  row.appendChild(pool);
+  row.appendChild(zone);
+  return row;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PHASE 5 — TOURNAMENT JOURNAL
+//
+// Each format has a list of tournaments. Each tournament has a list of
+// rounds (opponent matchup × going-first/second × W/L/D × notes). The
+// matchup card shows the aggregated W-L record across all tournaments
+// in this format.
+// ════════════════════════════════════════════════════════════════════════
+
+function makeTournament(name) {
+  const now = new Date().toISOString();
+  return {
+    tournamentId: "t_" + Date.now() + "_" + Math.random().toString(36).slice(2, 5),
+    name: name || "Untitled event",
+    date: now.slice(0, 10),       // YYYY-MM-DD
+    location: "",
+    deckVariantId: null,          // optional: which decklist you played
+    rounds: [],                    // [{ opponentDeckId, going, result, notes }]
+    notes: "",
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function makeRound() {
+  return {
+    roundId: "r_" + Date.now() + "_" + Math.random().toString(36).slice(2, 4),
+    opponentDeckId: null,         // null = unknown / rogue
+    going: "first",                // "first" | "second"
+    result: "W",                    // "W" | "L" | "D"
+    notes: "",
+  };
+}
+
+function buildTournamentsSection(format) {
+  const wrap = document.createElement("div");
+  wrap.className = "tournaments-section";
+
+  // If a tournament is being drilled in, show its drill view ONLY
+  if (_formatActiveTournamentId) {
+    const t = format.tournaments.find(x => x.tournamentId === _formatActiveTournamentId);
+    if (t) {
+      wrap.appendChild(buildTournamentDrill(format, t));
+      return wrap;
+    }
+    _formatActiveTournamentId = null;
+  }
+
+  // Otherwise, show the section header + tournament list
+  const title = document.createElement("div");
+  title.className = "format-section-title";
+  const tCount = format.tournaments.length;
+  title.innerHTML = `<span>Tournament journal <span class="count">(${tCount} event${tCount === 1 ? "" : "s"})</span></span>`;
+  wrap.appendChild(title);
+
+  if (!format.tournaments.length) {
+    const empty = document.createElement("div");
+    empty.style.fontSize = "12px";
+    empty.style.color = "var(--text-faint)";
+    empty.style.fontStyle = "italic";
+    empty.style.padding = "8px 0";
+    empty.textContent = "No tournaments yet. Log an event after locals or a major to track your matchup win rate across the format.";
+    wrap.appendChild(empty);
+  } else {
+    const list = document.createElement("div");
+    list.className = "tournament-list";
+    // Most recent first
+    format.tournaments.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach(t => {
+      list.appendChild(buildTournamentRow(format, t));
+    });
+    wrap.appendChild(list);
+  }
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "tournament-add";
+  addBtn.textContent = "+ Log a tournament";
+  addBtn.onclick = async () => {
+    const name = await ydkPrompt({ title: "Log a tournament", message: "Tournament name (e.g. \"Locals 2026-05-18\", \"YCS Birmingham\"):" });
+    if (!name) return;
+    const t = makeTournament(name);
+    format.tournaments.push(t);
+    persistFormat(format);
+    _formatActiveTournamentId = t.tournamentId;
+    renderFormatTab();
+  };
+  wrap.appendChild(addBtn);
+
+  return wrap;
+}
+
+function buildTournamentRow(format, t) {
+  const row = document.createElement("div");
+  row.className = "tournament-row";
+
+  // Date cell
+  const date = document.createElement("span");
+  date.className = "tournament-row-date";
+  date.textContent = t.date || "—";
+  row.appendChild(date);
+
+  // Name cell
+  const name = document.createElement("span");
+  name.className = "tournament-row-name";
+  name.textContent = t.name || "Untitled event";
+  row.appendChild(name);
+
+  // Record summary
+  let wins = 0, losses = 0, draws = 0;
+  (t.rounds || []).forEach(r => {
+    if (r.result === "W") wins++;
+    else if (r.result === "L") losses++;
+    else if (r.result === "D") draws++;
+  });
+  const record = document.createElement("span");
+  record.className = "tournament-row-record";
+  record.textContent = `${wins}-${losses}${draws ? "-" + draws : ""} · ${t.rounds.length} round${t.rounds.length === 1 ? "" : "s"}`;
+  row.appendChild(record);
+
+  // Delete button
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "tournament-row-del";
+  del.textContent = "×";
+  del.title = "Delete this tournament";
+  del.onclick = async (e) => {
+    e.stopPropagation();
+    const ok = await ydkConfirm({
+      icon: "🗑",
+      title: `Delete "${t.name}"?`,
+      message: "This event and all its rounds will be removed from this format's journal.",
+      confirmText: "Delete event",
+      danger: true,
+    });
+    if (!ok) return;
+    format.tournaments = format.tournaments.filter(x => x.tournamentId !== t.tournamentId);
+    persistFormat(format);
+    renderFormatTab();
+  };
+  row.appendChild(del);
+
+  row.onclick = () => {
+    _formatActiveTournamentId = t.tournamentId;
+    renderFormatTab();
+  };
+  return row;
+}
+
+function buildTournamentDrill(format, t) {
+  const wrap = document.createElement("div");
+  wrap.className = "tournament-drill";
+
+  const head = document.createElement("div");
+  head.className = "tournament-drill-head";
+
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "matchup-drill-back";
+  back.textContent = "← Back to format";
+  back.onclick = () => {
+    _formatActiveTournamentId = null;
+    renderFormatTab();
+  };
+  head.appendChild(back);
+
+  // Editable name
+  const name = document.createElement("input");
+  name.type = "text";
+  name.className = "tournament-drill-input";
+  name.value = t.name;
+  name.style.fontSize = "16px";
+  name.style.fontWeight = "600";
+  name.style.flex = "1";
+  name.style.minWidth = "0";
+  name.addEventListener("blur", () => {
+    if (name.value !== t.name) { t.name = name.value; persistFormat(format); }
+  });
+  name.addEventListener("keydown", (e) => e.stopPropagation());
+  head.appendChild(name);
+
+  // Editable date
+  const date = document.createElement("input");
+  date.type = "date";
+  date.className = "tournament-drill-input";
+  date.value = t.date || "";
+  date.addEventListener("change", () => {
+    t.date = date.value;
+    persistFormat(format);
+  });
+  date.addEventListener("keydown", (e) => e.stopPropagation());
+  head.appendChild(date);
+
+  // Decklist played (which build)
+  const decks = loadDecks();
+  const primaryDeck = decks.find(d => d.deckId === format.primaryDeckId);
+  if (primaryDeck && (primaryDeck.decklists || []).length > 1) {
+    const buildSel = document.createElement("select");
+    buildSel.className = "tournament-drill-input";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "— deck variant —";
+    buildSel.appendChild(blank);
+    primaryDeck.decklists.forEach(dl => {
+      const opt = document.createElement("option");
+      opt.value = dl.decklistId;
+      opt.textContent = dl.name;
+      if (dl.decklistId === t.deckVariantId) opt.selected = true;
+      buildSel.appendChild(opt);
+    });
+    buildSel.onchange = () => {
+      t.deckVariantId = buildSel.value || null;
+      persistFormat(format);
+    };
+    head.appendChild(buildSel);
+  }
+
+  wrap.appendChild(head);
+
+  // Rounds list
+  const roundsLabel = document.createElement("div");
+  roundsLabel.className = "matchup-drill-field-label";
+  roundsLabel.style.marginBottom = "8px";
+  roundsLabel.textContent = "Rounds (opponent · going · result · notes)";
+  wrap.appendChild(roundsLabel);
+
+  const roundsList = document.createElement("div");
+  roundsList.className = "tournament-rounds";
+
+  const renderRounds = () => {
+    roundsList.innerHTML = "";
+    if (!t.rounds.length) {
+      const empty = document.createElement("div");
+      empty.className = "matchup-drill-empty-hint";
+      empty.textContent = "No rounds logged yet. Add one for each round you played.";
+      roundsList.appendChild(empty);
+      return;
+    }
+    t.rounds.forEach((r, i) => {
+      roundsList.appendChild(buildRoundRow(format, t, r, i, renderRounds));
+    });
+  };
+  renderRounds();
+  wrap.appendChild(roundsList);
+
+  // + Add round
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "tournament-add-round";
+  add.textContent = "+ Add round";
+  add.onclick = () => {
+    t.rounds.push(makeRound());
+    persistFormat(format);
+    renderRounds();
+  };
+  wrap.appendChild(add);
+
+  // Event-wide notes
+  const evtNotesLabel = document.createElement("div");
+  evtNotesLabel.className = "matchup-drill-field-label";
+  evtNotesLabel.style.marginTop = "14px";
+  evtNotesLabel.textContent = "Event notes (lessons, things to remember)";
+  wrap.appendChild(evtNotesLabel);
+  const evtNotes = document.createElement("textarea");
+  evtNotes.className = "matchup-drill-textarea";
+  evtNotes.value = t.notes || "";
+  evtNotes.placeholder = "What you learned, what worked, what you'd change next event.";
+  evtNotes.rows = 3;
+  evtNotes.addEventListener("blur", () => {
+    if (evtNotes.value !== (t.notes || "")) {
+      t.notes = evtNotes.value;
+      persistFormat(format);
+    }
+  });
+  evtNotes.addEventListener("keydown", (e) => e.stopPropagation());
+  wrap.appendChild(evtNotes);
+
+  return wrap;
+}
+
+function buildRoundRow(format, t, r, i, renderRounds) {
+  const row = document.createElement("div");
+  row.className = "tournament-round";
+
+  // Round number
+  const num = document.createElement("span");
+  num.className = "tournament-round-num";
+  num.textContent = "R" + (i + 1);
+  row.appendChild(num);
+
+  // Opponent — dropdown of this format's matchup decks
+  const oppSel = document.createElement("select");
+  oppSel.className = "tournament-round-select";
+  const blank = document.createElement("option");
+  blank.value = "";
+  blank.textContent = "— opponent —";
+  oppSel.appendChild(blank);
+  const decks = loadDecks();
+  const matchupDeckIds = (format.matchups || []).map(m => m.opponentDeckId).filter(Boolean);
+  matchupDeckIds.forEach(deckId => {
+    const d = decks.find(x => x.deckId === deckId);
+    if (!d) return;
+    const opt = document.createElement("option");
+    opt.value = deckId;
+    opt.textContent = d.name;
+    if (r.opponentDeckId === deckId) opt.selected = true;
+    oppSel.appendChild(opt);
+  });
+  // "Unknown / rogue" sentinel
+  const unknownOpt = document.createElement("option");
+  unknownOpt.value = "__unknown__";
+  unknownOpt.textContent = "Unknown / rogue";
+  if (r.opponentDeckId === "__unknown__") unknownOpt.selected = true;
+  oppSel.appendChild(unknownOpt);
+  oppSel.onchange = () => {
+    r.opponentDeckId = oppSel.value || null;
+    persistFormat(format);
+    renderFormatTab(); // re-render to refresh aggregate badges on matchup cards
+  };
+  row.appendChild(oppSel);
+
+  // Going first/second
+  const goingSel = document.createElement("select");
+  goingSel.className = "tournament-round-select going-cell";
+  ["first", "second"].forEach(g => {
+    const opt = document.createElement("option");
+    opt.value = g;
+    opt.textContent = "Going " + g;
+    if (r.going === g) opt.selected = true;
+    goingSel.appendChild(opt);
+  });
+  goingSel.onchange = () => {
+    r.going = goingSel.value;
+    persistFormat(format);
+  };
+  row.appendChild(goingSel);
+
+  // Result W/L/D
+  const resSel = document.createElement("select");
+  resSel.className = "tournament-round-select tournament-round-result is-" + (r.result || "W");
+  ["W", "L", "D"].forEach(res => {
+    const opt = document.createElement("option");
+    opt.value = res;
+    opt.textContent = res === "W" ? "Win" : res === "L" ? "Loss" : "Draw";
+    if (r.result === res) opt.selected = true;
+    resSel.appendChild(opt);
+  });
+  resSel.onchange = () => {
+    r.result = resSel.value;
+    resSel.className = "tournament-round-select tournament-round-result is-" + r.result;
+    persistFormat(format);
+    renderFormatTab();
+  };
+  row.appendChild(resSel);
+
+  // Notes
+  const notes = document.createElement("input");
+  notes.type = "text";
+  notes.className = "tournament-round-input notes-cell";
+  notes.value = r.notes || "";
+  notes.placeholder = "Round notes (sideboard plan, key moment, mistake)…";
+  notes.addEventListener("blur", () => {
+    if (notes.value !== (r.notes || "")) {
+      r.notes = notes.value;
+      persistFormat(format);
+    }
+  });
+  notes.addEventListener("keydown", (e) => e.stopPropagation());
+  row.appendChild(notes);
+
+  // Delete
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "tournament-round-del";
+  del.textContent = "×";
+  del.title = "Remove this round";
+  del.onclick = () => {
+    t.rounds.splice(i, 1);
+    persistFormat(format);
+    renderRounds();
+    renderFormatTab(); // refresh aggregates
+  };
+  row.appendChild(del);
+
+  return row;
 }
 
 // Tech & Counter card list — repeating rows of { name, side, notes }.
