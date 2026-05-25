@@ -669,6 +669,26 @@
   }
   .deck-recovery-btn.is-primary:hover { filter: brightness(1.1); color: white; }
 
+  /* Role toggle on the deck panel — sits next to the delete button. */
+  .deck-panel-role-toggle {
+    height: 28px;
+    padding: 0 12px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s;
+  }
+  .deck-panel-role-toggle:hover {
+    background: var(--accent);
+    color: white;
+  }
+
   .decks-workspace {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -5543,7 +5563,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round5-deck-recovery-banner";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round6-role-recovery";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7771,6 +7791,93 @@ function saveDecks(arr) {
   try { localStorage.setItem(DECKS_KEY, JSON.stringify(arr)); } catch (_) {}
 }
 
+// ROLE RECOVERY (May 18 — round 6):
+// An earlier bug in addMatchupFlow flipped EXISTING primary decks to
+// role:"matchup" via content-hash dedup collisions. The fix
+// (createMatchupDeck) prevents new occurrences but doesn't restore
+// already-flipped decks. This detector finds decks that were probably
+// flipped (heuristic: they have combos linked OR were the active deck
+// at some point) and offers a one-click batch-restore.
+function detectMatchupDecksThatShouldBePrimary() {
+  try {
+    const decks = loadDecks();
+    const allMatchup = decks.length > 0 && decks.every(d => d.role === "matchup");
+    if (!allMatchup) {
+      // Soft heuristic: any matchup deck that has combos linked to it
+      // (combos.deckId === deck.deckId) is almost certainly a flipped
+      // primary deck. Real opponent decks don't have your combos.
+      const combos = loadSavedCombos();
+      const matchupDecksWithCombos = decks.filter(d =>
+        d.role === "matchup" && combos.some(c => c.deckId === d.deckId)
+      );
+      if (!matchupDecksWithCombos.length) return null;
+      return { kind: "with-combos", decks: matchupDecksWithCombos };
+    }
+    // All decks are matchup — the user almost certainly didn't intend that
+    return { kind: "all-matchup", decks };
+  } catch (_) { return null; }
+}
+
+function renderRoleRecoveryBanner() {
+  const tabDecks = document.getElementById("tab-decks");
+  if (!tabDecks) return;
+  const existing = tabDecks.querySelector(".role-recovery-banner");
+  if (existing) existing.remove();
+  const dismissedKey = "ydk_role_recovery_dismissed";
+  if (localStorage.getItem(dismissedKey) === "1") return;
+  const result = detectMatchupDecksThatShouldBePrimary();
+  if (!result) return;
+
+  const banner = document.createElement("div");
+  banner.className = "deck-recovery-banner role-recovery-banner";
+  const msg = result.kind === "all-matchup"
+    ? `<strong>Heads up — all ${result.decks.length} of your decks are marked as Matchup.</strong>` +
+      `<span>An earlier bug may have flipped your primary decks. Restore them as "My deck" so they show under My Decks?</span>`
+    : `<strong>${result.decks.length} matchup deck${result.decks.length === 1 ? " has" : "s have"} your combos linked to them.</strong>` +
+      `<span>These were probably flipped from My deck → Matchup by an earlier bug. Convert them back?</span>`;
+  banner.innerHTML =
+    `<div class="deck-recovery-message">${msg}</div>` +
+    `<div class="deck-recovery-actions">` +
+      `<button type="button" class="deck-recovery-btn is-primary" data-action="restore-roles">Convert to My deck</button>` +
+      `<button type="button" class="deck-recovery-btn" data-action="dismiss-roles">Dismiss</button>` +
+    `</div>`;
+  banner.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".deck-recovery-btn");
+    if (!btn) return;
+    if (btn.dataset.action === "restore-roles") {
+      const all = loadDecks();
+      const idsToFlip = new Set(result.decks.map(d => d.deckId));
+      let flipped = 0;
+      for (const d of all) {
+        if (idsToFlip.has(d.deckId) && d.role === "matchup") {
+          d.role = "primary";
+          flipped++;
+        }
+      }
+      saveDecks(all);
+      banner.remove();
+      _decksTabRoleFilter = "primary";
+      if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
+      renderDecksTab();
+      if (typeof ydkStatus === "function") ydkStatus(`Restored ${flipped} deck${flipped === 1 ? "" : "s"} to "My deck"`);
+    } else if (btn.dataset.action === "dismiss-roles") {
+      const ok = await ydkConfirm({
+        icon: "⚠",
+        title: "Dismiss the role recovery?",
+        message: "If you dismiss, this banner won't show again. You can still convert individual decks via the role toggle on the deck panel.",
+        confirmText: "Dismiss",
+      });
+      if (ok) {
+        try { localStorage.setItem(dismissedKey, "1"); } catch (_) {}
+        banner.remove();
+      }
+    }
+  });
+  const header = tabDecks.querySelector(".decks-tab-header");
+  if (header) header.parentNode.insertBefore(banner, header);
+  else tabDecks.insertBefore(banner, tabDecks.firstChild);
+}
+
 // EMERGENCY RECOVERY (May 18 — round 5):
 // If ydk_decks is empty but the one-time pre-migration backup still
 // exists, the user's library was wiped somehow (browser clear, accidental
@@ -8084,6 +8191,40 @@ function buildDeckPanel(deck) {
   countsEl.className = "deck-panel-counts";
   countsEl.textContent = `${counts.main || 0}m · ${counts.extra || 0}e · ${counts.side || 0}s`;
   head.appendChild(countsEl);
+
+  // Phase 6A bug fix (May 18 round 6): role toggle. Lets the user
+  // flip a deck between "My deck" and "Matchup". Critical recovery
+  // path because an EARLIER bug in addMatchupFlow flipped primary
+  // decks to "matchup" via content-hash dedup collisions, leaving
+  // users with no visible decks under "My Decks". This toggle is
+  // the manual fix.
+  const roleToggle = document.createElement("button");
+  roleToggle.type = "button";
+  roleToggle.className = "deck-panel-role-toggle";
+  const isMatchup = deck.role === "matchup";
+  roleToggle.textContent = isMatchup ? "→ Convert to My deck" : "→ Convert to Matchup";
+  roleToggle.title = isMatchup
+    ? "Re-classify this deck as one of your own"
+    : "Re-classify this deck as an opposing matchup deck";
+  roleToggle.onclick = async () => {
+    const ok = await ydkConfirm({
+      icon: "↻",
+      title: `Convert "${deck.name}" to ${isMatchup ? "My deck" : "Matchup"}?`,
+      message: isMatchup
+        ? "This deck will appear under <strong>My Decks</strong> and become eligible as a primary deck in Format planner."
+        : "This deck will appear under <strong>Matchup Decks</strong> and become eligible as an opponent in Format planner.",
+      confirmText: "Convert",
+    });
+    if (!ok) return;
+    deck.role = isMatchup ? "primary" : "matchup";
+    persistDeck(deck);
+    // Land on the destination filter so the deck remains visible
+    _decksTabRoleFilter = deck.role === "matchup" ? "matchup" : "primary";
+    if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
+    renderDecksTab();
+    if (typeof ydkStatus === "function") ydkStatus(`"${deck.name}" → ${deck.role === "matchup" ? "Matchup" : "My deck"}`);
+  };
+  head.appendChild(roleToggle);
 
   // Phase 6A bug fix (May 18): delete button for the selected deck.
   // Works for both Mine and Matchup decks; cleanupDeckReferences sweeps
@@ -14886,6 +15027,9 @@ try {
   // Emergency recovery: if ydk_decks is empty but the pre-migration
   // backup still has data, show a banner offering one-click restore.
   if (typeof renderDeckRecoveryBanner === "function") renderDeckRecoveryBanner();
+  // Role recovery: detect decks that were flipped to "matchup" by the
+  // earlier addMatchupFlow bug and offer one-click restore.
+  if (typeof renderRoleRecoveryBanner === "function") renderRoleRecoveryBanner();
 } catch (e) {
   console.error("[YDK] initial renderDecksTab failed:", e);
   if (typeof ydkStatus === "function") {
