@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-18-phase6A-bugfix-round6-role-recovery` |
+| Decoder | `2026-05-18-phase6A-bugfix-round7-isolated-renders` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |

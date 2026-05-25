@@ -5563,7 +5563,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round6-role-recovery";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round7-isolated-renders";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7327,32 +7327,44 @@ function decodeComboParam(b64) {
 }
 
 function setActiveTab(tabName) {
+  // Phase 6A bug fix (round 7): visibility toggles ALWAYS run first +
+  // unguarded — even if a render function later throws, the user's
+  // click still flips the tab UI. Each render call is independently
+  // try/caught so one broken view doesn't kill the rest.
   document.querySelectorAll(".tab").forEach(t => {
     t.classList.toggle("active", t.dataset.tab === tabName);
   });
-  document.getElementById("tab-cards").classList.toggle("hidden", tabName !== "cards");
-  document.getElementById("tab-combos").classList.toggle("hidden", tabName !== "combos");
-  document.getElementById("tab-practice").classList.toggle("hidden", tabName !== "practice");
-  const settingsEl = document.getElementById("tab-settings");
-  if (settingsEl) settingsEl.classList.toggle("hidden", tabName !== "settings");
-  // Decks tab — phase 1 of format planner. Renders on activation so the
-  // panel always reflects the latest deck list / methodology edits.
-  const decksEl = document.getElementById("tab-decks");
-  if (decksEl) decksEl.classList.toggle("hidden", tabName !== "decks");
-  // Format tab — phase 3 of format planner. Banlist-bounded matchup planning.
-  const formatEl = document.getElementById("tab-format");
-  if (formatEl) formatEl.classList.toggle("hidden", tabName !== "format");
-  if (tabName === "practice" && typeof renderPracticeTab === "function") renderPracticeTab();
-  if (tabName === "settings" && typeof refreshSettingsTab === "function") refreshSettingsTab();
-  if (tabName === "decks" && typeof renderDecksTab === "function") renderDecksTab();
-  if (tabName === "format" && typeof renderFormatTab === "function") renderFormatTab();
+  const safeToggle = (id, hide) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle("hidden", hide);
+  };
+  safeToggle("tab-cards",    tabName !== "cards");
+  safeToggle("tab-combos",   tabName !== "combos");
+  safeToggle("tab-practice", tabName !== "practice");
+  safeToggle("tab-settings", tabName !== "settings");
+  safeToggle("tab-decks",    tabName !== "decks");
+  safeToggle("tab-format",   tabName !== "format");
+
+  // Render calls — each wrapped so an error inside one doesn't prevent
+  // the others (or break subsequent tab clicks).
+  const safeRun = (label, fn) => {
+    try { if (typeof fn === "function") fn(); }
+    catch (e) {
+      console.error("[YDK] " + label + " failed:", e);
+      if (typeof ydkStatus === "function") ydkStatus(label + " failed — see console");
+    }
+  };
+  if (tabName === "practice") safeRun("renderPracticeTab", typeof renderPracticeTab === "function" ? renderPracticeTab : null);
+  if (tabName === "settings") safeRun("refreshSettingsTab", typeof refreshSettingsTab === "function" ? refreshSettingsTab : null);
+  if (tabName === "decks") safeRun("renderDecksTab", typeof renderDecksTab === "function" ? renderDecksTab : null);
+  if (tabName === "format") safeRun("renderFormatTab", typeof renderFormatTab === "function" ? renderFormatTab : null);
+
   // Phase 6A: clear the sub-view return path if the user navigates to
-  // a destination other than the sub-view itself. (Decks counts because
-  // that IS the return target — handled by the back-bar btn directly.)
+  // a destination other than the sub-view itself.
   if (tabName !== "cards" && tabName !== "combos" && tabName !== "decks") {
     _subviewSourceDeckId = null;
   }
-  if (typeof renderSubviewBackBars === "function") renderSubviewBackBars();
+  try { if (typeof renderSubviewBackBars === "function") renderSubviewBackBars(); } catch (_) {}
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -8129,9 +8141,26 @@ function renderDecksTab() {
     empty.className = "decks-content-empty";
     empty.textContent = "Pick a deck from the left to view its details.";
     content.appendChild(empty);
-    return;
+  } else {
+    // Phase 6A bug fix (round 7): wrap buildDeckPanel in try/catch so an
+    // error rendering ONE deck doesn't kill the whole Decks tab + cascade
+    // into preventing recovery banners from showing.
+    try {
+      content.appendChild(buildDeckPanel(selected));
+    } catch (e) {
+      console.error("[YDK] buildDeckPanel failed for deck", selected.deckId, e);
+      const errBox = document.createElement("div");
+      errBox.className = "decks-content-empty";
+      errBox.innerHTML = `<strong style="color:var(--warning);">Failed to render this deck.</strong><br><small>Check console for details. Other decks may still be usable from the sidebar.</small>`;
+      content.appendChild(errBox);
+    }
   }
-  content.appendChild(buildDeckPanel(selected));
+
+  // Phase 6A bug fix (round 7): recovery banners fire EVERY render so
+  // they survive a buildDeckPanel error and so they reappear if the
+  // user changes filter / data. Each is independently try/caught.
+  try { renderDeckRecoveryBanner(); } catch (e) { console.warn("[YDK] renderDeckRecoveryBanner failed:", e); }
+  try { renderRoleRecoveryBanner(); } catch (e) { console.warn("[YDK] renderRoleRecoveryBanner failed:", e); }
 }
 
 // One tile in the sidebar deck list. Click → set selection + re-render
