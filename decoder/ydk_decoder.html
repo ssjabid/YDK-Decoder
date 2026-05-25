@@ -5563,7 +5563,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6A-bugfix-round7-isolated-renders";
+const YDK_BUILD = "2026-05-18-phase6A-bugfix-round8-syntax-error";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -9574,8 +9574,10 @@ function renderFormatTab() {
   grid.appendChild(addNewTile);
 
   // Only show "Pick existing" tile when there are existing matchup decks
-  // not already linked to this format
-  const decks = loadDecks();
+  // not already linked to this format. Note: `decks` is already declared
+  // at the top of renderFormatTab — reusing it here. The duplicate
+  // `const decks = ...` that was here previously caused a SyntaxError
+  // that killed the entire script.
   const matchupDecks = decks.filter(d => d.role === "matchup");
   const alreadyLinked = new Set((activeFormat.matchups || []).map(m => m.opponentDeckId));
   const linkable = matchupDecks.filter(d => !alreadyLinked.has(d.deckId));
