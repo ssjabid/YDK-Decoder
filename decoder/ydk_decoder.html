@@ -5768,7 +5768,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-18-phase6B-rich-text-editor+at-mentions-on-combo-notes";
+const YDK_BUILD = "2026-05-18-phase6B-step2-rte-everywhere";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -9210,7 +9210,7 @@ function buildKeyCardEditor(deck, kc) {
   r2.appendChild(catSel);
   editor.appendChild(r2);
 
-  // Row 3: notes
+  // Row 3: notes — Phase 6B rich-text editor
   const r3 = document.createElement("div");
   r3.className = "key-card-editor-row";
   const r3l = document.createElement("span");
@@ -9219,22 +9219,22 @@ function buildKeyCardEditor(deck, kc) {
   r3l.style.alignSelf = "flex-start";
   r3l.style.marginTop = "4px";
   r3.appendChild(r3l);
-  const notes = document.createElement("textarea");
-  notes.className = "key-card-notes-input";
-  notes.value = kc.notes || "";
-  notes.placeholder = "e.g. \"Their main starter — Ash this every time.\"";
-  notes.rows = 2;
-  notes.style.flex = "1";
-  notes.style.minWidth = "0";
-  notes.addEventListener("blur", () => {
-    if (notes.value !== (kc.notes || "")) {
-      kc.notes = notes.value;
-      kc.auto = false;
-      persistDeck(deck);
-    }
+  const notesEditorWrap = document.createElement("div");
+  notesEditorWrap.style.flex = "1";
+  notesEditorWrap.style.minWidth = "0";
+  const notesEditor = createRichTextEditor({
+    initialValue: kc.notes || "",
+    placeholder: "e.g. \"Their main starter — Ash this every time.\" Type @ to mention a card.",
+    onChange: (html) => {
+      if (html !== (kc.notes || "")) {
+        kc.notes = html;
+        kc.auto = false;
+        persistDeck(deck);
+      }
+    },
   });
-  notes.addEventListener("keydown", (e) => e.stopPropagation());
-  r3.appendChild(notes);
+  notesEditorWrap.appendChild(notesEditor.element);
+  r3.appendChild(notesEditorWrap);
   editor.appendChild(r3);
 
   // Actions: remove this entry entirely
@@ -9312,19 +9312,35 @@ function buildMethodologySection(deck) {
     labelEl.className = "methodology-field-label";
     labelEl.textContent = f.label;
     fieldWrap.appendChild(labelEl);
-    const input = document.createElement("textarea");
-    input.className = "methodology-field-input" + (f.multi ? "" : " is-single");
-    input.value = deck.methodology[f.key] || "";
-    input.placeholder = f.placeholder;
-    input.rows = f.multi ? 3 : 1;
-    input.addEventListener("blur", () => {
-      if (input.value !== (deck.methodology[f.key] || "")) {
-        deck.methodology[f.key] = input.value;
-        persistDeck(deck);
-      }
-    });
-    input.addEventListener("keydown", (e) => e.stopPropagation());
-    fieldWrap.appendChild(input);
+    if (f.multi) {
+      // Phase 6B: rich-text editor for multi-line methodology fields.
+      // keyRatios stays as a plain single-line input (just numbers/ratios).
+      const editor = createRichTextEditor({
+        initialValue: deck.methodology[f.key] || "",
+        placeholder: f.placeholder + " Type @ to mention a card.",
+        onChange: (html) => {
+          if (html !== (deck.methodology[f.key] || "")) {
+            deck.methodology[f.key] = html;
+            persistDeck(deck);
+          }
+        },
+      });
+      fieldWrap.appendChild(editor.element);
+    } else {
+      const input = document.createElement("textarea");
+      input.className = "methodology-field-input is-single";
+      input.value = deck.methodology[f.key] || "";
+      input.placeholder = f.placeholder;
+      input.rows = 1;
+      input.addEventListener("blur", () => {
+        if (input.value !== (deck.methodology[f.key] || "")) {
+          deck.methodology[f.key] = input.value;
+          persistDeck(deck);
+        }
+      });
+      input.addEventListener("keydown", (e) => e.stopPropagation());
+      fieldWrap.appendChild(input);
+    }
     body.appendChild(fieldWrap);
   }
 
@@ -9417,19 +9433,18 @@ function buildDeckNotesSection(deck) {
   label.className = "methodology-field-label";
   label.textContent = "Free-form notes";
   fieldWrap.appendChild(label);
-  const ta = document.createElement("textarea");
-  ta.className = "methodology-field-input";
-  ta.value = deck.notes || "";
-  ta.placeholder = "Anything that doesn't fit the methodology slots — build rationale, side-deck plans, things to remember.";
-  ta.rows = 4;
-  ta.addEventListener("blur", () => {
-    if (ta.value !== (deck.notes || "")) {
-      deck.notes = ta.value;
-      persistDeck(deck);
-    }
+  // Phase 6B: rich-text editor with @cardname mentions.
+  const editor = createRichTextEditor({
+    initialValue: deck.notes || "",
+    placeholder: "Anything that doesn't fit the methodology slots — build rationale, side-deck plans, things to remember. Type @ to mention a card.",
+    onChange: (html) => {
+      if (html !== (deck.notes || "")) {
+        deck.notes = html;
+        persistDeck(deck);
+      }
+    },
   });
-  ta.addEventListener("keydown", (e) => e.stopPropagation());
-  fieldWrap.appendChild(ta);
+  fieldWrap.appendChild(editor.element);
   body.appendChild(fieldWrap);
   return section;
 }
@@ -9540,23 +9555,22 @@ function buildDecklistsSection(deck) {
     // Per-build notes — small textarea immediately below the row. Use
     // for "this version cuts Ash for Mulcharmy" / "tournament build only"
     // type build-specific reminders.
-    const notesTa = document.createElement("textarea");
-    notesTa.className = "methodology-field-input";
-    notesTa.style.fontSize = "11px";
-    notesTa.style.minHeight = "auto";
-    notesTa.style.padding = "5px 8px";
-    notesTa.style.marginTop = "-2px";
-    notesTa.value = dl.notes || "";
-    notesTa.placeholder = `Notes about this build (cuts, swaps, when to use it)…`;
-    notesTa.rows = 2;
-    notesTa.addEventListener("blur", () => {
-      if (notesTa.value !== (dl.notes || "")) {
-        dl.notes = notesTa.value;
-        persistDeck(deck);
-      }
+    // Phase 6B: rich-text editor per-build. Wrapped in a small div
+    // so we can constrain max-width and offset slightly below the row.
+    const dlNotesWrap = document.createElement("div");
+    dlNotesWrap.style.marginTop = "-2px";
+    const dlEditor = createRichTextEditor({
+      initialValue: dl.notes || "",
+      placeholder: `Notes about this build (cuts, swaps, when to use it)… Type @ to mention a card.`,
+      onChange: (html) => {
+        if (html !== (dl.notes || "")) {
+          dl.notes = html;
+          persistDeck(deck);
+        }
+      },
     });
-    notesTa.addEventListener("keydown", (e) => e.stopPropagation());
-    grid.appendChild(notesTa);
+    dlNotesWrap.appendChild(dlEditor.element);
+    grid.appendChild(dlNotesWrap);
   }
   body.appendChild(grid);
 
@@ -10240,19 +10254,18 @@ function buildFormatNotesSection(format) {
   title.className = "format-section-title";
   title.innerHTML = `<span>Format notes <span class="count">(banlist-wide context)</span></span>`;
   wrap.appendChild(title);
-  const ta = document.createElement("textarea");
-  ta.className = "matchup-drill-textarea";
-  ta.value = format.notes || "";
-  ta.placeholder = "Format-wide context: what defines this meta, top decks to expect, side-deck plans, format predictions.";
-  ta.rows = 3;
-  ta.addEventListener("blur", () => {
-    if (ta.value !== (format.notes || "")) {
-      format.notes = ta.value;
-      persistFormat(format);
-    }
+  // Phase 6B: rich-text editor — supports @cardname for tech ideas
+  const editor = createRichTextEditor({
+    initialValue: format.notes || "",
+    placeholder: "Format-wide context: what defines this meta, top decks to expect, side-deck plans, format predictions. Type @ to mention a card.",
+    onChange: (html) => {
+      if (html !== (format.notes || "")) {
+        format.notes = html;
+        persistFormat(format);
+      }
+    },
   });
-  ta.addEventListener("keydown", (e) => e.stopPropagation());
-  wrap.appendChild(ta);
+  wrap.appendChild(editor.element);
   return wrap;
 }
 
@@ -10379,20 +10392,21 @@ function buildMatchupCard(format, matchup) {
   head.appendChild(del);
   card.appendChild(head);
 
-  // How they win (preview)
-  if ((matchup.howTheyWin || "").trim()) {
+  // How they win (preview) — Phase 6B: fields are HTML now, strip tags
+  const howTheyWinText = notesHtmlToText(matchup.howTheyWin || "").trim();
+  if (howTheyWinText) {
     const tw = document.createElement("div");
     tw.className = "matchup-card-section";
-    tw.innerHTML = `<span class="label">They win by</span>${escapeHtml(matchup.howTheyWin).slice(0, 140)}${matchup.howTheyWin.length > 140 ? "…" : ""}`;
+    tw.innerHTML = `<span class="label">They win by</span>${escapeHtml(howTheyWinText).slice(0, 140)}${howTheyWinText.length > 140 ? "…" : ""}`;
     card.appendChild(tw);
   }
 
-  // Our plan (preview)
-  const plan = (matchup.gameplanFirst || matchup.gameplanSecond || "").trim();
-  if (plan) {
+  // Our plan (preview) — Phase 6B: fields are HTML now, strip tags
+  const planText = notesHtmlToText(matchup.gameplanFirst || matchup.gameplanSecond || "").trim();
+  if (planText) {
     const op = document.createElement("div");
     op.className = "matchup-card-section";
-    op.innerHTML = `<span class="label">Our plan</span>${escapeHtml(plan).slice(0, 140)}${plan.length > 140 ? "…" : ""}`;
+    op.innerHTML = `<span class="label">Our plan</span>${escapeHtml(planText).slice(0, 140)}${planText.length > 140 ? "…" : ""}`;
     card.appendChild(op);
   }
 
@@ -10554,19 +10568,20 @@ function buildMatchupDrill(format, matchup) {
     lab.className = "matchup-drill-field-label";
     lab.textContent = f.label;
     fieldWrap.appendChild(lab);
-    const ta = document.createElement("textarea");
-    ta.className = "matchup-drill-textarea";
-    ta.value = matchup[f.key] || "";
-    ta.placeholder = f.placeholder;
-    ta.rows = 4;
-    ta.addEventListener("blur", () => {
-      if (ta.value !== (matchup[f.key] || "")) {
-        matchup[f.key] = ta.value;
-        persistFormat(format);
-      }
+    // Phase 6B: rich-text editor with @cardname mentions on all freeform
+    // matchup fields. The structured fields (priority list, chokepoints,
+    // sideboard, target endboard) keep their bespoke editors.
+    const editor = createRichTextEditor({
+      initialValue: matchup[f.key] || "",
+      placeholder: f.placeholder + " Type @ to mention a card.",
+      onChange: (html) => {
+        if (html !== (matchup[f.key] || "")) {
+          matchup[f.key] = html;
+          persistFormat(format);
+        }
+      },
     });
-    ta.addEventListener("keydown", (e) => e.stopPropagation());
-    fieldWrap.appendChild(ta);
+    fieldWrap.appendChild(editor.element);
     grid.appendChild(fieldWrap);
   });
 
@@ -11469,25 +11484,23 @@ function buildTournamentDrill(format, t) {
   };
   wrap.appendChild(add);
 
-  // Event-wide notes
+  // Event-wide notes — Phase 6B rich-text editor
   const evtNotesLabel = document.createElement("div");
   evtNotesLabel.className = "matchup-drill-field-label";
   evtNotesLabel.style.marginTop = "14px";
   evtNotesLabel.textContent = "Event notes (lessons, things to remember)";
   wrap.appendChild(evtNotesLabel);
-  const evtNotes = document.createElement("textarea");
-  evtNotes.className = "matchup-drill-textarea";
-  evtNotes.value = t.notes || "";
-  evtNotes.placeholder = "What you learned, what worked, what you'd change next event.";
-  evtNotes.rows = 3;
-  evtNotes.addEventListener("blur", () => {
-    if (evtNotes.value !== (t.notes || "")) {
-      t.notes = evtNotes.value;
-      persistFormat(format);
-    }
+  const evtEditor = createRichTextEditor({
+    initialValue: t.notes || "",
+    placeholder: "What you learned, what worked, what you'd change next event. Type @ to mention a card.",
+    onChange: (html) => {
+      if (html !== (t.notes || "")) {
+        t.notes = html;
+        persistFormat(format);
+      }
+    },
   });
-  evtNotes.addEventListener("keydown", (e) => e.stopPropagation());
-  wrap.appendChild(evtNotes);
+  wrap.appendChild(evtEditor.element);
 
   return wrap;
 }
@@ -15095,7 +15108,8 @@ function buildComboSearchHaystack(combo) {
     }
     parts.push(Array.from(stepCards).join(" "));
   }
-  if (combo.userNotes) parts.push(combo.userNotes);
+  // Phase 6B: userNotes is now HTML — extract plain text for search.
+  if (combo.userNotes) parts.push(notesHtmlToText(combo.userNotes));
   if (combo.replayId) parts.push(String(combo.replayId));
   // Include "vs Opponent" linkage so searching by an opponent name in
   // the sidebar surfaces combos linked to that matchup.
@@ -15301,7 +15315,8 @@ function renderCombos() {
       // Notes badge — render only when the combo has non-empty notes.
       // Tooltip shows the first ~80 chars so the user can preview without
       // opening the combo. Position: top-left of the art crop.
-      const notesText = (c.userNotes || "").trim();
+      // Phase 6B: notes is HTML now — strip tags before display
+      const notesText = notesHtmlToText(c.userNotes || "").trim();
       const notesPreview = notesText
         ? notesText.replace(/\s+/g, " ").slice(0, 80) + (notesText.length > 80 ? "…" : "")
         : "";
