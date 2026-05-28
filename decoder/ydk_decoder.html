@@ -5973,6 +5973,39 @@
      the unified motion variable). */
   .deck-tile-role-stripe { transition: width var(--motion-base); }
 
+  /* ── Guided round-form modal (Phase 6G) ── */
+  .round-form {
+    display: flex; flex-direction: column; gap: 6px;
+    max-height: 56vh; overflow-y: auto;
+    text-align: left;
+    padding-right: 4px;
+  }
+  .round-form-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+  .round-form-label:first-child { margin-top: 0; }
+  .round-form-hint {
+    font-size: 10px; font-weight: 500; letter-spacing: 0;
+    text-transform: none; color: var(--text-faint); margin-left: 6px;
+  }
+  .round-form-input {
+    width: 100%;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 10px; font: inherit; font-size: 13px;
+  }
+  .round-form-input:focus { outline: none; border-color: var(--accent); }
+  .round-form-textarea { resize: vertical; min-height: 56px; line-height: 1.5; }
+  /* Win/Loss/Draw option tinting in the form */
+  .round-form-res.is-W.is-active { border-color: var(--success); color: var(--success); }
+  .round-form-res.is-L.is-active { border-color: var(--role-handtrap, #c45f7a); color: var(--role-handtrap, #c45f7a); }
+  .round-form-res.is-D.is-active { border-color: var(--warning); color: var(--warning); }
+  /* Score cell in the inline round row — narrow */
+  .tournament-round-input.score-cell { max-width: 64px; text-align: center; }
+
 </style>
 </head>
 <body>
@@ -6321,7 +6354,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-28-audit-pass-1";
+const YDK_BUILD = "2026-05-29-phase6G-round-form";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -12442,6 +12475,7 @@ function makeRound() {
     opponentDeckId: null,         // null = unknown / rogue
     going: "first",                // "first" | "second"
     result: "W",                    // "W" | "L" | "D"
+    score: "",                      // optional game score, e.g. "2-0" / "2-1"
     notes: "",
   };
 }
@@ -12623,6 +12657,154 @@ function pickTournamentType() {
   });
 }
 
+// Guided "log a round" form (Phase 6G). Instead of appending a blank
+// inline row the user then has to decode, this asks the questions in
+// plain language: who you played (pre-filled from the format's matchups),
+// going first/second, win/loss/draw, optional score, optional notes.
+// Reuses the shared modal shell + the .tourn-type-grid option styling.
+// Resolves true if a round was added, false on cancel.
+function addRoundFlow(format, t) {
+  return new Promise((resolve) => {
+    const backdrop = document.getElementById("ydk-modal-backdrop");
+    const titleEl = document.getElementById("ydk-modal-title");
+    const msgEl = document.getElementById("ydk-modal-message");
+    const iconEl = document.getElementById("ydk-modal-icon");
+    const inputRow = document.getElementById("ydk-modal-input-row");
+    const cancelBtn = document.getElementById("ydk-modal-cancel");
+    const confirmBtn = document.getElementById("ydk-modal-confirm");
+    if (!backdrop) { resolve(false); return; }
+
+    titleEl.textContent = "Log round " + ((t.rounds || []).length + 1);
+    iconEl.textContent = "🎲";
+    if (inputRow) inputRow.hidden = true;
+
+    const decks = loadDecks();
+    const matchupDecks = (format.matchups || [])
+      .map(m => decks.find(d => d.deckId === m.opponentDeckId))
+      .filter(Boolean);
+
+    // Form state
+    let oppId = null;      // deckId | "__unknown__"
+    let going = "first";   // "first" | "second"
+    let result = null;     // "W" | "L" | "D"
+    let score = "";
+    let notes = "";
+
+    const form = document.createElement("div");
+    form.className = "round-form";
+    const makeLabel = (txt, hint) => {
+      const l = document.createElement("div");
+      l.className = "round-form-label";
+      l.innerHTML = escapeHtml(txt) + (hint ? ` <span class="round-form-hint">${escapeHtml(hint)}</span>` : "");
+      return l;
+    };
+    const makeGrid = () => { const g = document.createElement("div"); g.className = "tourn-type-grid"; return g; };
+    const setActive = (grid, btn) => { grid.querySelectorAll(".tourn-type-opt").forEach(b => b.classList.remove("is-active")); btn.classList.add("is-active"); };
+    const validate = () => { confirmBtn.disabled = !(oppId && result); };
+
+    // 1. Opponent — pre-selected from the format's matchups
+    form.appendChild(makeLabel("What did you play against?", matchupDecks.length ? "" : "no matchups yet — pick Unknown, or add matchups in this format first"));
+    const oppGrid = makeGrid();
+    const oppOptions = matchupDecks.map(d => ({ value: d.deckId, label: d.name, hint: "matchup deck" }));
+    oppOptions.push({ value: "__unknown__", label: "Unknown / rogue", hint: "not in your matchup list" });
+    oppOptions.forEach(o => {
+      const opt = document.createElement("button");
+      opt.type = "button";
+      opt.className = "tourn-type-opt";
+      opt.innerHTML = `<strong>${escapeHtml(o.label)}</strong><span>${escapeHtml(o.hint)}</span>`;
+      opt.onclick = () => { oppId = o.value; setActive(oppGrid, opt); validate(); };
+      oppGrid.appendChild(opt);
+    });
+    form.appendChild(oppGrid);
+
+    // 2. Going first / second
+    form.appendChild(makeLabel("Going first or second?"));
+    const goingGrid = makeGrid();
+    [["first", "Going first"], ["second", "Going second"]].forEach(([v, l], i) => {
+      const opt = document.createElement("button");
+      opt.type = "button";
+      opt.className = "tourn-type-opt" + (i === 0 ? " is-active" : "");
+      opt.innerHTML = `<strong>${l}</strong>`;
+      opt.onclick = () => { going = v; setActive(goingGrid, opt); };
+      goingGrid.appendChild(opt);
+    });
+    form.appendChild(goingGrid);
+
+    // 3. Result
+    form.appendChild(makeLabel("Did you win?"));
+    const resGrid = makeGrid();
+    [["W", "Win"], ["L", "Loss"], ["D", "Draw"]].forEach(([v, l]) => {
+      const opt = document.createElement("button");
+      opt.type = "button";
+      opt.className = "tourn-type-opt round-form-res is-" + v;
+      opt.innerHTML = `<strong>${l}</strong>`;
+      opt.onclick = () => { result = v; setActive(resGrid, opt); validate(); };
+      resGrid.appendChild(opt);
+    });
+    form.appendChild(resGrid);
+
+    // 4. Score (optional)
+    form.appendChild(makeLabel("Score", "optional"));
+    const scoreInput = document.createElement("input");
+    scoreInput.type = "text";
+    scoreInput.className = "round-form-input";
+    scoreInput.placeholder = "e.g. 2-0, 2-1, 1-2";
+    scoreInput.addEventListener("input", () => { score = scoreInput.value; });
+    scoreInput.addEventListener("keydown", (e) => { if (e.key !== "Escape") e.stopPropagation(); });
+    form.appendChild(scoreInput);
+
+    // 5. Notes (optional)
+    form.appendChild(makeLabel("Notes", "optional"));
+    const notesInput = document.createElement("textarea");
+    notesInput.className = "round-form-input round-form-textarea";
+    notesInput.rows = 3;
+    notesInput.placeholder = "What happened — e.g. \"Won off Solemn Judgment on their Aluber. Bricked game 2.\"";
+    notesInput.addEventListener("input", () => { notes = notesInput.value; });
+    notesInput.addEventListener("keydown", (e) => { if (e.key !== "Escape") e.stopPropagation(); });
+    form.appendChild(notesInput);
+
+    msgEl.innerHTML = "";
+    msgEl.appendChild(form);
+
+    confirmBtn.textContent = "Add round";
+    cancelBtn.textContent = "Cancel";
+    confirmBtn.classList.remove("is-danger");
+    confirmBtn.disabled = true;
+    backdrop.hidden = false;
+
+    const cleanup = (added) => {
+      backdrop.hidden = true;
+      confirmBtn.disabled = false;
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+      backdrop.removeEventListener("click", onBackdrop);
+      document.removeEventListener("keydown", onKey, true);
+      msgEl.innerHTML = "";
+      resolve(added);
+    };
+    const onConfirm = () => {
+      if (!(oppId && result)) return;
+      const r = makeRound();
+      r.opponentDeckId = oppId;     // "__unknown__" sentinel matches buildRoundRow + aggregate logic
+      r.going = going;
+      r.result = result;
+      r.score = (score || "").trim();
+      r.notes = (notes || "").trim();
+      t.rounds = t.rounds || [];
+      t.rounds.push(r);
+      persistFormat(format);
+      cleanup(true);
+    };
+    const onCancel = () => cleanup(false);
+    const onBackdrop = (e) => { if (e.target === backdrop) cleanup(false); };
+    const onKey = (e) => { if (e.key === "Escape") { e.preventDefault(); cleanup(false); } };
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    backdrop.addEventListener("click", onBackdrop);
+    document.addEventListener("keydown", onKey, true);
+  });
+}
+
 function buildTournamentRow(format, t) {
   const row = document.createElement("div");
   row.className = "tournament-row";
@@ -12784,10 +12966,11 @@ function buildTournamentDrill(format, t) {
   add.type = "button";
   add.className = "tournament-add-round";
   add.textContent = "+ Add round";
-  add.onclick = () => {
-    t.rounds.push(makeRound());
-    persistFormat(format);
-    renderRounds();
+  add.onclick = async () => {
+    const added = await addRoundFlow(format, t);
+    // renderFormatTab rebuilds the tournament drill (standalone) with the
+    // new round AND refreshes the aggregate W-L badges on matchup cards.
+    if (added) renderFormatTab();
   };
   wrap.appendChild(add);
 
@@ -12886,6 +13069,22 @@ function buildRoundRow(format, t, r, i, renderRounds) {
     renderFormatTab();
   };
   row.appendChild(resSel);
+
+  // Score (optional game score like 2-0) — small text input
+  const scoreInput = document.createElement("input");
+  scoreInput.type = "text";
+  scoreInput.className = "tournament-round-input score-cell";
+  scoreInput.value = r.score || "";
+  scoreInput.placeholder = "2-0";
+  scoreInput.title = "Game score (optional)";
+  scoreInput.addEventListener("blur", () => {
+    if (scoreInput.value !== (r.score || "")) {
+      r.score = scoreInput.value.trim();
+      persistFormat(format);
+    }
+  });
+  scoreInput.addEventListener("keydown", (e) => e.stopPropagation());
+  row.appendChild(scoreInput);
 
   // Notes
   const notes = document.createElement("input");

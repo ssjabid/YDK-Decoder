@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-28-audit-pass-1` |
+| Decoder | `2026-05-29-phase6G-round-form` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,22 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Audit pass 1 — autonomous deep audit (May 28 2026, latest)
+### Phase 6G — guided tournament round form (May 29 2026, latest)
+Logging a round used to append a blank inline row of selects the user had to
+decode. Replaced with a guided modal (`addRoundFlow(format, t)`):
+- **Opponent** — pre-selected buttons built from the format's matchups, plus
+  an "Unknown / rogue" option. (The user's requested "pre-selected list from
+  format analysis".)
+- **Going first / second**, **Win / Loss / Draw** (colour-tinted), an optional
+  **score** field (e.g. "2-1"), and an optional **notes** box.
+- Confirm is disabled until opponent + result are chosen.
+- New `round.score` field added to the schema + shown in the inline round row.
+- "+ Add round" now opens this form; on confirm it re-renders the Format tab
+  (refreshing the matchup aggregate W-L badges).
+Verified live: form renders all options, persists a round with every field,
+and the matchup aggregate badge updates (0-1 after logging a loss).
+
+### Audit pass 1 — autonomous deep audit (May 28 2026)
 Full-app audit (init/migration, cross-references, backup/restore, Format tab,
 combos, practice, Chrome extension). Five real issues found + fixed, all
 verified in a live localhost browser session. Full detail in `docs/BUGS.md`.
