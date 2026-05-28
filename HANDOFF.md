@@ -262,14 +262,31 @@ Per `docs/ROADMAP.md`. **N1.1 (deck extractor) and N1.2/N1.3 (combos↔decks map
 
 ## 🚀 Next priorities (queued, not started)
 
-The May 2026 round shipped the **complete Format Planner** (phases 1–4), plus the original 1–5 UI queue, the combo-narration bugs, per-step card-text chips, and sidebar search. Net result: the tool is now a deck-+-format-+-matchup planning workbench, not just a combo viewer.
+As of 2026-05-19 the app is **feature-complete** through Phase 6F: a full
+deck-+-format-+-matchup planning workbench with rich-text notes, visual
+refresh, and archetype-grouped Key Ratios. There are **no half-finished
+features in the code.** The queue is now verification first, then backlog.
 
-### Next priorities (mostly real-world testing now)
+**In priority order:**
 
-### Other queued items (smaller, parallelizable with Format-planner phases)
-
-4. **N1.5 end-to-end test sweep** — re-extract the 6 reference DoomZ combos against the current build and verify each renders cleanly in all 5 view modes. *Needs Abid physically driving the extension.*
-5. **"Played as" indicator** — when Practice mode resolves a hand to a combo, stamp `combo.lastPlayedAt`. Tile shows a tiny clock icon if played in the last N days.
+1. **Verify Phase 6E + 6F** *(active — needs Abid driving the app).* Run the
+   test checklist the assistant produced (visual refresh, matchup collapsible
+   sections, save toast, Key Ratios archetype grouping, sideboard pool
+   ordering, plus regression of all prior features). File any failure as a
+   numbered BUGS.md entry and fix before new features.
+   - Watch the 6F grouping specifically: Engine vs Staples split correct for
+     DoomZ? If a card lands wrong, tune `_ARCHETYPE_STOP_WORDS` or the 2-card
+     threshold in `detectArchetypeTokens()`. Type ordering depends on
+     `card.type` being hydrated (cold cache buckets as "Other").
+2. **N1.5 end-to-end extraction sweep** *(needs Abid + Chrome extension).*
+   Re-extract the 6 reference DoomZ combos (`docs/DECK_CONTEXT.md`) and verify
+   thumbnails resolve, each tags the right `deckId`, endboards are sensible,
+   disruption groups correctly, and combos roll up under the active deck.
+3. **"Played as" indicator** — when Practice resolves a hand to a combo, stamp
+   `combo.lastPlayedAt`; tile shows a clock icon if played recently.
+4. **Backlog** (see `docs/ROADMAP.md` § Backlog): mobile/narrow layout (B3.1),
+   SVG diagram arrows (B3.2), replace BLZD placeholder passcodes (B3.3),
+   combo tagging/filtering (B1.1), spaced-repetition practice (B4.1).
 
 ### Deferred per Abid's guidance
 
@@ -283,7 +300,10 @@ The May 2026 round shipped the **complete Format Planner** (phases 1–4), plus 
 ## 🪤 Gotchas / non-obvious decisions
 
 ### Architecture
-- **Active deck is global context, not a destination.** There's no "Decks tab" — switching the active deck (via header switcher) reloads Cards/Combos/Practice. This was a deliberate refactor; do not revert.
+- **Two ways to reach a deck, and they coexist (don't "simplify" this away):**
+  1. **Decks is a top-level tab** (re-introduced in Phase 6A). It's a master/detail workbench — deck-tile list + selected-deck panel (methodology, key cards, decklists, notes) + "Cards ↗" / "Combos ↗" sub-views.
+  2. **The header deck-switcher** sets the *active deck* — the global context that the Cards / Combos sub-views and Practice operate on.
+  - Earlier (2026-04-26) there was a refactor that *removed* the Decks tab and made active-deck-via-switcher the only model. Phase 6A reversed that for the Format Planner. **Both now exist on purpose**: the tab is where you *manage* decks; the switcher is what picks the *active* one. Cards & Combos are NOT top-level tabs — only Decks / Format / Practice (+ Settings gear) are.
 - **localStorage is the source of truth.** No backend. Every piece of state has a `ydk_*` key. Backup/restore reads/writes a known set documented in `BACKUP_KEYS` in the decoder.
 - **Cross-component sync uses CustomEvents** — `ydk:combo-injected` and `ydk:deck-injected` fire on `window` after the SW injects into localStorage. The decoder listens and re-renders.
 - **Service-worker → page injection** is via `chrome.scripting.executeScript({ func: ... })` with the function serialized. Those `injectComboIntoDecoderPage` and `injectDeckIntoDecoderPage` functions in `service-worker.js` MUST be self-contained — no closures, no external refs except web globals.

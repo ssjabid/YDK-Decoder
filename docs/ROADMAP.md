@@ -1,12 +1,12 @@
 # ROADMAP
 
-Status as of **2026-05-17**.
+Status as of **2026-05-19**.
 Read top to bottom. The "Shipped" section is what already works in the
 current build. The "In progress / next" section is the active queue.
 "Backlog" is everything that's been triaged but isn't being worked on yet.
 
 Build markers (use these to verify a fresh load):
-- Decoder: `YDK_BUILD = "2026-05-17-phase5-sideboard+chokepoints+priority+target-endboard+tournaments"` (top of `decoder/ydk_decoder.html`, surfaced in the status bar)
+- Decoder: `YDK_BUILD = "2026-05-19-phase6F-archetype-type-grouping"` (top of `decoder/ydk_decoder.html`, logged to console + shown in Settings → About)
 - Service worker: `YDK_SW_BUILD = "sw-build-2026-04-26-combo-deckid-stamp"` (logged on SW startup)
 - Extension manifest: `version: 1.5.0`
 
@@ -109,6 +109,36 @@ After Phase 4 the app could plan matchups but couldn't actually side-board, prio
 - ✅ **Per-matchup W-L badge** — `aggregateMatchupRecord()` computes across all tournaments in the format; renders bottom-right of each matchup card (green / red / neutral).
 - ✅ All Phase 5 fields backfilled by `ensureMatchupPhase5Fields()` + `ensureFormatPhase5Fields()` so matchups/formats created earlier in the day don't blow up the UI.
 
+### N6 — Phase 6 UX overhaul  (DONE 2026-05-19, latest)
+After the Format Planner was feature-complete, the focus shifted to making it
+usable and pleasant. Six sub-phases, all shipped:
+
+**Phase 6A — Tab restructure + Decks panel sub-nav**
+- ✅ Top-level tabs collapsed to **Decks / Format / Practice** (+ Settings gear). Cards and Combos are no longer top-level — they're sub-views reached from the Decks panel header ("Cards ↗" / "Combos ↗") with a back bar.
+- ✅ Role filter simplified (dropped "All", default "Mine"); sideboard chips given uniform sizing; matchup deck creation via `.ydk` file picker (two direct-click grid tiles to preserve user-activation for the file dialog).
+- ✅ Tile selection state reworked: role-tinted background + thick role stripe + right-edge dot (replaced the clashing orange border).
+- ✅ 8 rounds of bug fixes (duplicate `const decks` parse error, Decks tab empty on load, 6 decks flipped to matchup role, Cards subview showing stale deck, file picker user-activation loss) — see BUGS.md.
+
+**Phase 6B — Rich-text notes + `@cardname` mentions**
+- ✅ `createRichTextEditor()` — contenteditable + toolbar (bold/italic/bullet/number/H3/H4/¶/link/@). Rolled out to **every** notes surface (deck, decklist, format, matchup ×4 freeform fields, combo, methodology ×6 fields).
+- ✅ `@`-mention picker with cached sorted name index + debounced indexed search; inserts inline card chips with hover preview. Link insertion uses a styled in-app modal (no `window.prompt`).
+
+**Phase 6C — Card-name autocomplete on inline inputs**
+- ✅ Reusable `pickCardByName()` modal (search with art). Wired into "+ Add card" (key cards), tech/target/counter card inputs.
+
+**Phase 6D — (folded into 6B/6C; no separate ship.)**
+
+**Phase 6E — End-to-end visual refresh**
+- ✅ Refreshed design tokens (shadow/radius/motion scales, deeper bg layers, accent-hover/soft). Radial-gradient body, Inter font stack. Refined tab bar.
+- ✅ Polish layer: focus rings, dark scrollbars, modal fade+slide animations, tile elevations + hover lift, RTE focus elevation, sub-view back-bar gradient, unified `.btn` helper.
+- ✅ **Matchup drill → 7 collapsible sections** (Quick reference / Playbook / Target end board open; Side-deck / Tech / Combos / Detailed notes collapsed, with count meta).
+- ✅ **Save indicator toast** — `showSaveToast()` fires on every debounced RTE save + combo-checkbox toggle; coalesces within 600ms; capped to 3.
+
+**Phase 6F — Archetype + type grouping**
+- ✅ `detectArchetypeTokens()` / `isEngineCard()` / `classifyCardBroadType()` helpers.
+- ✅ **Key Ratios autofill** now emits up to 8 labelled sections (Engine / Staples × Monster / Spell / Trap / Other), count-desc within each, instead of one wrap-crammed paragraph.
+- ✅ **Side-deck planner pools** sorted Monster → Spell → Trap → Other, then by name.
+
 ### N4 — Late-patch completion  (DONE 2026-05-17)
 Triple-check pass + notes audit + the Illusion-Gate-vs-Branded feature.
 
@@ -141,14 +171,39 @@ Foundation for the new top-level "Format" concept: a banlist-bounded plan that t
 
 ## 🔧 In progress / next
 
-### N1 — Multi-deck + variations system  (IN PROGRESS, phased)
+> **The build is feature-complete for now.** No half-finished features in the
+> code. The "next" work is **verification + real-world testing**, then picking
+> from the backlog. Concretely, in priority order:
 
-The user runs more than one deck and wants to hold multiple variations of each
-deck side-by-side, with combos organized per deck and inheriting from the
-parent deck for variations. Everything has to survive a browser refresh
-(localStorage), and there must be an export/import path so nothing is ever
-lost. We're building this in three phases so each one is testable end-to-end
-before moving on.
+### NEXT-1 — Verify Phase 6E + 6F  (active — needs Abid driving the app)
+Run the test checklist (the assistant produced it; sections cover visual
+refresh, matchup collapsibles, save toast, Key Ratios archetype grouping,
+sideboard pool ordering, plus regression of everything previous). File any
+failure as a numbered BUGS.md entry and fix before starting new features.
+
+Specific things to watch on the new Phase 6F grouping:
+- Engine vs Staples split correct for the DoomZ deck (DoomZ/Power Patron →
+  Engine; Ash/Belle/Mulcharmy/Solemn → Staples). If a card lands in the
+  wrong group, tune `_ARCHETYPE_STOP_WORDS` or the 2-card token threshold in
+  `detectArchetypeTokens()`.
+- Monster/Spell/Trap ordering correct (depends on `card.type` being hydrated —
+  cold cache may bucket as "Other" until the Cards tab fetches data).
+
+### NEXT-2 — N1.5 end-to-end extraction sweep  (needs Abid + Chrome extension)
+Re-extract the 6 reference DoomZ combos (`docs/DECK_CONTEXT.md`) through the
+popup → decoder pipeline against the current build and confirm:
+1. All 40+ active-deck cards resolve thumbnails (no text-only pills)
+2. Each combo extracts cleanly, tagged with the right `deckId`
+3. Endboard sensible (no orphan materials, no missing equips)
+4. Disruption section groups pieces correctly
+5. Combos list groups under the active deck
+Any UI niggle found here → BUGS.md Bug 7 punch list.
+
+### N1 — Multi-deck system  (LARGELY SHIPPED — kept for history)
+
+Variations were **dropped from scope** (Abid, 2026-04-27: each deck is
+independent; no parent/child inheritance). The deck library, combos↔decks
+mapping, and backup/restore all shipped. Remaining open item is N1.5 (above).
 
 #### N1.1 — Deck extractor in the extension  (DONE 2026-04-26)
 Manifest 1.4.0. The popup has a "Scan DuelingBook deck page" button that
@@ -182,8 +237,11 @@ re-render its deck library on the fly.
 }
 ```
 
-#### N1.2 — Decks tab in the decoder  (NEXT)
-Add a new top-level tab "Decks" alongside Cards / Combos.
+#### N1.2 — Decks tab in the decoder  (DONE — shipped as Format Planner + Phase 6A)
+The Decks tab exists as a top-level destination (Phase 6A), with a deck-tile
+list, selected-deck panel, methodology editor, key-card buckets, multi-decklist
+picker, and Cards/Combos sub-views. The original spec below is preserved for
+reference; the shipped version went well beyond it.
 
 UI:
 - **Sidebar** lists all decks; variations indent under their parent.
@@ -198,7 +256,7 @@ UI:
 - **Make Variation**: deep-clones a deck, sets `parentDeckId` to the
   source, opens it in edit mode so the user can add/remove cards.
 
-#### N1.3 — Combos belong to decks
+#### N1.3 — Combos belong to decks  (DONE)
 Existing `localStorage.ydk_saved_combos` entries each get a `deckId` field.
 - New combos extracted while a deck is active are tagged with that `deckId`.
 - Old combos with no `deckId` show in an "Unassigned" group; user can

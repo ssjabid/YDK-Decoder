@@ -1,8 +1,44 @@
 # Known Bugs
 
-Status as of **2026-05-17**. ✅ = fixed and verified. 🚧 = open / partial.
+Status as of **2026-05-19**. ✅ = fixed and verified. 🚧 = open / partial.
 "Polish punch list" at the bottom is for small UI niggles to gather and
 batch-fix during the next pass.
+
+---
+
+## ✅ Phase 6 bug round  (FIXED 2026-05-18 → 05-19)
+
+The Phase 6 UX overhaul (tab restructure, rich-text notes, visual refresh,
+archetype grouping) surfaced and fixed a cluster of bugs. Grouped here.
+
+- ✅ **Duplicate `const decks` SyntaxError** (Phase 6A) — re-declared `decks`
+  inside `renderFormatTab` which already had it in an outer scope. The whole
+  script failed to parse → blank app on hard refresh. Fixed by reusing the
+  outer variable.
+- ✅ **Decks tab empty on initial load** — after making Decks the default tab,
+  its container kept `class="hidden"`. Removed the class; wrapped the init
+  `renderDecksTab()` in try/catch.
+- ✅ **Six decks all flipped to `role:"matchup"`** — the old add-matchup flow
+  ran `upsertDeckFromYdkText()` + set `role="matchup"`, and content-hash dedup
+  matched the user's own primary decks, mutating them. Fixed two ways: (1) new
+  `createMatchupDeck()` always makes a fresh entity that bypasses dedup; (2) a
+  per-deck role toggle + auto-detection banner offering one-click batch-restore.
+- ✅ **Cards/Combos sub-view showed a stale deck** — `openDeckSubview` wasn't
+  triggering a re-render. Fixed by calling `loadDeckFromText` (Cards) /
+  `renderCombos` (Combos) on entry.
+- ✅ **Matchup `.ydk` file picker silently failed** — user-activation was lost
+  across `await ydkConfirm` + `await ydkPrompt`, so the browser blocked the
+  file dialog. Split into two direct-click grid tiles → synchronous picker.
+- ✅ **Mention chips looked like loud orange buttons** — restyled to subtle
+  inline pills with an `@` prefix.
+- ✅ **Tournament name format** — changed `Type · Venue · Date` to the
+  requested `Type - Venue: Date`.
+- ✅ **Key Ratios auto-fill was wrap-crammed + ungrouped** (Phase 6F) — the
+  autofill dumped every card into one `<p>` joined by commas, mixing engine
+  cards with handtraps in an unreadable soup. Rewrote to detect archetype
+  tokens (`detectArchetypeTokens`), bucket into Engine vs Staples, then by
+  broad type (Monster/Spell/Trap/Other), emitting up to 8 labelled sections.
+  Side-deck planner pools got the same Monster→Spell→Trap→name ordering.
 
 ---
 

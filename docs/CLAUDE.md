@@ -39,21 +39,33 @@ This file is for AI assistants (like Claude Code) working on this project. Read 
 - Decoder is static HTML — needs localhost (`py -m http.server 8000`) for API/image access
 - Extension does the hard scraping, Decoder does the beautiful rendering
 
-## Current state
+## Current state (refreshed 2026-05-19)
 
-### What works
-- ✅ `extension/content/combo-import-helper.js` — proven extractor (401 lines, unchanged from DuelMetrics v4.0 because it works)
-- ✅ `extension/background/service-worker.js` — orchestrates extraction (clean rewrite, 290 lines)
-- ✅ `extension/popup/popup.*` — URL input, progress display, Copy JSON, Open in Decoder
-- ✅ Two real extractions confirmed working — see `sample-data/`
-- ✅ `decoder/ydk_decoder.html` — parses .ydk, shows cards with role tags, has combo tab (currently with hand-written combos from before extractor worked)
+> **The decoder is now a full deck-+-format-+-matchup planning workbench**, not
+> just a combo viewer. The "what's broken" list below is small and specific —
+> the big architectural items that used to be here are all shipped. For the
+> blow-by-blow of every feature, read `HANDOFF.md` (the canonical snapshot) and
+> `docs/ROADMAP.md` (the queue).
 
-### What's broken or incomplete
-- 🚧 **Decoder doesn't yet consume the extension's output.** The extension builds `http://localhost:8000/ydk_decoder.html?combo=<base64>` but the decoder doesn't detect the URL param
-- 🚧 **Endboard tracking wrong.** The extractor's `deriveEndboard()` lists every card ever summoned — doesn't track Xyz materials going underneath, doesn't handle destruction/banish. See `sample-data/elara-combo-summary.json` for the "actual" vs "naive" endboard.
-- 🚧 **Images don't load without localhost.** Need server running for CORS on YGOPRODeck image CDN.
-- 🚧 **Hand-written combos in decoder are inferred, not verified.** These should be deleted once real extracted combos render.
-- 🚧 **New BLZD cards use placeholder passcodes** (55555555, 77777777, etc.) because real API data didn't exist when the cache was written. On localhost the real API fills these in at runtime — but for cards too new for the API, the placeholders stick.
+### What works (the short version — see HANDOFF.md for the full list)
+- ✅ **Extension → decoder handoff** — replay JSON flows via `?combo=<base64>` URL param AND direct `chrome.scripting.executeScript` injection into the decoder tab's `localStorage`. Combos auto-tag with the active `deckId`.
+- ✅ **`combo-import-helper.js`** — proven replay extractor (unchanged from DuelMetrics v4.0). **Do not rewrite.**
+- ✅ **`deck-extractor.js`** — content script that scrapes a DB deck-constructor page into a `.ydk`.
+- ✅ **Field-state simulator** (`simulateCombo()`) — replaced the naive endboard; tracks Xyz materials underneath, equips, Pendulum scales, banish/GY moves. Hand-written combos are **deleted**.
+- ✅ **Decoder rendering** — role tags, stripped effects, hover previews, 5 combo view modes, per-phase mini playmat, end-board playmat, disruption analysis.
+- ✅ **Three top-level tabs: Decks / Format / Practice** (+ Settings gear). Cards & Combos are sub-views reached from the Decks panel (Phase 6A restructure).
+- ✅ **Format Planner** (phases 1–6F) — methodology editor, key-card buckets, multi-decklist builds, matchups with side-deck planner / chokepoints / priority playbook / target end board / tech cards / linked combos, tournament journal with W-L aggregation.
+- ✅ **Rich-text notes everywhere** (contenteditable + `@cardname` mentions with hover preview) — Phase 6B.
+- ✅ **Schema v1→v2 migration** with one-time backup; localStorage is the source of truth; full Settings → Backup/Restore.
+- ✅ Visual refresh (Phase 6E) + archetype/type grouping for Key Ratios + sideboard pools (Phase 6F).
+
+### What's broken or incomplete (current, small)
+- 🚧 **N1.5 end-to-end test not done.** The 6 reference DoomZ combos (`docs/DECK_CONTEXT.md`) haven't been re-extracted against the current build. Needs Abid physically driving the Chrome extension.
+- 🚧 **Phase 6E + 6F verification pending.** Abid has a test checklist to run (visual refresh, matchup collapsibles, save toast, Key Ratios grouping, sideboard ordering). Fix whatever fails.
+- 🚧 **Images / API need localhost.** `py -m http.server 8000` is mandatory; CORS blocks YGOPRODeck on `file://`. Inline cache still works offline.
+- 🚧 **New BLZD cards use placeholder passcodes** (55555555, 77777777, …) because real API data didn't exist when the cache was written. On localhost the real API fills these at runtime — but cards too new for the API keep the placeholders (Bug 4 / ROADMAP B3.3).
+- 🚧 **Trap-Equip variant** (DoomZ Destruction GY-trigger equips from deck) isn't always captured — DB sometimes omits the equip event (see BUGS.md Bug 8 notes).
+- 🚧 **Mobile / narrow-viewport layout** breaks below ~800px (ROADMAP B3.1).
 
 ## Key decisions made
 
@@ -66,8 +78,8 @@ Chrome extension → Decoder communication is via `?combo=<base64-json>` URL par
 ### 3. Localhost over file:// for the decoder
 File:// triggers CORS restrictions that break the YGOPRODeck API and images. Instructed user to run `py -m http.server 8000`. No way around this — it's a browser security thing.
 
-### 4. One combo, one JSON. No combo library yet.
-The current extension stores only the `latestCombo` in chrome.storage.local. When the user extracts another, it overwrites. Combo library (saving multiple combos, tagging, searching) is explicitly deferred — see ROADMAP.md.
+### 4. Combo library shipped (this decision is now historical)
+Originally the extension stored only `latestCombo` and the decoder had no library. **That's no longer true.** The decoder now persists every combo to `localStorage.ydk_saved_combos` (dedupe by `replayId`), groups them by opener size, supports drag-reorder, rename, per-combo notes, search, and linking combos to the matchups they solve. Combos auto-tag with the active `deckId`. The extension still hands off one combo at a time; the decoder accumulates them.
 
 ## Conventions
 
