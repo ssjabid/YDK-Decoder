@@ -6337,6 +6337,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Run schema migrations BEFORE the first deck read. Idempotent and
   // safe to run on every load — they bail out if already done.
   if (typeof migrateDecksToV2 === "function") migrateDecksToV2();
+  // Backfill v2 shape on any deck that bypassed migration (extension push,
+  // old-backup restore). Runs after the gated migration; idempotent.
+  if (typeof normalizeAllDecksShape === "function") normalizeAllDecksShape();
   if (typeof migrateCombosToDecklists === "function") migrateCombosToDecklists();
   if (typeof updateTabTitle === "function") updateTabTitle();
 });
@@ -8927,6 +8930,73 @@ function migrateCombosToDecklists() {
     console.warn("[YDK] Combo decklistId migration failed:", e);
     return false;
   }
+}
+
+// Backfill v2 shape on a single deck, in place. Idempotent. Returns true
+// if anything changed.
+//
+// WHY THIS EXISTS: migrateDecksToV2() only runs once (gated on the schema
+// version flag). But a v1-shape deck can enter ydk_decks AFTER that flag
+// is set — most importantly when the Chrome extension pushes a scanned
+// deck (injectDeckIntoDecoderPage writes only legacy main/extra/side/
+// counts/ydkContent), or when an old backup is restored. Such a deck has
+// no decklists/role/methodology/keyCards. Consumers mostly guard against
+// that, but the Decklists section would show empty and adding a build
+// could orphan the legacy cards. This makes every deck whole regardless
+// of how it entered storage. The synthesized decklistId is DETERMINISTIC
+// (dl_<deckId>_main) so combo.decklistId linkage stays stable across runs.
+function ensureDeckV2Shape(deck) {
+  if (!deck) return false;
+  let changed = false;
+  if (!deck.role) { deck.role = "primary"; changed = true; }
+  if (!deck.methodology || typeof deck.methodology !== "object") {
+    deck.methodology = { summary: "", endboard: "", howItWins: "", strengths: "", weaknesses: "", keyRatios: "", techCards: [] };
+    changed = true;
+  }
+  if (!Array.isArray(deck.keyCards)) { deck.keyCards = []; changed = true; }
+  if (!Array.isArray(deck.decklists) || !deck.decklists.length) {
+    const hasLegacy = (deck.ydkContent || (deck.main && deck.main.length));
+    if (hasLegacy) {
+      const decklistId = "dl_" + (deck.deckId || "x") + "_main";
+      deck.decklists = [{
+        decklistId,
+        name: "Main build",
+        ydkContent: deck.ydkContent || "",
+        counts: deck.counts || { main: (deck.main || []).length, extra: (deck.extra || []).length, side: (deck.side || []).length, total: ((deck.main || []).length + (deck.extra || []).length + (deck.side || []).length) },
+        main: (deck.main || []).slice(),
+        extra: (deck.extra || []).slice(),
+        side: (deck.side || []).slice(),
+        notes: deck.notes || "",
+        createdAt: deck.createdAt || new Date().toISOString(),
+        updatedAt: deck.updatedAt || new Date().toISOString(),
+      }];
+      deck.primaryDecklistId = decklistId;
+      changed = true;
+    }
+  } else if (!deck.primaryDecklistId) {
+    deck.primaryDecklistId = deck.decklists[0].decklistId;
+    changed = true;
+  }
+  return changed;
+}
+
+// Sweep the whole deck library and backfill v2 shape on any deck that
+// missed migration (extension-pushed, restored from old backup, etc.).
+// Persists once if anything changed, then re-stamps combos so any newly
+// materialized primaryDecklistId propagates to its combos.
+function normalizeAllDecksShape() {
+  try {
+    const decks = loadDecks();
+    if (!decks.length) return false;
+    let changed = 0;
+    for (const d of decks) { if (ensureDeckV2Shape(d)) changed++; }
+    if (changed) {
+      saveDecks(decks);
+      console.log("[YDK] Normalized v2 shape on " + changed + " deck(s).");
+      if (typeof migrateCombosToDecklists === "function") migrateCombosToDecklists();
+    }
+    return changed > 0;
+  } catch (e) { console.warn("[YDK] normalizeAllDecksShape failed:", e); return false; }
 }
 
 // Accessors — single source of truth for "which decklist is active for
@@ -16967,6 +17037,14 @@ window.addEventListener("ydk:deck-injected", async (e) => {
     if (!arr.length) return;
     const deck = arr.find(d => d && d.deckId === deckId) || arr[arr.length - 1];
     if (!deck || !deck.ydkContent) return;
+    // The extension writes a v1-shape deck (legacy fields only). Backfill
+    // the v2 shape (decklists/role/methodology/keyCards) and persist before
+    // we render, so the Decks tab shows a proper "Main build" instead of an
+    // empty Decklists section.
+    if (typeof ensureDeckV2Shape === "function" && ensureDeckV2Shape(deck)) {
+      saveDecks(arr);
+      if (typeof migrateCombosToDecklists === "function") migrateCombosToDecklists();
+    }
     setActiveDeckId(deck.deckId);
     const filename = (deck.name || "deck") + ".ydk";
     // Reuse the existing .ydk-loading pipeline so the user sees their cards
