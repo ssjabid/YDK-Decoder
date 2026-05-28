@@ -13889,6 +13889,25 @@ async function runRestoreFromFile(file) {
     saveSavedCombos(local);
   }
 
+  // Formats — dedupe by formatId, conservative (never overwrite a local
+  // format with the same id). This was previously MISSING entirely, so a
+  // restore silently dropped the user's whole Format Planner (matchups,
+  // sideboard plans, tournament journal) even though the backup contained
+  // it. Append any format id we don't already have locally.
+  if (Array.isArray(incoming.formats)) {
+    const local = loadFormats();
+    const localIds = new Set(local.map(f => f && f.formatId));
+    for (const f of incoming.formats) {
+      if (!f || !f.formatId || localIds.has(f.formatId)) continue;
+      local.push(f);
+      counts.formats = (counts.formats || 0) + 1;
+    }
+    saveFormats(local);
+    // If there's no active format locally but we just restored some, point
+    // at the first one so the Format tab isn't blank.
+    if (!getActiveFormatId() && local.length) setActiveFormatId(local[0].formatId);
+  }
+
   // Card cache — local wins on conflict, imported fills gaps
   if (incoming.cardCache && typeof incoming.cardCache === "object") {
     const local = (typeof loadCardCache === "function") ? loadCardCache() : {};
@@ -13917,28 +13936,21 @@ async function runRestoreFromFile(file) {
     if (typeof savePracticeStreaks === "function") savePracticeStreaks(local);
   }
 
-  showComboToast(`Restored: +${counts.decks} decks, +${counts.combos} combos, +${counts.cards} cards`);
+  const fmtMsg = counts.formats ? `, +${counts.formats} formats` : "";
+  showComboToast(`Restored: +${counts.decks} decks, +${counts.combos} combos${fmtMsg}, +${counts.cards} cards`);
   refreshDeckSwitcher();
   renderDeckSwitcherList();
   if (typeof renderCombos === "function") renderCombos();
   if (typeof renderDecksLibrary === "function") renderDecksLibrary();
+  if (typeof renderDecksTab === "function") { try { renderDecksTab(); } catch (_) {} }
+  if (typeof renderFormatTab === "function") { try { renderFormatTab(); } catch (_) {} }
 }
 
-(function wireBackupRestore() {
-  const backupBtn = document.getElementById("ydk-backup-btn");
-  const restoreBtn = document.getElementById("ydk-restore-btn");
-  const restoreInput = document.getElementById("ydk-restore-file-input");
-  if (backupBtn) backupBtn.addEventListener("click", runBackupDownload);
-  if (restoreBtn && restoreInput) {
-    restoreBtn.addEventListener("click", () => restoreInput.click());
-    restoreInput.addEventListener("change", async (e) => {
-      const file = (e.target.files || [])[0];
-      if (!file) return;
-      await runRestoreFromFile(file);
-      restoreInput.value = "";
-    });
-  }
-})();
+// NOTE: backup/restore buttons are wired in wireSettingsTab() against the
+// real DOM ids (settings-backup-btn / settings-restore-btn /
+// settings-restore-input). An earlier wireBackupRestore() IIFE here wired
+// a different id set (ydk-backup-btn / …) that never existed in the DOM —
+// removed 2026-05 as dead code so there's a single, real restore path.
 
 function showComboToast(message, variant) {
   const existing = document.getElementById("combo-toast");
