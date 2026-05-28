@@ -13678,9 +13678,19 @@ function startRenameDeckSwitcherRow(row, deck) {
         if (!ok) return;
         const remaining = loadDecks().filter(d => d.deckId !== deckId);
         saveDecks(remaining);
+        // Sweep cross-references so the modal's promise ("Combos linked to
+        // this deck will become unassigned") is actually kept. Without this,
+        // deleting from the header switcher orphaned combos (stale deckId)
+        // and left formats pointing at a now-missing primaryDeckId. The
+        // Decks-tab delete paths already called this; the switcher path
+        // was the one that didn't.
+        cleanupDeckReferences(deckId);
         if (getActiveDeckId() === deckId) setActiveDeckId(null);
         renderDeckSwitcherList();
         refreshDeckSwitcher();
+        // If the Decks tab is showing, refresh it too so a deleted deck's
+        // panel doesn't linger.
+        if (typeof renderDecksTab === "function") { try { renderDecksTab(); } catch (_) {} }
       })();
       return;
     }
@@ -17038,6 +17048,33 @@ ydkStatus("init complete — listeners armed");
       }
     }
     if (combosChanged) saveSavedCombos(combos);
+    // Repoint format references too — primaryDeckId and matchup.opponentDeckId
+    // could point at a collapsed duplicate. Same replaceMap (dup → keeper).
+    try {
+      const formats = loadFormats();
+      let formatsChanged = false;
+      for (const f of formats) {
+        if (f && f.primaryDeckId && replaceMap[f.primaryDeckId]) {
+          f.primaryDeckId = replaceMap[f.primaryDeckId];
+          formatsChanged = true;
+        }
+        for (const m of (f && f.matchups || [])) {
+          if (m && m.opponentDeckId && replaceMap[m.opponentDeckId]) {
+            m.opponentDeckId = replaceMap[m.opponentDeckId];
+            formatsChanged = true;
+          }
+        }
+        for (const t of (f && f.tournaments || [])) {
+          for (const r of (t.rounds || [])) {
+            if (r && r.opponentDeckId && replaceMap[r.opponentDeckId]) {
+              r.opponentDeckId = replaceMap[r.opponentDeckId];
+              formatsChanged = true;
+            }
+          }
+        }
+      }
+      if (formatsChanged) saveFormats(formats);
+    } catch (e) { console.warn("[YDK] dedup format repoint failed:", e); }
     const activeId = getActiveDeckId();
     if (activeId && replaceMap[activeId]) setActiveDeckId(replaceMap[activeId]);
     const collapsed = decks.length - survivors.length;
