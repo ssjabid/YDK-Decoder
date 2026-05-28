@@ -11115,6 +11115,21 @@ function renderFormatTab() {
     _formatActiveDrillId = null;
   }
 
+  // Tournament drill — render standalone (like the matchup drill above)
+  // instead of below the full matchup grid. Without this early return, a
+  // round edit calls renderFormatTab(), which rebuilt the entire grid with
+  // the tournament drill underneath — yanking the user's scroll to the top
+  // mid-round-entry. buildTournamentsSection returns the drill-only view
+  // when _formatActiveTournamentId is set.
+  if (_formatActiveTournamentId) {
+    const t = (activeFormat.tournaments || []).find(x => x.tournamentId === _formatActiveTournamentId);
+    if (t) {
+      body.appendChild(buildTournamentsSection(activeFormat));
+      return;
+    }
+    _formatActiveTournamentId = null;
+  }
+
   // ── Format-level notes — meta context that doesn't fit a specific matchup ──
   body.appendChild(buildFormatNotesSection(activeFormat));
 
