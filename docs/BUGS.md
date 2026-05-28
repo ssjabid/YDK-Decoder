@@ -1,8 +1,71 @@
 # Known Bugs
 
-Status as of **2026-05-19**. ✅ = fixed and verified. 🚧 = open / partial.
+Status as of **2026-05-28**. ✅ = fixed and verified. 🚧 = open / partial.
 "Polish punch list" at the bottom is for small UI niggles to gather and
 batch-fix during the next pass.
+
+---
+
+## ✅ Audit pass 1 — autonomous deep audit  (FIXED + verified live 2026-05-28)
+
+A full-app audit (init/migration, cross-references, backup/restore, Format
+tab, combos, practice, Chrome extension) surfaced five real issues, all
+fixed and verified in a live localhost browser session. Build marker
+`2026-05-28-audit-pass-1`.
+
+- ✅ **Restore silently dropped the entire Format Planner.** `buildBackupBlob()`
+  exported `ydk_formats` (matchups, side-deck plans, tournament journal),
+  but `runRestoreFromFile()` had no formats branch — it restored decks,
+  combos, card cache, prefs, practice streaks, and ignored formats. A
+  restore onto a fresh machine lost all format/matchup/tournament work even
+  though it sat in the backup. Added a conservative formats merge (dedupe by
+  formatId, append only new ids, set activeFormatId if none). *Verified: a
+  format with 1 matchup + 1 tournament survives a wipe→restore round-trip.*
+- ✅ **Header deck-switcher delete didn't clean up references.** Its confirm
+  modal promised "Combos linked to this deck will become unassigned," but
+  the handler just filtered + saved — combos kept their stale `deckId` and
+  formats kept a dangling `primaryDeckId`. The two Decks-tab delete paths
+  already swept refs; the switcher path was missed. Now calls
+  `cleanupDeckReferences(deckId)`. *Verified: cleanup nulls combo.deckId /
+  decklistId and format.primaryDeckId.*
+- ✅ **Extension-pushed / restored decks were stuck in v1 shape.**
+  `migrateDecksToV2()` only runs once (schema-flag gated), so a deck that
+  enters `ydk_decks` afterward (extension `injectDeckIntoDecoderPage`, or an
+  old-backup restore) had no `decklists`/`role`/`methodology`/`keyCards`.
+  No crash (consumers guard), but the Decklists section showed empty and
+  adding a build could orphan the legacy cards. Added idempotent
+  `ensureDeckV2Shape()` + `normalizeAllDecksShape()` (deterministic
+  `dl_<deckId>_main` id so combo linkage stays stable), wired into init and
+  the `ydk:deck-injected` handler. *Verified: a simulated v1 deck gains a
+  Main build whose id matches primaryDecklistId; idempotent on 2nd call.*
+- ✅ **Init-time duplicate-deck dedup left formats dangling.** It repointed
+  combos + the active-deck pointer to the surviving keeper but not
+  `format.primaryDeckId` / `matchup.opponentDeckId` / tournament-round
+  `opponentDeckId`. Now repoints all three via the same dup→keeper map.
+- ✅ **Tournament drill yanked scroll to top on every round edit.** Unlike
+  the matchup drill (which returns early to render standalone), the
+  tournament drill rendered below the full matchup grid. `buildRoundRow`'s
+  result/opponent handlers call `renderFormatTab()` to refresh aggregate
+  badges, so each edit rebuilt the grid and scrolled the user away from the
+  rounds they were entering. Added an early-return so the tournament drill
+  renders standalone. *Verified: with a tournament drill active, the matchup
+  grid is no longer in the DOM above it.*
+
+Also removed a dead `wireBackupRestore()` IIFE that wired button ids
+(`ydk-backup-btn` …) which never existed in the DOM (real wiring is in
+`wireSettingsTab`).
+
+**Flagged for Abid (couldn't self-verify — need Chrome / real combos):**
+- Practice hand-matcher matches the *entire* recorded `openingHand`. For a
+  combo whose recorded opener is a full 5-card hand, "Playable" requires
+  drawing all 5 — likely too strict. Logic is internally correct (multiset
+  bag, handles needing 2 copies); whether `openingHand` is the right thing
+  to match against is a data/design question to settle during N1.5 with
+  real extracted combos. Not changed blind.
+- The extension combo-injection lands on the standalone `tab-combos` view
+  (`focusComboByKey` → `setActiveTab("combos")`). Since Phase 6A removed the
+  Combos tab button, no top tab highlights (content still shows). Left as-is
+  — it's the intended "show the freshly extracted combo" behavior.
 
 ---
 

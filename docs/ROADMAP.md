@@ -1,12 +1,17 @@
 # ROADMAP
 
-Status as of **2026-05-19**.
+Status as of **2026-05-28**.
 Read top to bottom. The "Shipped" section is what already works in the
 current build. The "In progress / next" section is the active queue.
 "Backlog" is everything that's been triaged but isn't being worked on yet.
 
+> **2026-05-28 — Audit pass 1 done.** A full autonomous audit fixed five real
+> bugs (the big one: restore was silently dropping the entire Format Planner)
+> plus a data-loss-class cross-reference gap on deck delete. All verified live.
+> See `docs/BUGS.md` → "Audit pass 1". No feature-queue changes.
+
 Build markers (use these to verify a fresh load):
-- Decoder: `YDK_BUILD = "2026-05-19-phase6F-archetype-type-grouping"` (top of `decoder/ydk_decoder.html`, logged to console + shown in Settings → About)
+- Decoder: `YDK_BUILD = "2026-05-28-audit-pass-1"` (top of `decoder/ydk_decoder.html`, logged to console + shown in Settings → About)
 - Service worker: `YDK_SW_BUILD = "sw-build-2026-04-26-combo-deckid-stamp"` (logged on SW startup)
 - Extension manifest: `version: 1.5.0`
 

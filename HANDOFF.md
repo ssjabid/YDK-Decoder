@@ -1,7 +1,7 @@
 # HANDOFF — YDK Decoder
 
 Snapshot of the project state for whoever picks this up next (including future-me).
-Last updated: **2026-05-19**.
+Last updated: **2026-05-28**.
 
 ---
 
@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-19-phase6F-archetype-type-grouping` |
+| Decoder | `2026-05-28-audit-pass-1` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,33 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6F — Archetype + type grouping (May 19 2026, latest)
+### Audit pass 1 — autonomous deep audit (May 28 2026, latest)
+Full-app audit (init/migration, cross-references, backup/restore, Format tab,
+combos, practice, Chrome extension). Five real issues found + fixed, all
+verified in a live localhost browser session. Full detail in `docs/BUGS.md`.
+
+- ✅ **Restore silently dropped the Format Planner** — backup exported
+  `ydk_formats` but `runRestoreFromFile()` had no formats branch. Added a
+  conservative formats merge (dedupe by formatId).
+- ✅ **Header deck-switcher delete skipped reference cleanup** — now calls
+  `cleanupDeckReferences()` like the other two delete paths.
+- ✅ **Extension-pushed / restored decks stuck in v1 shape** — new idempotent
+  `ensureDeckV2Shape()` + `normalizeAllDecksShape()` backfill decklists/role/
+  methodology/keyCards (deterministic `dl_<deckId>_main` id), wired into init
+  + the `ydk:deck-injected` handler.
+- ✅ **Init dedup left formats dangling** — now repoints `primaryDeckId`,
+  `matchup.opponentDeckId`, and tournament-round `opponentDeckId` to the
+  surviving keeper.
+- ✅ **Tournament drill scroll-jump on round edit** — now renders standalone
+  (early-return) like the matchup drill, so refreshing aggregate badges
+  doesn't yank the user to the top of the matchup grid.
+- 🧹 Removed dead `wireBackupRestore()` IIFE (wired non-existent button ids).
+
+Two items flagged for Abid (need Chrome / real combos): practice
+hand-matcher strictness, and the extension combo-landing tab highlight.
+See `docs/BUGS.md` → "Audit pass 1".
+
+### Phase 6F — Archetype + type grouping (May 19 2026)
 Bulk card lists are now ordered by what matters, not by .ydk position.
 
 **Helpers (new, top of utilities)**
