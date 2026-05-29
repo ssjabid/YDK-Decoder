@@ -9,6 +9,14 @@ current build. The "In progress / next" section is the active queue.
 > bugs (the big one: restore was silently dropping the entire Format Planner)
 > plus a data-loss-class cross-reference gap on deck delete. All verified live.
 > See `docs/BUGS.md` → "Audit pass 1". No feature-queue changes.
+>
+> **2026-05-29 — Phases 6G–6L shipped.** Guided tournament round form (6G);
+> mulligan effective-opener + face-down-set narration fix (6H); **card
+> knowledge base** authored from the YGOPRODeck API with DuelingBook↔official
+> name aliases, driving "In short" hover summaries + a combo coverage validator
+> (6I–6J); **Board Breaker** going-second practice (6K); **auto-backup nudge +
+> combo Drill mode + matchup cheat-sheet** (6L). Full per-feature test list:
+> `docs/TEST_CHECKLIST.md`.
 
 Build markers (use these to verify a fresh load):
 - Decoder: `YDK_BUILD = "2026-05-28-audit-pass-1"` (top of `decoder/ydk_decoder.html`, logged to console + shown in Settings → About)

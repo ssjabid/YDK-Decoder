@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-29-phase6K-board-breaker` |
+| Decoder | `2026-05-29-phase6L-backup-drill-cheatsheet` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,19 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6K — Board Breaker (going-second practice) (May 29 2026, latest)
+### Phase 6L — Batch E: backup nudge + combo drill + matchup cheat-sheet (May 29 2026, latest)
+- **Auto-backup nudge** (`renderBackupNudge`, host `#backup-nudge`): amber banner
+  when there's real data + no backup in 7 days (or ever). "Back up now" exports +
+  stamps `ydk_last_backup`; "Remind me tomorrow" snoozes 24h
+  (`ydk_backup_nudge_snooze`). `runBackupDownload` records the time + refreshes it.
+- **Combo drill** (`buildComboDrill`): "🎓 Drill" button on the open combo →
+  flashcard recall — shows the opener, reveals the line one play at a time
+  (Reveal / Hide last / Restart / Exit). Uses core steps via describeStep.
+- **Matchup cheat-sheet** (`openMatchupCheatSheet`): "📄 Cheat sheet" button in the
+  matchup drill → clean printable page in a new window (how they win, chokepoints,
+  their typical board, key targets, both playbooks, side plan, notes, record).
+
+### Phase 6K — Board Breaker (going-second practice) (May 29 2026)
 The Practice tab is renamed **Playtest** with two modes:
 - **Goldfish — your openers** (the existing going-first hand/combo matcher).
 - **Break boards — going 2nd** (new): pick an opponent + one of their saved
