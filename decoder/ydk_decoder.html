@@ -6006,6 +6006,32 @@
   /* Score cell in the inline round row — narrow */
   .tournament-round-input.score-cell { max-width: 64px; text-align: center; }
 
+  /* ── Card knowledge-base "In short" block in the hover preview (Phase 6I) ── */
+  .preview-kb-summary {
+    background: var(--accent-soft);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 7px 9px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .preview-kb-label {
+    display: block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 3px;
+  }
+  .preview-kb-full {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-dim);
+  }
+
 </style>
 </head>
 <body>
@@ -6354,7 +6380,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6I-card-kb-scaffold";
+const YDK_BUILD = "2026-05-29-phase6I-card-kb-wired";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -6615,6 +6641,68 @@ const CARD_FX = {
     summary: "Normal Spell. Destroy 1 \"DoomZ\" in hand, Deck, or face-up field (except Change). If destroyed by effect: add 1 \"DoomZ\" from GY (except Change) → Special Summon 1 \"DoomZ\" from hand. Each HOPT.",
     mechanics: {},
     verify: true,
+  },
+
+  // ── Handtraps + staples (text confirmed via INLINE_CACHE) ──
+  "Ash Blossom & Joyous Spring": {
+    archetype: "—", roles: ["Handtrap"],
+    summary: "When a card/effect activates that adds from Deck to hand, Special Summons from Deck, or sends Deck → GY: discard this → negate it. Once per turn.",
+    mechanics: { handtrap: true, negates: true }, verify: false,
+  },
+  "Mulcharmy Fuwalos": {
+    archetype: "Mulcharmy", roles: ["Handtrap"],
+    summary: "If you have no cards in hand and the opponent Special Summons 2+ on their turn: reveal this → draw until you hold 5. Rest of turn, monsters that were in your hand are locked out. Once per turn.",
+    mechanics: { handtrap: true }, verify: false,
+  },
+  "Mulcharmy Purulia": {
+    archetype: "Mulcharmy", roles: ["Handtrap"],
+    summary: "If the opponent adds 2+ cards from the Main Deck to hand (except by drawing) on their turn: reveal this → draw (special rules). Once per turn.",
+    mechanics: { handtrap: true }, verify: false,
+  },
+  "Ghost Belle & Haunted Mansion": {
+    archetype: "—", roles: ["Handtrap"],
+    summary: "When an effect activates that targets card(s) in the GY, or banishes from the GY/field: discard this → negate it. Once per turn.",
+    mechanics: { handtrap: true, negates: true }, verify: false,
+  },
+  "Infinite Impermanence": {
+    archetype: "—", roles: ["Handtrap"],
+    summary: "Target 1 face-up monster the opponent controls; negate its effects until end of turn. If Set, can also activate by discarding — then other Spell/Trap effects in that column are locked this turn. Once per turn.",
+    mechanics: { handtrap: true, negates: true }, verify: false,
+  },
+  "Called by the Grave": {
+    archetype: "—", roles: ["Tech"],
+    summary: "Target 1 monster in the opponent's GY; banish it, and until the end of the next turn its effects (and the effects of same-named cards) are negated. Once per turn.",
+    mechanics: {}, verify: false,
+  },
+  "Solemn Judgment": {
+    archetype: "—", roles: ["Stopper"],
+    summary: "Counter Trap. When a monster would be Summoned, OR a Spell/Trap is activated: pay half your LP → negate the Summon/activation and destroy it.",
+    mechanics: { negates: true }, verify: false,
+  },
+  "Solemn Warning": {
+    archetype: "—", roles: ["Stopper"],
+    summary: "Counter Trap. When a monster would be Summoned, OR a Spell/Trap/monster effect that includes a Summon is activated: pay 2000 LP → negate and destroy.",
+    mechanics: { negates: true }, verify: false,
+  },
+  "Droll & Lock Bird": {
+    archetype: "—", roles: ["Handtrap"],
+    summary: "If a card(s) is added from the Main Deck to the opponent's hand outside their Draw Phase (Quick): discard this → neither player can add cards from the Main Deck to hand for the rest of the turn. Once per turn.",
+    mechanics: { handtrap: true }, verify: false,
+  },
+  "Ghost Ogre & Snow Rabbit": {
+    archetype: "—", roles: ["Handtrap"],
+    summary: "When a face-up card on the field activates its effect: send this (hand/field) → GY → destroy that card. Once per turn.",
+    mechanics: { handtrap: true }, verify: false,
+  },
+  "Harpie's Feather Duster": {
+    archetype: "—", roles: ["Board breaker"],
+    summary: "Destroy all Spells & Traps the opponent controls.",
+    mechanics: {}, verify: false,
+  },
+  "Triple Tactics Talent": {
+    archetype: "—", roles: ["Tech"],
+    summary: "If the opponent activated a monster effect during your turn, apply one: draw 2; OR take control of 1 face-up opponent monster until the End Phase; OR look at the opponent's hand and add 1 of those cards. Once per turn.",
+    mechanics: {}, verify: false,
   },
 };
 
@@ -7021,7 +7109,21 @@ function _renderPreviewBody(card) {
 
   previewName.textContent = card.name;
   previewMeta.textContent = meta.join(" · ");
-  previewDesc.textContent = card.desc || "(no effect text available — may be a very new card)";
+  // Card knowledge base: if we have a stripped, memorizable summary for this
+  // card, show it as an "In short" block ABOVE the full Konami text. This is
+  // the whole point of the tool — learn the function, not 40 lines of text.
+  // Lands on every hover everywhere (combos, decks, format).
+  const fx = (typeof getCardFx === "function") ? getCardFx(card.name) : null;
+  if (fx && fx.summary) {
+    previewDesc.innerHTML =
+      `<div class="preview-kb-summary">` +
+        `<span class="preview-kb-label">In short${fx.verify ? " · verify" : ""}</span>` +
+        escapeHtml(fx.summary) +
+      `</div>` +
+      (card.desc ? `<div class="preview-kb-full">${escapeHtml(card.desc)}</div>` : "");
+  } else {
+    previewDesc.textContent = card.desc || "(no effect text available — may be a very new card)";
+  }
 
   const urls = getImageUrls(card.id);
   if (urls.length > 0) {

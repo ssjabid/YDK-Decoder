@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-29-phase6H-mulligan-opener-and-set-fix` |
+| Decoder | `2026-05-29-phase6I-card-kb-wired` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,31 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6H — mulligan opener + face-down-set narration (May 29 2026, latest)
+### Phase 6I — card knowledge base (May 29 2026, latest)
+The structured per-card effect DB that the smarter combo engine runs on.
+
+- **`CARD_FX`** (top of script, after NAME_OVERRIDES) — 27 cards so far: the 15
+  DoomZ / Power Patron core (Abid-confirmed) + 12 handtraps/staples (from
+  INLINE_CACHE). Each entry: `archetype`, `roles`, a stripped memorizable
+  `summary`, a `mechanics` block of structured flags (`setsFromDeck`,
+  `equipsFromDeck`, `searchesFromDeck`, `isEquipSpell`, …), and `verify` (true
+  for the 4 placeholder-passcode cards). Accessor: `getCardFx(name)`.
+- **First wiring — "In short" in the hover preview.** `_renderPreviewBody` now
+  shows the KB stripped summary in an accent block ABOVE the full Konami text,
+  on every card hover everywhere (combos / decks / format). Non-KB cards fall
+  back to plain text. This is the memorization payoff — learn the function, not
+  40 lines. (Verified live: Elara/Ash show "In short", random card doesn't.)
+
+**Still TODO on the KB (next):**
+- Author the combo's splash cards — need Abid's real text (don't invent):
+  Springans Merrymaker, Gigantic "Champion" Sargas, Therion "King" Regulus,
+  Unleashed Power Patron Portal - Terminus, Vidrium …, Null Power Patron Realm -
+  Vidria, The Fallen & The Virtuous.
+- Validation pass: flag combo steps referencing cards with no KB/cache data.
+- (Optional) KB-driven equip targets where the card text fixes the target
+  (e.g. Drastea equips to itself).
+
+### Phase 6H — mulligan opener + face-down-set narration (May 29 2026)
 Two extraction-accuracy fixes, verified against Abid's real Amalthe combo JSON.
 
 - **Effective opener for Solo Mode mulligan combos.** `computeEffectiveOpener(combo)`
