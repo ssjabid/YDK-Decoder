@@ -6207,6 +6207,43 @@
   .bb-pick-opt:hover { border-color: var(--accent); }
   .bb-pick-opt.is-active { border-color: var(--accent); background: var(--accent-soft); }
 
+  /* ── Auto-backup nudge banner (Phase 6L) ── */
+  .backup-nudge-banner {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: rgba(229,169,60,0.10);
+    border: 1px solid rgba(229,169,60,0.35);
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius-md);
+    padding: 11px 14px; margin-bottom: 18px;
+    font-size: 13px; color: var(--text-dim);
+  }
+  .backup-nudge-icon { color: var(--warning); font-weight: 700; font-size: 15px; }
+  .backup-nudge-text { flex: 1; min-width: 220px; line-height: 1.5; }
+  .backup-nudge-text strong { color: var(--text); }
+  .backup-nudge-actions { display: flex; gap: 8px; }
+
+  /* ── Combo Drill mode (Phase 6L) ── */
+  .combo-drill-btn {
+    background: var(--accent-soft); color: var(--accent);
+    border: 1px solid transparent; border-radius: var(--radius-sm);
+    font: inherit; font-size: 12px; font-weight: 600; padding: 5px 11px;
+    cursor: pointer; margin-left: 6px; transition: background var(--motion-fast);
+  }
+  .combo-drill-btn:hover { background: var(--accent); color: #fff; }
+  .combo-drill { padding: 4px 2px; }
+  .combo-drill-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .combo-drill-title { font-size: 15px; font-weight: 600; }
+  .combo-drill-exit { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: var(--radius-sm); font: inherit; font-size: 12px; padding: 5px 11px; cursor: pointer; }
+  .combo-drill-exit:hover { border-color: var(--accent); color: var(--accent); }
+  .combo-drill-opener { margin-bottom: 16px; }
+  .combo-drill-opener-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 600; margin-bottom: 6px; }
+  .combo-drill-prompt { font-size: 14px; color: var(--text); margin-bottom: 12px; font-weight: 500; }
+  .combo-drill-list { list-style: decimal; padding-left: 24px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 7px; }
+  .combo-drill-step { font-size: 13px; color: var(--text); line-height: 1.5; padding-left: 4px; animation: drill-reveal 0.22s ease-out; }
+  @keyframes drill-reveal { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+  .combo-drill-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+  .combo-drill-empty { color: var(--text-dim); font-style: italic; padding: 12px 0; }
+
 </style>
 </head>
 <body>
@@ -6320,6 +6357,10 @@
       }
     })();
   </script>
+
+  <!-- Auto-backup nudge — populated by renderBackupNudge() when there's
+       real data and no recent backup. -->
+  <div id="backup-nudge"></div>
 
   <!-- Tabs: Cards / Combos / Decks / Practice. Decks returns as a top-level
        tab (May 2026 format-planner phase 1) — methodology editor, multiple
@@ -6593,7 +6634,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6K-board-breaker";
+const YDK_BUILD = "2026-05-29-phase6L-backup-drill-cheatsheet";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -12273,6 +12314,15 @@ function buildMatchupDrill(format, matchup) {
     };
     head.appendChild(goOpp);
   }
+  // 📄 Cheat sheet — clean, printable one-page summary of this matchup for
+  // pre-event study (opens in a new window so it prints without the app UI).
+  const sheetBtn = document.createElement("button");
+  sheetBtn.type = "button";
+  sheetBtn.className = "matchup-drill-back";
+  sheetBtn.textContent = "📄 Cheat sheet";
+  sheetBtn.title = "Open a clean, printable one-page summary of this matchup";
+  sheetBtn.onclick = () => openMatchupCheatSheet(format, matchup, opp);
+  head.appendChild(sheetBtn);
   wrap.appendChild(head);
 
   // Phase 6E.6: collapsible sections. The drill was a 10-section
@@ -12452,6 +12502,61 @@ function buildMatchupDrill(format, matchup) {
   }, true, "structured fields cover most cases — use these for extra detail"));
 
   return wrap;
+}
+
+// 📄 Matchup cheat sheet — opens a clean, self-contained printable page in a
+// new window (no app CSS, print-ready) summarising the whole matchup plan:
+// how they win, chokepoints, their typical board, key targets, the going-
+// first/second playbooks, side plan, and freeform notes. For pre-event study.
+function openMatchupCheatSheet(format, matchup, opp) {
+  const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const txt = (html) => (typeof notesHtmlToText === "function" ? notesHtmlToText(html || "") : (html || "")).trim();
+  const oppName = opp ? opp.name : "Unknown opponent";
+  const tierLabel = matchup.tier === "tier1" ? "Tier 1" : matchup.tier === "tier2" ? "Tier 2" : "Rogue";
+  const rec = (typeof aggregateMatchupRecord === "function") ? aggregateMatchupRecord(format, matchup) : null;
+  const recStr = rec ? `${rec.wins}-${rec.losses}${rec.draws ? "-" + rec.draws : ""}` : "";
+
+  const listHtml = (arr) => (arr && arr.length) ? "<ol>" + arr.map(s => `<li>${esc(typeof s === "string" ? s : s.text)}</li>`).join("") + "</ol>" : "<p class='empty'>—</p>";
+  const chipsHtml = (arr) => (arr && arr.length) ? arr.map(n => `<span class="chip">${esc(n)}</span>`).join(" ") : "<span class='empty'>—</span>";
+  const sb = matchup.sideboard || {};
+  const sbDir = (d) => { const x = sb[d] || { in: [], out: [] }; return `<div class="sb"><div><strong>In:</strong> ${chipsHtml(x.in)}</div><div><strong>Out:</strong> ${chipsHtml(x.out)}</div></div>`; };
+
+  let boardHtml = "<p class='empty'>—</p>";
+  if (opp && Array.isArray(opp.endboards) && opp.endboards.length) {
+    boardHtml = opp.endboards.map(eb => `<div class="board"><strong>${esc(eb.name)}:</strong> ${(eb.pieces || []).map(p => `${esc(p.card)} <em>(${esc(p.disruption)})</em>`).join(", ") || "—"}</div>`).join("");
+  }
+
+  const sections = [
+    ["How they win", `<p>${esc(txt(matchup.howTheyWin)) || "—"}</p>`],
+    ["Chokepoints", `<p><strong>Theirs (we stop):</strong> ${esc(matchup.chokepointTheirs) || "—"}</p><p><strong>Ours (they stop):</strong> ${esc(matchup.chokepointOurs) || "—"}</p>`],
+    ["Their typical board", boardHtml],
+    ["Key targets", chipsHtml(matchup.keyTargets)],
+    ["Playbook — going first", listHtml(matchup.priorityFirst)],
+    ["Playbook — going second", listHtml(matchup.prioritySecond)],
+    ["Side plan — going first", sbDir("goingFirst")],
+    ["Side plan — going second", sbDir("goingSecond")],
+    ["Notes — going first", `<p>${esc(txt(matchup.gameplanFirst)) || "—"}</p>`],
+    ["Notes — going second", `<p>${esc(txt(matchup.gameplanSecond)) || "—"}</p>`],
+    ["Other notes", `<p>${esc(txt(matchup.freeformNotes)) || "—"}</p>`],
+  ];
+  const body = sections.map(([h, c]) => `<section><h2>${esc(h)}</h2>${c}</section>`).join("");
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>vs ${esc(oppName)} — cheat sheet</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#111;line-height:1.5;}
+h1{font-size:22px;margin:0 0 2px;}.sub{color:#666;font-size:13px;margin-bottom:18px;}
+section{margin-bottom:14px;page-break-inside:avoid;}h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#a33;border-bottom:1px solid #ddd;padding-bottom:3px;margin:0 0 6px;}
+p{margin:4px 0;}ol{margin:4px 0 4px 20px;padding:0;}li{margin:2px 0;}
+.chip{display:inline-block;background:#f0f0f0;border-radius:4px;padding:1px 7px;margin:2px 2px 2px 0;font-size:13px;}
+.sb div{margin:2px 0;}.board{margin:3px 0;}em{color:#a33;font-style:normal;font-size:12px;}.empty{color:#bbb;}
+@media print{body{margin:0;}.noprint{display:none;}}</style></head><body>
+<h1>vs ${esc(oppName)}</h1>
+<div class="sub">${esc(tierLabel)}${recStr ? " · record " + esc(recStr) : ""} · ${esc(format.name || "format")} · YDK Decoder</div>
+${body}
+<p class="noprint" style="margin-top:20px;"><a href="#" onclick="window.print();return false;">🖨 Print this sheet</a></p>
+</body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) { ydkAlert({ title: "Pop-up blocked", message: "Allow pop-ups for this site to open the printable cheat sheet." }); return; }
+  w.document.open(); w.document.write(html); w.document.close();
 }
 
 // Create a brand-new matchup deck from .ydk text. We intentionally do
@@ -14697,7 +14802,61 @@ function runBackupDownload() {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  // Record the backup time so the auto-backup nudge knows you're covered.
+  try { localStorage.setItem("ydk_last_backup", new Date().toISOString()); } catch (_) {}
+  if (typeof renderBackupNudge === "function") renderBackupNudge();
   showComboToast(`Backup saved: ${payload.counts.decks} decks · ${payload.counts.combos} combos · ${payload.counts.cachedCards} cards`);
+}
+
+// ── Auto-backup nudge ──────────────────────────────────────────────────
+// Everything lives in this browser's localStorage. If it's cleared, it's
+// gone — the only safety net is a downloaded backup the user has to
+// remember to make. This banner gently reminds them when they have real
+// data and haven't backed up recently (or ever). Dismiss snoozes for a day.
+const BACKUP_NUDGE_DAYS = 7;
+function renderBackupNudge() {
+  const host = document.getElementById("backup-nudge");
+  if (!host) return;
+  host.innerHTML = "";
+  // Only nudge if there's meaningful data to lose.
+  let dataCount = 0;
+  try {
+    dataCount = (loadDecks() || []).length + (loadSavedCombos() || []).length +
+                ((typeof loadFormats === "function" ? loadFormats() : []) || []).length;
+  } catch (_) {}
+  if (!dataCount) return;
+
+  const now = Date.now();
+  let snoozeUntil = 0, lastBackup = 0;
+  try { snoozeUntil = parseInt(localStorage.getItem("ydk_backup_nudge_snooze") || "0", 10) || 0; } catch (_) {}
+  try { const lb = localStorage.getItem("ydk_last_backup"); lastBackup = lb ? Date.parse(lb) : 0; } catch (_) {}
+  if (now < snoozeUntil) return;
+
+  const daysSince = lastBackup ? Math.floor((now - lastBackup) / 86400000) : null;
+  if (lastBackup && daysSince < BACKUP_NUDGE_DAYS) return; // backed up recently
+
+  const banner = document.createElement("div");
+  banner.className = "backup-nudge-banner";
+  const msg = lastBackup
+    ? `It's been <strong>${daysSince} days</strong> since your last backup.`
+    : `You've <strong>never backed up</strong>.`;
+  banner.innerHTML =
+    `<span class="backup-nudge-icon">⚠</span>` +
+    `<span class="backup-nudge-text">${msg} Your decks, combos & format plans live only in this browser — back up so a cleared cache can't wipe them.</span>`;
+  const actions = document.createElement("span");
+  actions.className = "backup-nudge-actions";
+  const backupBtn = document.createElement("button");
+  backupBtn.type = "button"; backupBtn.className = "btn is-primary"; backupBtn.textContent = "Back up now";
+  backupBtn.onclick = () => { runBackupDownload(); };
+  const laterBtn = document.createElement("button");
+  laterBtn.type = "button"; laterBtn.className = "btn is-ghost"; laterBtn.textContent = "Remind me tomorrow";
+  laterBtn.onclick = () => {
+    try { localStorage.setItem("ydk_backup_nudge_snooze", String(now + 86400000)); } catch (_) {}
+    host.innerHTML = "";
+  };
+  actions.appendChild(backupBtn); actions.appendChild(laterBtn);
+  banner.appendChild(actions);
+  host.appendChild(banner);
 }
 
 // Merge an imported backup into existing state. Strategy:
@@ -16039,6 +16198,98 @@ function buildComboCoverageChip(combo) {
   return chip;
 }
 
+// 🎓 Combo drill — flashcard recall. Hides the line and reveals it one play
+// at a time so the user trains the sequence from memory (the core point of
+// the tool). Uses the core (significant) steps, mulligan + face-down noise
+// handled, described via describeStep so the wording matches the combo view.
+function buildComboDrill(combo) {
+  const wrap = document.createElement("div");
+  wrap.className = "combo-drill";
+
+  let steps = [];
+  try {
+    const sim = simulateCombo(combo);
+    markMulliganSteps(sim);
+    markFaceDownSets(sim);
+    const core = filterCoreSteps(sim.filter(s => !s._truncated && !s._mulligan));
+    steps = core.map(s => describeStep(s)).filter(Boolean);
+  } catch (_) { steps = []; }
+  steps = steps.filter((t, i) => i === 0 || t !== steps[i - 1]); // drop consecutive dupes
+
+  const total = steps.length;
+  let revealed = 0;
+
+  const head = document.createElement("div");
+  head.className = "combo-drill-head";
+  head.innerHTML = `<span class="combo-drill-title">🎓 Drill — ${escapeHtml(getComboDisplayTitle(combo))}</span>`;
+  const exit = document.createElement("button");
+  exit.type = "button"; exit.className = "combo-drill-exit"; exit.textContent = "✕ Exit drill";
+  exit.onclick = () => { const out = document.getElementById("combos-output"); if (out) { out.innerHTML = ""; out.appendChild(renderExtractedCombo(combo)); } };
+  head.appendChild(exit);
+  wrap.appendChild(head);
+
+  const opener = computeEffectiveOpener(combo) || (combo.openingHand || []).filter(Boolean);
+  if (opener.length) {
+    const op = document.createElement("div");
+    op.className = "combo-drill-opener";
+    op.innerHTML = `<span class="combo-drill-opener-label">You open with</span>`;
+    const row = document.createElement("div"); row.className = "opening-hand-row";
+    opener.forEach(n => row.appendChild(renderNamedCard(n)));
+    op.appendChild(row);
+    wrap.appendChild(op);
+  }
+
+  if (!total) {
+    const empty = document.createElement("div");
+    empty.className = "combo-drill-empty";
+    empty.textContent = "No combo line to drill — this combo has no recorded steps.";
+    wrap.appendChild(empty);
+    return wrap;
+  }
+
+  const prompt = document.createElement("div"); prompt.className = "combo-drill-prompt";
+  const list = document.createElement("ol"); list.className = "combo-drill-list";
+  const controls = document.createElement("div"); controls.className = "combo-drill-controls";
+
+  const render = () => {
+    list.innerHTML = "";
+    for (let i = 0; i < revealed; i++) {
+      const li = document.createElement("li");
+      li.className = "combo-drill-step";
+      li.textContent = steps[i];
+      list.appendChild(li);
+    }
+    controls.innerHTML = "";
+    if (revealed < total) {
+      prompt.textContent = revealed === 0
+        ? "Recall your FIRST play from this hand, then reveal to check."
+        : "What's the next play?";
+      const next = document.createElement("button");
+      next.type = "button"; next.className = "btn is-primary";
+      next.textContent = `Reveal play ${revealed + 1} of ${total}`;
+      next.onclick = () => { revealed++; render(); };
+      controls.appendChild(next);
+      if (revealed > 0) {
+        const back = document.createElement("button");
+        back.type = "button"; back.className = "btn is-ghost"; back.textContent = "Hide last";
+        back.onclick = () => { revealed = Math.max(0, revealed - 1); render(); };
+        controls.appendChild(back);
+      }
+    } else {
+      prompt.textContent = `✓ Full line revealed — ${total} plays. Run it again to lock it in.`;
+      const restart = document.createElement("button");
+      restart.type = "button"; restart.className = "btn is-secondary"; restart.textContent = "↺ Restart drill";
+      restart.onclick = () => { revealed = 0; render(); };
+      controls.appendChild(restart);
+    }
+  };
+  wrap.appendChild(prompt);
+  wrap.appendChild(list);
+  wrap.appendChild(controls);
+  render();
+  return wrap;
+}
+
 function setComboOpenerSize(combo, size) {
   combo.userOpenerSize = size;
   upsertSavedCombo(combo);
@@ -16436,6 +16687,21 @@ function renderExtractedCombo(combo) {
   viewWrap.appendChild(viewLabel);
   viewWrap.appendChild(select);
   head.appendChild(viewWrap);
+
+  // 🎓 Drill — flashcard-style recall: hide the line and reveal it one play
+  // at a time so you train the sequence from memory.
+  const drillBtn = document.createElement("button");
+  drillBtn.type = "button";
+  drillBtn.className = "combo-drill-btn";
+  drillBtn.textContent = "🎓 Drill";
+  drillBtn.title = "Recall the combo one play at a time from memory";
+  drillBtn.onclick = () => {
+    const out = document.getElementById("combos-output");
+    if (!out) return;
+    out.innerHTML = "";
+    out.appendChild(buildComboDrill(combo));
+  };
+  head.appendChild(drillBtn);
 
   div.appendChild(head);
 
@@ -18395,6 +18661,8 @@ try {
 // App is rendered — dismiss the first-paint loading overlay right away
 // (don't wait for window 'load', which also blocks on card images).
 if (typeof window.__ydkHideLoading === "function") window.__ydkHideLoading();
+// Show the auto-backup nudge if there's data at risk + no recent backup.
+try { if (typeof renderBackupNudge === "function") renderBackupNudge(); } catch (_) {}
 
 function focusComboByKey(key, name) {
   setActiveTab("combos");
