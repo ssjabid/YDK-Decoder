@@ -6354,7 +6354,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6H-mulligan-opener-and-set-fix";
+const YDK_BUILD = "2026-05-29-phase6I-card-kb-scaffold";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -6502,6 +6502,128 @@ const NAME_OVERRIDES = {
   "Triple Tactics Talent":                               { pc: 84749824 },
   "Solemn Warning":                                      { pc: 25311006 },
 };
+
+// ════════════════════════════════════════════════════════════════════════
+// CARD KNOWLEDGE BASE (Phase 6I) — structured per-card effect grammar.
+//
+// WHY: the combo renderer guesses intent from DuelingBook's log wording
+// ("Set" vs "Placed" vs "Equip"), which is fragile. This KB lets narration
+// + validation be driven by what each card ACTUALLY does. Authored from the
+// real card text (INLINE_CACHE), not invented. `verify: true` marks cards
+// whose text isn't fully confirmed yet (placeholder passcodes / new BLZD).
+//
+// STATUS: DATA-ONLY SCAFFOLD — not yet wired into describeStep/validation.
+// Pending Abid's confirmation that these summaries are correct, then the
+// narration + validation layers get pointed at getCardFx().
+//
+// Shape per card:
+//   archetype : "DoomZ" | "Power Patron" | …
+//   roles     : memorization tags
+//   summary   : stripped, memorizable effect text (NOT full Konami text)
+//   mechanics : structured flags the renderer/validator can act on, e.g.
+//               setsFromDeck / equipsFromDeck / searchesFromDeck /
+//               isEquipSpell / makesXyzWhileEquipped …
+//   verify    : true when the card text is not yet fully confirmed
+// ════════════════════════════════════════════════════════════════════════
+const CARD_FX = {
+  "Medius the Pure": {
+    archetype: "Power Patron", roles: ["Starter", "Extender"],
+    summary: "On Normal/Special Summon: Special Summon 1 \"Power Patron\" monster from Deck. In GY: shuffle 1 monster from hand or field into Deck → Special Summon itself (banished when it leaves). Each once per turn.",
+    mechanics: { onSummon: true, summonsFromDeck: "Power Patron monster" },
+    verify: false,
+  },
+  "Power Patron DoomZ": {
+    archetype: "Power Patron", roles: ["Combo piece", "Extender"],
+    summary: "Locks Extra Deck to Xyz only. Target 1 other Effect Monster you control → Special Summon a \"DoomZ\" Xyz (or Jupiter) of equal Rank using it as material, and equip this to it. If destroyed: add 1 \"DoomZ\" card from Deck. Each once per turn.",
+    mechanics: { makesXyz: true, becomesEquipAfterUse: true, addsFromDeckOnDestroy: "DoomZ card" },
+    verify: false,
+  },
+  "DoomZ XII Zero - Drastea": {
+    archetype: "DoomZ", roles: ["Extender", "Combo piece"],
+    summary: "Target 1 \"DoomZ\" you control; destroy it → Special Summon this from hand, then equip 1 Equip Spell from Deck to it. While equipped (Quick): make a WIND Machine Xyz whose Rank = this card's Level using this + its equips. Each HOPT.",
+    mechanics: { equipsFromDeck: "Equip Spell", makesXyzWhileEquipped: true },
+    verify: false,
+  },
+  "DoomZ V Five - Amalthe": {
+    archetype: "DoomZ", roles: ["Starter", "Searcher", "Extender"],
+    summary: "On Normal/Special Summon, or when destroyed by effect: add 1 \"DoomZ\" monster from Deck (except Amalthe). While equipped (Quick): make a WIND Machine Xyz of equal Rank using this + its equips. Each HOPT.",
+    mechanics: { onSummon: true, searchesFromDeck: "DoomZ monster (not Amalthe)", makesXyzWhileEquipped: true },
+    verify: false,
+  },
+  "DoomZ VII Seven - Elara": {
+    archetype: "DoomZ", roles: ["Extender", "Combo piece"],
+    summary: "On Normal/Special Summon, or when destroyed by effect: Set 1 \"DoomZ\" Spell/Trap directly from Deck (face-down). While equipped (Quick): make a WIND Machine Xyz of equal Rank using this + its equips. Each HOPT.",
+    mechanics: { onSummon: true, setsFromDeck: "DoomZ Spell/Trap", makesXyzWhileEquipped: true },
+    verify: false,
+  },
+  "DoomZ Raiders": {
+    archetype: "DoomZ", roles: ["Engine", "Searcher"],
+    summary: "Continuous Spell. Main Phase: destroy 1 other \"DoomZ\" in hand/face-up field → take 1 \"DoomZ\" monster from Deck (add to hand OR Special Summon), then Extra Deck is Xyz-only this turn. If destroyed: destroy 1 face-up monster. 1 of 2 effects per turn.",
+    mechanics: { takesFromDeck: "DoomZ monster" },
+    verify: false,
+  },
+  'DoomZ Command "D.O.O.M.D.U.R.G."': {
+    archetype: "DoomZ", roles: ["Equip"],
+    summary: "Equip Spell. Each Standby: equipped's controller takes 500. The equipped \"DoomZ\"/WIND Machine Xyz can't be targeted by the opponent; once per turn destroy 1 other face-up card you control → it gains ATK = Level/Rank ×100 and can attack directly.",
+    mechanics: { isEquipSpell: true },
+    verify: false,
+  },
+  'DoomZ Command "A.D.R.A.S.T.E.I.A."': {
+    archetype: "DoomZ", roles: ["Equip"],
+    summary: "Equip Spell. The equipped monster survives its first battle-destruction each turn. Main Phase: destroy equipped → Special Summon 1 other \"DoomZ\" from hand/GY/banishment in DEF. If in GY: equip this to a face-up monster you control (take Level/Rank ×100 damage). Effects 2 & 3 HOPT.",
+    mechanics: { isEquipSpell: true, equipsSelfFromGY: true },
+    verify: true,
+  },
+  "DoomZ Destruction": {
+    archetype: "DoomZ", roles: ["Floodgate", "Combo piece"],
+    summary: "Trap. Equip to a \"DoomZ\" Xyz you control: opponent can't add cards from the Main Deck to hand except by drawing. If destroyed by effect: equip 1 \"DoomZ\" monster from Deck to a face-up monster you control as an Equip Spell. Each HOPT.",
+    mechanics: { equipsMonsterFromDeckOnDestroy: true },
+    verify: false,
+  },
+  "DoomZ Break - Diactorus": {
+    archetype: "DoomZ", roles: ["Boss"],
+    summary: "Xyz (2 Level 4). On Special Summon: destroy 1 \"DoomZ\" in hand/field → destroy 1 monster. If destroyed by effect while it had a \"DoomZ\"/Medius material: take 1 Equip Spell from Deck (add to hand or send to GY). Each HOPT.",
+    mechanics: { onSummon: true },
+    verify: false,
+  },
+  "DoomZ XII End - Drastrius": {
+    archetype: "DoomZ", roles: ["Boss", "Finisher"],
+    summary: "Xyz (3 Level 8). On Xyz Summon: equip 1 other face-up monster to this as an Equip Spell. Once per turn survives destruction. When the opponent activates a monster effect on field/GY (Quick): detach 1 → negate it, then equip 1 of their face-up monsters to this. Effects 1 & 3 HOPT.",
+    mechanics: { onSummonEquipsMonster: true, negates: true },
+    verify: false,
+  },
+  "DoomZ XIII Over - Graflario": {
+    archetype: "DoomZ", roles: ["Boss", "Searcher"],
+    summary: "Xyz (3 Level 5). Can also be Xyz Summoned over 1 \"DoomZ\" Xyz you control (transfer its materials). Detach 1: add 1 \"DoomZ\" Spell/Trap from Deck → destroy 1 card on the field. If destroyed by effect: Special Summon 1 non-Xyz \"DoomZ\" from Deck or GY. Each HOPT.",
+    mechanics: { addsFromDeck: "DoomZ Spell/Trap" },
+    verify: true,
+  },
+  "Jupiter the Power Patron of Destruction": {
+    archetype: "Power Patron", roles: ["Boss", "Finisher"],
+    summary: "Xyz (3 Level 10). Can also be Xyz Summoned using 1 monster equipped with 3+ Equip Spells (transfer materials). On Summon: equip Equip Spells from GY. Gains 3000 ATK while it has an Xyz material. Once per turn detach 1: Special Summon 1 \"DoomZ\" from GY → destroy 1 card.",
+    mechanics: { makesXyz: false },
+    verify: false,
+  },
+  "Power Patron Shadow Machine Zegredo": {
+    archetype: "Power Patron", roles: ["Pendulum", "Extender"],
+    summary: "Pendulum (treated as \"DoomZ\"). [Scale] destroy this + 1 \"Power Patron\"/\"DoomZ\" in hand/field → destroy 1 card. [Monster] banish top 3 of Deck face-down, destroy this → Special Summon Jupiter from Extra Deck, attach 1 from hand. If added to Extra Deck face-up: add 1 \"Power Patron\"/\"DoomZ\" Spell/Trap from Deck. Each HOPT.",
+    mechanics: { isPendulum: true },
+    verify: true,
+  },
+  "DoomZ Change": {
+    archetype: "DoomZ", roles: ["Engine"],
+    summary: "Normal Spell. Destroy 1 \"DoomZ\" in hand, Deck, or face-up field (except Change). If destroyed by effect: add 1 \"DoomZ\" from GY (except Change) → Special Summon 1 \"DoomZ\" from hand. Each HOPT.",
+    mechanics: {},
+    verify: true,
+  },
+};
+
+// Accessor — returns the KB entry for a card name, or null. Inert helper
+// until narration/validation are wired to it.
+function getCardFx(name) {
+  if (!name) return null;
+  return CARD_FX[name] || null;
+}
 
 // ============================================================
 // CARD TAGS — redone properly per your feedback
