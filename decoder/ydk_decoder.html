@@ -6790,6 +6790,28 @@ const CARD_FX = {
     mechanics: {}, verify: false,
   },
 
+  // ── Extra-deck generics (text confirmed via YGOPRODeck API) ──
+  "Divine Arsenal AA-ZEUS - Sky Thunder": {
+    archetype: "—", roles: ["Boss", "Board breaker"],
+    summary: "Xyz (2 Level 12), LIGHT Machine 3000/3000. Can be Xyz Summoned over any Xyz that battled this turn (transfer materials). (Quick) detach 2 → send ALL other cards on the field to the GY. If a card you control is destroyed by battle/opponent effect: attach 1 from hand/Deck/Extra Deck as material. Each HOPT.",
+    mechanics: { boardWipe: true }, verify: false,
+  },
+  "Super Starslayer TY-PHON - Sky Crisis": {
+    archetype: "—", roles: ["Boss", "Stopper"],
+    summary: "Xyz (2 Level 12), DARK Fiend 2900/2900. If the opponent Special Summoned 2+ from the Extra Deck this turn or last: Xyz Summon this over your highest-ATK monster (then you can't summon for the rest of the turn). While face-up: neither player can activate effects of monsters with 3000+ ATK. Detach 1: bounce 1 monster on the field to hand. Once per turn.",
+    mechanics: { floodgate: true }, verify: false,
+  },
+  "Dark Ceruvim Irisfil": {
+    archetype: "—", roles: ["Boss"],
+    summary: "Xyz (2 Level 8), LIGHT Fairy 800/2500. Can be Xyz Summoned over an Xyz that didn't use its effects this turn (transfer materials). On Xyz Summon: this turn, your Xyz gain ATK equal to Rank ×100 during the Battle Phase. If it would be destroyed (battle/effect): detach 1 material from a monster you control instead. Once per turn.",
+    mechanics: {}, verify: false,
+  },
+  "Clockwork Knight": {
+    archetype: "—", roles: ["Extender", "Engine"],
+    summary: "Link-1 (1 non-Link Machine with ≤1000 original ATK), EARTH Machine 500. On Link Summon: send 1 face-up Continuous Spell you control to GY → add 1 \"Clockwork Night\" from Deck. Target a Machine with ≤1000 ATK in your GY; Tribute 1 Machine → Special Summon that target in DEF. Each HOPT.",
+    mechanics: {}, verify: false,
+  },
+
   // ── Handtraps + staples (text confirmed via INLINE_CACHE) ──
   "Ash Blossom & Joyous Spring": {
     archetype: "—", roles: ["Handtrap"],
