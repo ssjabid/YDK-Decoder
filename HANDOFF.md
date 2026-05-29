@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-29-phase6I-card-kb-wired` |
+| Decoder | `2026-05-29-phase6J-kb-api-coverage-loader` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,30 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6I — card knowledge base (May 29 2026, latest)
+### Phase 6J — KB via API + name aliases + validation + loading screen (May 29 2026, latest)
+Three things in one pass.
+
+- **Authored the combo's splash cards from the YGOPRODeck API** (not invented —
+  pulled the real text by passcode). KB now 38 cards: added Springans
+  Merrymaker, Gigantic "Champion" Sargas, Therion "King" Regulus, Terminus,
+  Vidrium, Vidria, Varudras, Forbidden Crown, Dimension Shifter, Dark Ruler No
+  More, Lightning Storm; flipped the 4 `verify` cards (ADRASTEIA, Graflario,
+  Zegredo, Change) to confirmed.
+- **DuelingBook ↔ official name aliases.** Discovered DuelingBook uses
+  unofficial early names for the new "Power Patron" cards (combo's "Zegredo" =
+  official "Jupredo the Shademachine Power Patron", same passcode 43871165).
+  `CARD_FX_ALIASES` maps official → DB key so `getCardFx` resolves either name
+  (combo logs use DB names, Cards tab / API use official). Likely the root of
+  past "missing data / VERIFY" for these cards.
+- **Validation/coverage chip.** `buildComboCoverageChip` shows, at the top of
+  each open combo, "✓ Effect data for all N cards" or "⚠ N need data: …" —
+  surfaces gaps instead of silently rendering context-less cards. (Real combo:
+  "all 12 cards".)
+- **First-paint loading overlay.** `#ydk-loading-overlay` (logo + spinner)
+  fades out once init finishes (`window.__ydkHideLoading()`), with a window-load
+  + 3s fallback. Respects prefers-reduced-motion.
+
+### Phase 6I — card knowledge base (May 29 2026)
 The structured per-card effect DB that the smarter combo engine runs on.
 
 - **`CARD_FX`** (top of script, after NAME_OVERRIDES) — 27 cards so far: the 15

@@ -6032,9 +6032,98 @@
     color: var(--text-dim);
   }
 
+  /* ── Combo coverage / validation chip (Phase 6I) ── */
+  .combo-coverage {
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+    line-height: 1.5;
+  }
+  .combo-coverage.is-ok {
+    background: rgba(111,200,142,0.10);
+    border: 1px solid rgba(111,200,142,0.30);
+    color: var(--text-dim);
+  }
+  .combo-coverage.is-ok .combo-coverage-icon { color: var(--success); font-weight: 700; }
+  .combo-coverage.is-warn {
+    background: rgba(229,169,60,0.10);
+    border: 1px solid rgba(229,169,60,0.30);
+    color: var(--text-dim);
+  }
+  .combo-coverage.is-warn .combo-coverage-icon { color: var(--warning); font-weight: 700; }
+  .combo-coverage-card {
+    color: var(--text);
+    font-weight: 500;
+    background: rgba(255,255,255,0.05);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ── First-paint loading overlay (Phase 6I) ── */
+  #ydk-loading-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(229,91,60,0.08) 0%, transparent 55%),
+      var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  #ydk-loading-overlay.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .ydk-loading-logo {
+    font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--text);
+  }
+  .ydk-loading-logo .accent { color: var(--accent); }
+  .ydk-loading-sub { font-size: 12px; color: var(--text-dim); }
+  .ydk-loading-spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: ydk-spin 0.8s linear infinite;
+  }
+  @keyframes ydk-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .ydk-loading-spinner { animation: none; }
+    #ydk-loading-overlay { transition: none; }
+  }
+
 </style>
 </head>
 <body>
+<!-- First-paint loading overlay — fades out once the app has initialized so
+     the user never sees a half-built page or a flash of unstyled content. -->
+<div id="ydk-loading-overlay">
+  <div class="ydk-loading-logo">YDK <span class="accent">Decoder</span></div>
+  <div class="ydk-loading-spinner" aria-hidden="true"></div>
+  <div class="ydk-loading-sub">Loading your decks…</div>
+</div>
+<script>
+  // Hide the overlay once the page is ready. window 'load' covers script +
+  // first render; a fallback timer guarantees it never gets stuck if some
+  // resource hangs. Adding .is-hidden triggers the CSS fade-out.
+  (function () {
+    var hidden = false;
+    function hideOverlay() {
+      if (hidden) return; hidden = true;
+      var el = document.getElementById("ydk-loading-overlay");
+      if (el) {
+        el.classList.add("is-hidden");
+        setTimeout(function () { if (el && el.parentNode) el.parentNode.removeChild(el); }, 500);
+      }
+    }
+    window.addEventListener("load", function () { setTimeout(hideOverlay, 150); });
+    // Fallback: never let the overlay outlive ~3s regardless of load events.
+    setTimeout(hideOverlay, 3000);
+    window.__ydkHideLoading = hideOverlay; // allow init code to dismiss earlier
+  })();
+</script>
 <div class="container">
   <!-- Status bar removed (2026-04-27) — was developer debug clutter
        in normal use. Build marker still readable from `window.YDK_BUILD`
@@ -6380,7 +6469,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6I-card-kb-wired";
+const YDK_BUILD = "2026-05-29-phase6J-kb-api-coverage-loader";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -6598,7 +6687,7 @@ const CARD_FX = {
     archetype: "DoomZ", roles: ["Equip"],
     summary: "Equip Spell. The equipped monster survives its first battle-destruction each turn. Main Phase: destroy equipped → Special Summon 1 other \"DoomZ\" from hand/GY/banishment in DEF. If in GY: equip this to a face-up monster you control (take Level/Rank ×100 damage). Effects 2 & 3 HOPT.",
     mechanics: { isEquipSpell: true, equipsSelfFromGY: true },
-    verify: true,
+    verify: false, // confirmed via YGOPRODeck API (id 84054556)
   },
   "DoomZ Destruction": {
     archetype: "DoomZ", roles: ["Floodgate", "Combo piece"],
@@ -6622,7 +6711,7 @@ const CARD_FX = {
     archetype: "DoomZ", roles: ["Boss", "Searcher"],
     summary: "Xyz (3 Level 5). Can also be Xyz Summoned over 1 \"DoomZ\" Xyz you control (transfer its materials). Detach 1: add 1 \"DoomZ\" Spell/Trap from Deck → destroy 1 card on the field. If destroyed by effect: Special Summon 1 non-Xyz \"DoomZ\" from Deck or GY. Each HOPT.",
     mechanics: { addsFromDeck: "DoomZ Spell/Trap" },
-    verify: true,
+    verify: false, // confirmed via YGOPRODeck API (id 65848113, official name "Graflareio")
   },
   "Jupiter the Power Patron of Destruction": {
     archetype: "Power Patron", roles: ["Boss", "Finisher"],
@@ -6632,15 +6721,73 @@ const CARD_FX = {
   },
   "Power Patron Shadow Machine Zegredo": {
     archetype: "Power Patron", roles: ["Pendulum", "Extender"],
-    summary: "Pendulum (treated as \"DoomZ\"). [Scale] destroy this + 1 \"Power Patron\"/\"DoomZ\" in hand/field → destroy 1 card. [Monster] banish top 3 of Deck face-down, destroy this → Special Summon Jupiter from Extra Deck, attach 1 from hand. If added to Extra Deck face-up: add 1 \"Power Patron\"/\"DoomZ\" Spell/Trap from Deck. Each HOPT.",
-    mechanics: { isPendulum: true },
-    verify: true,
+    summary: "Pendulum, Level 10 DARK Machine, Scale 1 (always treated as \"DoomZ\"). [Scale] destroy this + 1 \"Power Patron\"/\"DoomZ\" in hand/field → destroy 1 card. [Monster] banish top 3 of Deck face-down, destroy this → Special Summon Jupiter from Extra Deck (as an Xyz Summon), then attach 1 from hand to it. If added to Extra Deck face-up: add 1 \"Power Patron\"/\"DoomZ\" Spell/Trap from Deck. Each HOPT.",
+    mechanics: { isPendulum: true, summonsFromED: "Jupiter the Power Patron of Destruction" },
+    verify: false, // confirmed via YGOPRODeck API (id 43871165, official name "Jupredo the Shademachine Power Patron")
   },
   "DoomZ Change": {
     archetype: "DoomZ", roles: ["Engine"],
     summary: "Normal Spell. Destroy 1 \"DoomZ\" in hand, Deck, or face-up field (except Change). If destroyed by effect: add 1 \"DoomZ\" from GY (except Change) → Special Summon 1 \"DoomZ\" from hand. Each HOPT.",
     mechanics: {},
-    verify: true,
+    verify: false, // confirmed via YGOPRODeck API (id 38007649)
+  },
+
+  // ── Combo splash cards (text confirmed via YGOPRODeck API; keyed by the
+  //    DuelingBook name the combo logs use — official names aliased above) ──
+  "Springans Merrymaker": {
+    archetype: "Springans", roles: ["Combo piece", "Extender"],
+    summary: "Xyz (2 Level 4), FIRE Machine 1100/2000. If Special Summoned from Extra Deck: send 1 \"Springans\" monster from Deck to GY. On opponent's turn (Quick): banish this until the End Phase; if it had 2+ materials, also send 1 \"Fallen of Albaz\" Fusion from your Extra Deck to GY. Each HOPT.",
+    mechanics: { onSummon: true, millsFromDeck: "Springans monster" }, verify: false,
+  },
+  'Gigantic "Champion" Sargas': {
+    archetype: "Springans", roles: ["Boss", "Searcher", "Board breaker"],
+    summary: "Xyz (2+ Level 8), FIRE Machine 2800/1500. Can be Xyz Summoned over a \"Springans\" Xyz (transfer materials). While it has material: add 1 \"Springans\"/\"Therion\" card from Deck. When material leaves any monster on the field: target 1 card → destroy it OR bounce it to hand. Each HOPT.",
+    mechanics: { searchesFromDeck: "Springans/Therion card" }, verify: false,
+  },
+  'Therion "King" Regulus': {
+    archetype: "Therion", roles: ["Boss", "Stopper", "Extender"],
+    summary: "Effect, Level 8 EARTH Machine 2800/1600. Target a \"Therion\"/Machine in your GY → Special Summon this from hand and equip that monster to it. When the opponent activates a card/effect (Quick): send 1 \"Therion\" (hand/field) to GY → negate it. A \"Therion\" equipped with this gains 700 ATK and can use that negate. Each HOPT.",
+    mechanics: { negates: true, summonsSelfFromHand: true }, verify: false,
+  },
+  "Unleashed Power Patron Portal - Terminus": {
+    archetype: "Power Patron", roles: ["Engine", "Searcher"],
+    summary: "Normal Spell. Send 1 \"Power Patron\" monster from Deck/Extra Deck to GY → add 1 DARK Fairy monster from Deck (you can only attack with \"Power Patron\" monsters this turn). In GY, when your \"Power Patron\" battles: banish this → banish the opponent's battling monster face-down. Each HOPT.",
+    mechanics: { searchesFromDeck: "DARK Fairy monster", millsFromDeck: "Power Patron monster" }, verify: false,
+  },
+  "Vidrium the Power Patron of Chaos Extermination": {
+    archetype: "Power Patron", roles: ["Boss", "Finisher", "Pendulum"],
+    summary: "Pendulum, Level 12 DARK Fairy 5000/0, Scale 11. [Scale] destroy this → SS 1 \"Power Patron\" from hand/GY; OR destroy this → your Level-12 \"Power Patron\" gain 5000 ATK this turn. [Monster] can't be Normal Summoned; SS by returning 1 Fusion + 1 Synchro + 1 Xyz (field/GY) to the Extra Deck. Unaffected by non-\"Power Patron\" monster effects. Added to ED face-up: add a \"Power Patron\" card from Deck. Each HOPT.",
+    mechanics: { isPendulum: true }, verify: false,
+  },
+  "Null Power Patron Realm - Vidria": {
+    archetype: "Power Patron", roles: ["Engine", "Searcher", "Floodgate"],
+    summary: "Field Spell. Reveal 1 \"Power Patron\" in your Extra Deck; banish 1 card from hand face-down → add to hand OR Special Summon 1 monster from Deck that mentions that revealed card's name. Opponent's monsters lose 100 ATK per banished card. While you control Nerva + Jupiter + Junora: opponent can't use GY effects. Once per turn.",
+    mechanics: { searchesFromDeck: "monster mentioning revealed Power Patron" }, verify: false,
+  },
+  "Varudras, the Final Bringer of the End Times": {
+    archetype: "—", roles: ["Boss", "Finisher", "Stopper"],
+    summary: "Xyz (2+ Level 10), DARK Wyrm 3000/3000. When the opponent activates a card/effect (Quick): detach 1 → negate it, then you can detach 1 more → destroy 1 card. When it attacks while it has material: destroy 1 card. If this Xyz-Summoned card is destroyed: destroy 1 card. Each HOPT.",
+    mechanics: { negates: true }, verify: false,
+  },
+  "Forbidden Crown": {
+    archetype: "—", roles: ["Tech"],
+    summary: "Quick-Play Spell. Until end of turn, 1 face-up monster: effects negated, can't attack, can't be destroyed (battle/effect), unaffected by other activated effects, can't be Tributed, can't be used as material. Neither player can chain monster effects to it. Once per turn.",
+    mechanics: { negates: true }, verify: false,
+  },
+  "Dimension Shifter": {
+    archetype: "—", roles: ["Handtrap", "Floodgate"],
+    summary: "If you have no cards in the GY and it's not your turn: send this from hand to GY → for the rest of this turn and the entire next turn, cards sent to the GY are banished face-down instead. Once per turn.",
+    mechanics: { handtrap: true }, verify: false,
+  },
+  "Dark Ruler No More": {
+    archetype: "—", roles: ["Board breaker"],
+    summary: "Negate the effects of all face-up monsters your opponent currently controls this turn (they can't activate effects in response). You take no battle damage from attacks involving those monsters this turn.",
+    mechanics: { negates: true }, verify: false,
+  },
+  "Lightning Storm": {
+    archetype: "—", roles: ["Board breaker"],
+    summary: "If you control no face-up cards: destroy all face-up Attack-Position monsters your opponent controls, OR destroy all Spells/Traps they control. Once per turn.",
+    mechanics: {}, verify: false,
   },
 
   // ── Handtraps + staples (text confirmed via INLINE_CACHE) ──
@@ -6706,11 +6853,27 @@ const CARD_FX = {
   },
 };
 
-// Accessor — returns the KB entry for a card name, or null. Inert helper
-// until narration/validation are wired to it.
+// Name aliases — DuelingBook uses unofficial/early translations for the new
+// BLZD "Power Patron" cards, while YGOPRODeck (and the .ydk passcodes) use the
+// official TCG names. SAME passcode = same card = same effect, just a different
+// name. This map lets getCardFx() resolve a card whether the app refers to it
+// by the DuelingBook name (combo logs) or the official name (Cards tab / API).
+// Maps OFFICIAL name → the DuelingBook/combo key the KB is authored under.
+const CARD_FX_ALIASES = {
+  "Jupredo the Shademachine Power Patron":            "Power Patron Shadow Machine Zegredo",
+  "DoomZ XIII Over - Graflareio":                     "DoomZ XIII Over - Graflario",
+  "Vidolium the Unstable Power Patron of Unity":      "Vidrium the Power Patron of Chaos Extermination",
+  "Plundered Power Patron Plane - Vidolia":           "Null Power Patron Realm - Vidria",
+  "Prohibited Power Patron Portal - Terminus":        "Unleashed Power Patron Portal - Terminus",
+};
+
+// Accessor — returns the KB entry for a card name (resolving DuelingBook ↔
+// official aliases), or null.
 function getCardFx(name) {
   if (!name) return null;
-  return CARD_FX[name] || null;
+  if (CARD_FX[name]) return CARD_FX[name];
+  const alias = CARD_FX_ALIASES[name];
+  return alias && CARD_FX[alias] ? CARD_FX[alias] : null;
 }
 
 // ============================================================
@@ -15691,6 +15854,45 @@ function openerSizeLabel(size) {
   return size === 1 ? "1-card" : `${size}-card`;
 }
 
+// Every distinct card name a combo touches — opening hand, every step, and
+// the end board (incl. Xyz materials). Used by the coverage validator.
+function getComboCardNames(combo) {
+  const names = new Set();
+  (combo.openingHand || []).forEach(n => n && names.add(n));
+  (combo.steps || []).forEach(s => (s.cards || []).forEach(n => n && names.add(n)));
+  const eb = combo.endboard || combo.endboardFromExtractor || [];
+  eb.forEach(e => {
+    const n = (typeof e === "string") ? e : (e && e.card);
+    if (n) names.add(n);
+    if (e && Array.isArray(e.materials)) e.materials.forEach(m => m && names.add(m));
+  });
+  return Array.from(names);
+}
+
+// VALIDATION PASS (Phase 6I): does every card in the combo have effect data
+// we understand — either a knowledge-base entry OR fetched card text? Cards
+// with neither are surfaced so extraction gaps / unknown cards are visible
+// instead of silently rendering with no context.
+function buildComboCoverageChip(combo) {
+  const names = getComboCardNames(combo);
+  if (!names.length) return null;
+  const uncovered = names.filter(n => {
+    if (typeof getCardFx === "function" && getCardFx(n)) return false;
+    const card = lookupCardByName(n);
+    if (card && card.desc) return false;
+    return true;
+  });
+  const chip = document.createElement("div");
+  chip.className = "combo-coverage " + (uncovered.length ? "is-warn" : "is-ok");
+  if (!uncovered.length) {
+    chip.innerHTML = `<span class="combo-coverage-icon">✓</span> Effect data for all ${names.length} cards in this combo`;
+  } else {
+    chip.innerHTML = `<span class="combo-coverage-icon">⚠</span> ${uncovered.length} of ${names.length} card${uncovered.length === 1 ? "" : "s"} need effect data — hover may be blank: ` +
+      uncovered.map(n => `<span class="combo-coverage-card">${escapeHtml(n)}</span>`).join(", ");
+  }
+  return chip;
+}
+
 function setComboOpenerSize(combo, size) {
   combo.userOpenerSize = size;
   upsertSavedCombo(combo);
@@ -16109,6 +16311,11 @@ function renderExtractedCombo(combo) {
 
   // Opening hand block — always render when there's a hand OR a Solo Mode flag,
   // so the user gets context even if the hand is empty (legacy v1 extractions).
+  // Validation/coverage chip — surfaces any card in this combo that has no
+  // effect data (no KB entry + no fetched text), so gaps are visible.
+  const coverageChip = buildComboCoverageChip(combo);
+  if (coverageChip) div.appendChild(coverageChip);
+
   const hasHand = Array.isArray(combo.openingHand) && combo.openingHand.length;
   const isLegacyV1 = !combo.version || combo.version < 2;
   // For Solo Mode mulligan combos, the real opener is the post-mulligan
@@ -17527,6 +17734,9 @@ try {
     ydkStatus("Decks tab render failed — check console for details");
   }
 }
+// App is rendered — dismiss the first-paint loading overlay right away
+// (don't wait for window 'load', which also blocks on card images).
+if (typeof window.__ydkHideLoading === "function") window.__ydkHideLoading();
 
 function focusComboByKey(key, name) {
   setActiveTab("combos");
