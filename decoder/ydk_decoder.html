@@ -6634,7 +6634,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6L-backup-drill-cheatsheet";
+const YDK_BUILD = "2026-05-29-phase6M-modal-refactor";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -13274,7 +13274,15 @@ const TOURNAMENT_TYPES = [
   { value: "Online",   label: "Online",   hint: "DuelingBook, MD ladder, etc." },
   { value: "Other",    label: "Other",    hint: "Anything else — testing, casual" },
 ];
-function pickTournamentType() {
+// ── Shared choice-modal shell ───────────────────────────────────────────
+// Reuses the ydk-modal backdrop for "pick / fill in something" flows so the
+// open / cleanup / Esc / backdrop / listener-removal boilerplate lives in ONE
+// place. opts.render(msgEl, api) builds the body; call api.setValid(bool) to
+// toggle the confirm button (api.confirm() submits programmatically). On
+// confirm, opts.getResult() supplies the resolved value; cancel / Esc /
+// backdrop resolve opts.cancelValue (default null). Set enterConfirms:true to
+// let Enter submit when valid. Replaces 3 near-identical copies.
+function runChoiceModal(opts) {
   return new Promise((resolve) => {
     const backdrop = document.getElementById("ydk-modal-backdrop");
     const titleEl = document.getElementById("ydk-modal-title");
@@ -13283,60 +13291,60 @@ function pickTournamentType() {
     const inputRow = document.getElementById("ydk-modal-input-row");
     const cancelBtn = document.getElementById("ydk-modal-cancel");
     const confirmBtn = document.getElementById("ydk-modal-confirm");
-    if (!backdrop) { resolve(null); return; }
-
-    titleEl.textContent = "Pick the event type";
-    iconEl.textContent = "🏆";
+    const cancelVal = (opts.cancelValue !== undefined) ? opts.cancelValue : null;
+    if (!backdrop) { resolve(cancelVal); return; }
+    titleEl.textContent = opts.title || "";
+    iconEl.textContent = opts.icon || "";
     if (inputRow) inputRow.hidden = true;
-
-    // Render the type grid in the message area
-    let chosen = null;
-    const grid = document.createElement("div");
-    grid.className = "tourn-type-grid";
-    TOURNAMENT_TYPES.forEach(t => {
-      const opt = document.createElement("button");
-      opt.type = "button";
-      opt.className = "tourn-type-opt";
-      opt.innerHTML = `<strong>${escapeHtml(t.label)}</strong><span>${escapeHtml(t.hint)}</span>`;
-      opt.onclick = () => {
-        chosen = t.value;
-        grid.querySelectorAll(".tourn-type-opt").forEach(b => b.classList.remove("is-active"));
-        opt.classList.add("is-active");
-        confirmBtn.disabled = false;
-      };
-      grid.appendChild(opt);
-    });
-    msgEl.innerHTML = "";
-    msgEl.appendChild(grid);
-
-    confirmBtn.textContent = "Next";
-    cancelBtn.textContent = "Cancel";
+    confirmBtn.textContent = opts.confirmText || "OK";
+    cancelBtn.textContent = opts.cancelText || "Cancel";
     confirmBtn.classList.remove("is-danger");
-    confirmBtn.disabled = true;
+    confirmBtn.disabled = !opts.startValid;
+    const api = { setValid: (v) => { confirmBtn.disabled = !v; }, confirm: () => onConfirm() };
+    msgEl.innerHTML = "";
+    opts.render(msgEl, api);
     backdrop.hidden = false;
 
-    const cleanup = (result) => {
-      backdrop.hidden = true;
-      confirmBtn.disabled = false;
+    function cleanup(val) {
+      backdrop.hidden = true; confirmBtn.disabled = false;
       confirmBtn.removeEventListener("click", onConfirm);
       cancelBtn.removeEventListener("click", onCancel);
-      backdrop.removeEventListener("click", onBackdropClick);
+      backdrop.removeEventListener("click", onBackdrop);
       document.removeEventListener("keydown", onKey, true);
-      // Restore default message area
       msgEl.innerHTML = "";
-      resolve(result);
-    };
-    const onConfirm = () => { if (chosen) cleanup(chosen); };
-    const onCancel = () => cleanup(null);
-    const onBackdropClick = (e) => { if (e.target === backdrop) cleanup(null); };
-    const onKey = (e) => {
-      if (e.key === "Escape") { e.preventDefault(); cleanup(null); }
-      else if (e.key === "Enter" && chosen) { e.preventDefault(); cleanup(chosen); }
-    };
+      resolve(val);
+    }
+    function onConfirm() { if (confirmBtn.disabled) return; cleanup(opts.getResult ? opts.getResult() : true); }
+    function onCancel() { cleanup(cancelVal); }
+    function onBackdrop(e) { if (e.target === backdrop) cleanup(cancelVal); }
+    function onKey(e) {
+      if (e.key === "Escape") { e.preventDefault(); cleanup(cancelVal); }
+      else if (e.key === "Enter" && opts.enterConfirms && !confirmBtn.disabled) { e.preventDefault(); onConfirm(); }
+    }
     confirmBtn.addEventListener("click", onConfirm);
     cancelBtn.addEventListener("click", onCancel);
-    backdrop.addEventListener("click", onBackdropClick);
+    backdrop.addEventListener("click", onBackdrop);
     document.addEventListener("keydown", onKey, true);
+  });
+}
+
+function pickTournamentType() {
+  let chosen = null;
+  return runChoiceModal({
+    title: "Pick the event type", icon: "🏆", confirmText: "Next", enterConfirms: true, cancelValue: null,
+    render: (msgEl, api) => {
+      const grid = document.createElement("div");
+      grid.className = "tourn-type-grid";
+      TOURNAMENT_TYPES.forEach(t => {
+        const opt = document.createElement("button");
+        opt.type = "button"; opt.className = "tourn-type-opt";
+        opt.innerHTML = `<strong>${escapeHtml(t.label)}</strong><span>${escapeHtml(t.hint)}</span>`;
+        opt.onclick = () => { chosen = t.value; grid.querySelectorAll(".tourn-type-opt").forEach(b => b.classList.remove("is-active")); opt.classList.add("is-active"); api.setValid(true); };
+        grid.appendChild(opt);
+      });
+      msgEl.appendChild(grid);
+    },
+    getResult: () => chosen,
   });
 }
 
@@ -13347,144 +13355,65 @@ function pickTournamentType() {
 // Reuses the shared modal shell + the .tourn-type-grid option styling.
 // Resolves true if a round was added, false on cancel.
 function addRoundFlow(format, t) {
-  return new Promise((resolve) => {
-    const backdrop = document.getElementById("ydk-modal-backdrop");
-    const titleEl = document.getElementById("ydk-modal-title");
-    const msgEl = document.getElementById("ydk-modal-message");
-    const iconEl = document.getElementById("ydk-modal-icon");
-    const inputRow = document.getElementById("ydk-modal-input-row");
-    const cancelBtn = document.getElementById("ydk-modal-cancel");
-    const confirmBtn = document.getElementById("ydk-modal-confirm");
-    if (!backdrop) { resolve(false); return; }
+  const decks = loadDecks();
+  const matchupDecks = (format.matchups || []).map(m => decks.find(d => d.deckId === m.opponentDeckId)).filter(Boolean);
+  let oppId = null, going = "first", result = null, score = "", notes = "";
 
-    titleEl.textContent = "Log round " + ((t.rounds || []).length + 1);
-    iconEl.textContent = "🎲";
-    if (inputRow) inputRow.hidden = true;
+  return runChoiceModal({
+    title: "Log round " + ((t.rounds || []).length + 1), icon: "🎲", confirmText: "Add round", cancelValue: false,
+    render: (msgEl, api) => {
+      const validate = () => api.setValid(!!(oppId && result));
+      const form = document.createElement("div"); form.className = "round-form";
+      const makeLabel = (txt, hint) => { const l = document.createElement("div"); l.className = "round-form-label"; l.innerHTML = escapeHtml(txt) + (hint ? ` <span class="round-form-hint">${escapeHtml(hint)}</span>` : ""); return l; };
+      const makeGrid = () => { const g = document.createElement("div"); g.className = "tourn-type-grid"; return g; };
+      const setActive = (grid, btn) => { grid.querySelectorAll(".tourn-type-opt").forEach(b => b.classList.remove("is-active")); btn.classList.add("is-active"); };
 
-    const decks = loadDecks();
-    const matchupDecks = (format.matchups || [])
-      .map(m => decks.find(d => d.deckId === m.opponentDeckId))
-      .filter(Boolean);
+      // Opponent — pre-selected from the format's matchups
+      form.appendChild(makeLabel("What did you play against?", matchupDecks.length ? "" : "no matchups yet — pick Unknown, or add matchups first"));
+      const oppGrid = makeGrid();
+      const oppOptions = matchupDecks.map(d => ({ value: d.deckId, label: d.name, hint: "matchup deck" }));
+      oppOptions.push({ value: "__unknown__", label: "Unknown / rogue", hint: "not in your matchup list" });
+      oppOptions.forEach(o => { const opt = document.createElement("button"); opt.type = "button"; opt.className = "tourn-type-opt"; opt.innerHTML = `<strong>${escapeHtml(o.label)}</strong><span>${escapeHtml(o.hint)}</span>`; opt.onclick = () => { oppId = o.value; setActive(oppGrid, opt); validate(); }; oppGrid.appendChild(opt); });
+      form.appendChild(oppGrid);
 
-    // Form state
-    let oppId = null;      // deckId | "__unknown__"
-    let going = "first";   // "first" | "second"
-    let result = null;     // "W" | "L" | "D"
-    let score = "";
-    let notes = "";
+      // Going first / second
+      form.appendChild(makeLabel("Going first or second?"));
+      const goingGrid = makeGrid();
+      [["first", "Going first"], ["second", "Going second"]].forEach(([v, l], i) => { const opt = document.createElement("button"); opt.type = "button"; opt.className = "tourn-type-opt" + (i === 0 ? " is-active" : ""); opt.innerHTML = `<strong>${l}</strong>`; opt.onclick = () => { going = v; setActive(goingGrid, opt); }; goingGrid.appendChild(opt); });
+      form.appendChild(goingGrid);
 
-    const form = document.createElement("div");
-    form.className = "round-form";
-    const makeLabel = (txt, hint) => {
-      const l = document.createElement("div");
-      l.className = "round-form-label";
-      l.innerHTML = escapeHtml(txt) + (hint ? ` <span class="round-form-hint">${escapeHtml(hint)}</span>` : "");
-      return l;
-    };
-    const makeGrid = () => { const g = document.createElement("div"); g.className = "tourn-type-grid"; return g; };
-    const setActive = (grid, btn) => { grid.querySelectorAll(".tourn-type-opt").forEach(b => b.classList.remove("is-active")); btn.classList.add("is-active"); };
-    const validate = () => { confirmBtn.disabled = !(oppId && result); };
+      // Result
+      form.appendChild(makeLabel("Did you win?"));
+      const resGrid = makeGrid();
+      [["W", "Win"], ["L", "Loss"], ["D", "Draw"]].forEach(([v, l]) => { const opt = document.createElement("button"); opt.type = "button"; opt.className = "tourn-type-opt round-form-res is-" + v; opt.innerHTML = `<strong>${l}</strong>`; opt.onclick = () => { result = v; setActive(resGrid, opt); validate(); }; resGrid.appendChild(opt); });
+      form.appendChild(resGrid);
 
-    // 1. Opponent — pre-selected from the format's matchups
-    form.appendChild(makeLabel("What did you play against?", matchupDecks.length ? "" : "no matchups yet — pick Unknown, or add matchups in this format first"));
-    const oppGrid = makeGrid();
-    const oppOptions = matchupDecks.map(d => ({ value: d.deckId, label: d.name, hint: "matchup deck" }));
-    oppOptions.push({ value: "__unknown__", label: "Unknown / rogue", hint: "not in your matchup list" });
-    oppOptions.forEach(o => {
-      const opt = document.createElement("button");
-      opt.type = "button";
-      opt.className = "tourn-type-opt";
-      opt.innerHTML = `<strong>${escapeHtml(o.label)}</strong><span>${escapeHtml(o.hint)}</span>`;
-      opt.onclick = () => { oppId = o.value; setActive(oppGrid, opt); validate(); };
-      oppGrid.appendChild(opt);
-    });
-    form.appendChild(oppGrid);
+      // Score (optional)
+      form.appendChild(makeLabel("Score", "optional"));
+      const scoreInput = document.createElement("input"); scoreInput.type = "text"; scoreInput.className = "round-form-input"; scoreInput.placeholder = "e.g. 2-0, 2-1, 1-2";
+      scoreInput.addEventListener("input", () => { score = scoreInput.value; });
+      scoreInput.addEventListener("keydown", (e) => { if (e.key !== "Escape") e.stopPropagation(); });
+      form.appendChild(scoreInput);
 
-    // 2. Going first / second
-    form.appendChild(makeLabel("Going first or second?"));
-    const goingGrid = makeGrid();
-    [["first", "Going first"], ["second", "Going second"]].forEach(([v, l], i) => {
-      const opt = document.createElement("button");
-      opt.type = "button";
-      opt.className = "tourn-type-opt" + (i === 0 ? " is-active" : "");
-      opt.innerHTML = `<strong>${l}</strong>`;
-      opt.onclick = () => { going = v; setActive(goingGrid, opt); };
-      goingGrid.appendChild(opt);
-    });
-    form.appendChild(goingGrid);
+      // Notes (optional)
+      form.appendChild(makeLabel("Notes", "optional"));
+      const notesInput = document.createElement("textarea"); notesInput.className = "round-form-input round-form-textarea"; notesInput.rows = 3; notesInput.placeholder = "What happened — e.g. \"Won off Solemn Judgment on their Aluber. Bricked game 2.\"";
+      notesInput.addEventListener("input", () => { notes = notesInput.value; });
+      notesInput.addEventListener("keydown", (e) => { if (e.key !== "Escape") e.stopPropagation(); });
+      form.appendChild(notesInput);
 
-    // 3. Result
-    form.appendChild(makeLabel("Did you win?"));
-    const resGrid = makeGrid();
-    [["W", "Win"], ["L", "Loss"], ["D", "Draw"]].forEach(([v, l]) => {
-      const opt = document.createElement("button");
-      opt.type = "button";
-      opt.className = "tourn-type-opt round-form-res is-" + v;
-      opt.innerHTML = `<strong>${l}</strong>`;
-      opt.onclick = () => { result = v; setActive(resGrid, opt); validate(); };
-      resGrid.appendChild(opt);
-    });
-    form.appendChild(resGrid);
-
-    // 4. Score (optional)
-    form.appendChild(makeLabel("Score", "optional"));
-    const scoreInput = document.createElement("input");
-    scoreInput.type = "text";
-    scoreInput.className = "round-form-input";
-    scoreInput.placeholder = "e.g. 2-0, 2-1, 1-2";
-    scoreInput.addEventListener("input", () => { score = scoreInput.value; });
-    scoreInput.addEventListener("keydown", (e) => { if (e.key !== "Escape") e.stopPropagation(); });
-    form.appendChild(scoreInput);
-
-    // 5. Notes (optional)
-    form.appendChild(makeLabel("Notes", "optional"));
-    const notesInput = document.createElement("textarea");
-    notesInput.className = "round-form-input round-form-textarea";
-    notesInput.rows = 3;
-    notesInput.placeholder = "What happened — e.g. \"Won off Solemn Judgment on their Aluber. Bricked game 2.\"";
-    notesInput.addEventListener("input", () => { notes = notesInput.value; });
-    notesInput.addEventListener("keydown", (e) => { if (e.key !== "Escape") e.stopPropagation(); });
-    form.appendChild(notesInput);
-
-    msgEl.innerHTML = "";
-    msgEl.appendChild(form);
-
-    confirmBtn.textContent = "Add round";
-    cancelBtn.textContent = "Cancel";
-    confirmBtn.classList.remove("is-danger");
-    confirmBtn.disabled = true;
-    backdrop.hidden = false;
-
-    const cleanup = (added) => {
-      backdrop.hidden = true;
-      confirmBtn.disabled = false;
-      confirmBtn.removeEventListener("click", onConfirm);
-      cancelBtn.removeEventListener("click", onCancel);
-      backdrop.removeEventListener("click", onBackdrop);
-      document.removeEventListener("keydown", onKey, true);
-      msgEl.innerHTML = "";
-      resolve(added);
-    };
-    const onConfirm = () => {
-      if (!(oppId && result)) return;
+      msgEl.appendChild(form);
+    },
+    getResult: () => {
+      if (!(oppId && result)) return false;
       const r = makeRound();
       r.opponentDeckId = oppId;     // "__unknown__" sentinel matches buildRoundRow + aggregate logic
-      r.going = going;
-      r.result = result;
-      r.score = (score || "").trim();
-      r.notes = (notes || "").trim();
-      t.rounds = t.rounds || [];
-      t.rounds.push(r);
+      r.going = going; r.result = result;
+      r.score = (score || "").trim(); r.notes = (notes || "").trim();
+      t.rounds = t.rounds || []; t.rounds.push(r);
       persistFormat(format);
-      cleanup(true);
-    };
-    const onCancel = () => cleanup(false);
-    const onBackdrop = (e) => { if (e.target === backdrop) cleanup(false); };
-    const onKey = (e) => { if (e.key === "Escape") { e.preventDefault(); cleanup(false); } };
-    confirmBtn.addEventListener("click", onConfirm);
-    cancelBtn.addEventListener("click", onCancel);
-    backdrop.addEventListener("click", onBackdrop);
-    document.addEventListener("keydown", onKey, true);
+      return true;
+    },
   });
 }
 
@@ -17769,36 +17698,23 @@ async function bbImportFromCombo(opp, prof) {
   persistDeck(opp); renderBbEditor(opp);
 }
 
-// Minimal list-chooser modal (reuses the shared modal shell). Resolves the
-// chosen index or null.
+// Minimal list-chooser modal (uses the shared runChoiceModal shell).
+// Resolves the chosen index or null.
 function pickFromList(title, items) {
-  return new Promise((resolve) => {
-    const backdrop = document.getElementById("ydk-modal-backdrop");
-    const titleEl = document.getElementById("ydk-modal-title");
-    const msgEl = document.getElementById("ydk-modal-message");
-    const iconEl = document.getElementById("ydk-modal-icon");
-    const inputRow = document.getElementById("ydk-modal-input-row");
-    const cancelBtn = document.getElementById("ydk-modal-cancel");
-    const confirmBtn = document.getElementById("ydk-modal-confirm");
-    if (!backdrop) { resolve(null); return; }
-    titleEl.textContent = title; iconEl.textContent = "📋"; if (inputRow) inputRow.hidden = true;
-    let chosen = null;
-    const list = document.createElement("div"); list.className = "bb-pick-list";
-    items.forEach((it, i) => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "bb-pick-opt";
-      b.textContent = it;
-      b.onclick = () => { chosen = i; list.querySelectorAll(".bb-pick-opt").forEach(x => x.classList.remove("is-active")); b.classList.add("is-active"); confirmBtn.disabled = false; };
-      list.appendChild(b);
-    });
-    msgEl.innerHTML = ""; msgEl.appendChild(list);
-    confirmBtn.textContent = "Import"; cancelBtn.textContent = "Cancel"; confirmBtn.classList.remove("is-danger"); confirmBtn.disabled = true;
-    backdrop.hidden = false;
-    const cleanup = (v) => { backdrop.hidden = true; confirmBtn.disabled = false; confirmBtn.removeEventListener("click", ok); cancelBtn.removeEventListener("click", no); backdrop.removeEventListener("click", bd); document.removeEventListener("keydown", key, true); msgEl.innerHTML = ""; resolve(v); };
-    const ok = () => { if (chosen != null) cleanup(chosen); };
-    const no = () => cleanup(null);
-    const bd = (e) => { if (e.target === backdrop) cleanup(null); };
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); cleanup(null); } };
-    confirmBtn.addEventListener("click", ok); cancelBtn.addEventListener("click", no); backdrop.addEventListener("click", bd); document.addEventListener("keydown", key, true);
+  let chosen = null;
+  return runChoiceModal({
+    title, icon: "📋", confirmText: "Import", cancelValue: null,
+    render: (msgEl, api) => {
+      const list = document.createElement("div"); list.className = "bb-pick-list";
+      items.forEach((it, i) => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "bb-pick-opt";
+        b.textContent = it;
+        b.onclick = () => { chosen = i; list.querySelectorAll(".bb-pick-opt").forEach(x => x.classList.remove("is-active")); b.classList.add("is-active"); api.setValid(true); };
+        list.appendChild(b);
+      });
+      msgEl.appendChild(list);
+    },
+    getResult: () => chosen,
   });
 }
 

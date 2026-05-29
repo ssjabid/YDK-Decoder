@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YDK Decoder — Test Checklist</title>
+<style>
+  :root{
+    --bg:#08080a; --card:#16161c; --elev:#14141a; --border:#25252d;
+    --text:#ecedf0; --dim:#92929c; --faint:#5a5a64; --accent:#e55b3c;
+    --ok:#6fc88e; --warn:#e5a93c; --bad:#c45f7a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:24px 16px 80px;}
+  .wrap{max-width:840px;margin:0 auto;}
+  h1{font-size:20px;margin:0 0 2px;} h1 .a{color:var(--accent);}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:16px;}
+  .bar{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:5;}
+  .progress{flex:1;min-width:160px;height:8px;background:var(--elev);border-radius:5px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);width:0;transition:width .25s;}
+  .count{font-size:13px;color:var(--dim);white-space:nowrap;}
+  button{font:inherit;font-size:12px;font-weight:500;border-radius:5px;border:1px solid var(--border);background:var(--elev);color:var(--text);padding:7px 12px;cursor:pointer;}
+  button:hover{border-color:var(--accent);color:var(--accent);}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  section{margin-bottom:22px;}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:5px;margin:0 0 10px;}
+  .item{display:grid;grid-template-columns:24px 1fr;gap:10px;padding:9px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border);margin-bottom:7px;}
+  .item.done{background:rgba(111,200,142,.07);border-color:rgba(111,200,142,.3);}
+  .item input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);cursor:pointer;}
+  .item-body{min-width:0;}
+  .item-text{font-size:13px;}
+  .item.done .item-text{color:var(--dim);}
+  .item-id{color:var(--faint);font-weight:600;margin-right:6px;}
+  .item-note{margin-top:6px;width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 8px;font:inherit;font-size:12px;}
+  .item-note::placeholder{color:var(--faint);}
+  .item-note:focus{outline:none;border-color:var(--accent);}
+  .warn-note{background:rgba(229,169,60,.08);border:1px solid rgba(229,169,60,.3);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--dim);margin-bottom:10px;}
+  .seti{color:var(--accent);}
+  code{background:var(--elev);padding:1px 5px;border-radius:3px;color:var(--accent);font-size:12px;}
+  .saved{font-size:11px;color:var(--ok);opacity:0;transition:opacity .2s;}
+  .saved.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>YDK <span class="a">Decoder</span> — Test Checklist</h1>
+  <div class="sub">Tick as you test; notes auto-save in this browser. Build should read <code>2026-05-29-phase6L-backup-drill-cheatsheet</code> or later.</div>
+  <div class="bar">
+    <div class="progress"><div class="progress-fill" id="fill"></div></div>
+    <span class="count" id="count">0 / 0</span>
+    <span class="saved" id="saved">saved ✓</span>
+    <button id="copyBtn">Copy results</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+  <div class="warn-note"><strong>Setup:</strong> run <code>py -m http.server 8000</code> in the repo root, open <code>http://localhost:8000/decoder/ydk_decoder.html</code>, then <code>Ctrl+Shift+R</code>. <span class="seti">⚠</span> = needs the Chrome extension.</div>
+  <div id="list"></div>
+</div>
+<script>
+const SECTIONS = [
+  ["§0 — First load", [
+    ["0.1","Loading screen (logo + spinner) shows briefly, then fades out."],
+    ["0.2","Console (F12) shows the build marker line, no red errors."],
+    ["0.3","If you have data + no recent backup, an amber “back up your data” banner appears."],
+    ["0.4","Tabs read Decks · Format · Playtest (+ ⚙ Settings)."],
+  ]],
+  ["§1 — Card knowledge base (hover)", [
+    ["1.1","Hover a DoomZ/Power-Patron card → accent “In short” summary above the full text."],
+    ["1.2","Hover a handtrap (Ash/Belle/Mulcharmy) → “In short” summary."],
+    ["1.3","New cards (Zegredo, Vidrium, Vidria, Terminus, Graflario, ADRASTEIA) show real summaries (no VERIFY/blank)."],
+    ["1.4","Summaries read correctly (flag any wrong)."],
+  ]],
+  ["§2 — Decks tab", [
+    ["2.1","Deck list shows; clicking a tile opens its panel."],
+    ["2.2","Methodology fields save (“Saved” toast as you type)."],
+    ["2.3","Key Ratios → Auto-fill produces grouped sections (Engine/Staples × Monster/Spell/Trap), not one blob."],
+    ["2.4","Key cards bucket; “+ Add card” opens autocomplete picker."],
+    ["2.5","Decklists: add / rename / switch / delete a build."],
+    ["2.6","Delete a deck → linked combos unassigned, format primary-deck pick cleared."],
+  ]],
+  ["§3 — Combos", [
+    ["3.1","Combo tiles show; clicking opens it (title matches tile)."],
+    ["3.2","Mulligan combo shows the REAL opener (e.g. Amalthe) + buckets as 1-card."],
+    ["3.3","Green “✓ Effect data for all N cards” chip (or amber “⚠ N need data”)."],
+    ["3.4","Elara setting from Deck reads “Set … face-down”, NOT “Equip”; ADRASTEIA from GY still “Equip”."],
+    ["3.5","🎓 Drill reveals the line one play at a time (Reveal / Hide last / Restart / Exit)."],
+    ["3.6","5 view modes render; drag-reorder + rename + per-combo notes work."],
+  ]],
+  ["§4 — Format tab", [
+    ["4.1","Create/rename/delete a format; set a primary deck."],
+    ["4.2","Add a matchup (+ Import opponent .ydk / + Link existing)."],
+    ["4.3","Matchup card opens drill — 7 collapsible sections."],
+    ["4.4","All drill sections save (chokepoints, playbook drag-reorder, end board, side planner, tech, combos, notes)."],
+    ["4.5","📄 Cheat sheet opens a clean printable page in a new tab (allow pop-ups)."],
+  ]],
+  ["§5 — Tournament journal", [
+    ["5.1","+ Log a tournament → type/venue/date → name “Type - Venue: Date”."],
+    ["5.2","+ Add round → guided form (opponent pre-picked, going, W/L/D, score, notes); confirm disabled until opponent+result chosen."],
+    ["5.3","Round shows with score; editing stays in the tournament view (no jump to top)."],
+    ["5.4","Matchup card W-L badge updates from logged rounds."],
+  ]],
+  ["§6 — Playtest tab", [
+    ["6.1","Goldfish: Shuffle & draw shows hand + possible lines."],
+    ["6.2","Goldfish: consistency streak updates."],
+    ["6.3","Break boards: toggle mode; pick an opponent."],
+    ["6.4","+ Define their board: add cards, tag disruptions, make Full + Half profiles."],
+    ["6.5","Import from a combo's end board populates pieces."],
+    ["6.6","Shuffle going 2nd → 6-card hand; breakers (orange) + handtraps (blue) highlighted."],
+    ["6.7","Gauge shows “N breakers + M handtraps vs K disruptions”."],
+    ["6.8","If a matchup side plan exists, “Side plan applied” shows + shuffle reflects it."],
+    ["6.9","Self-assess Broke it / Partial / Couldn't → tally updates; notes work."],
+  ]],
+  ["§7 — Settings", [
+    ["7.1","Theme toggle (dark/light) — everything readable."],
+    ["7.2","Backup downloads JSON; Restore brings back decks, combos, AND formats."],
+    ["7.3","Danger zone gated by confirm modal."],
+    ["7.4","About shows build marker + storage stats."],
+  ]],
+  ["§8 — Global / polish", [
+    ["8.1","Tab switches smooth; modals fade/slide in."],
+    ["8.2","Keyboard: Tab shows focus rings; Esc closes modals."],
+    ["8.3","Navigate everything with console open — zero red errors."],
+  ]],
+  ["⚠ Needs the Chrome extension", [
+    ["E.1","Extract a replay → combo lands in decoder, tagged to active deck.","warn"],
+    ["E.2","Scan a DB deck page → .ydk; importing shows a proper “Main build”.","warn"],
+    ["E.3","Re-extract the 6 reference DoomZ combos and sanity-check narration.","warn"],
+  ]],
+];
+const KEY="ydk_test_checklist_v1";
+let state={};
+try{ state=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ state={}; }
+const listEl=document.getElementById("list");
+let total=0;
+SECTIONS.forEach(([title,items])=>{
+  const sec=document.createElement("section");
+  const h=document.createElement("h2"); h.textContent=title; sec.appendChild(h);
+  items.forEach(([id,text,flag])=>{
+    total++;
+    const it=document.createElement("div"); it.className="item";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.id="cb_"+id;
+    const body=document.createElement("div"); body.className="item-body";
+    const t=document.createElement("div"); t.className="item-text";
+    t.innerHTML='<span class="item-id">'+(flag==="warn"?'<span class="seti">⚠</span> ':'')+id+'</span>'+text;
+    const note=document.createElement("input"); note.type="text"; note.className="item-note"; note.placeholder="notes…";
+    body.appendChild(t); body.appendChild(note);
+    it.appendChild(cb); it.appendChild(body); sec.appendChild(it);
+    // restore
+    const s=state[id]||{};
+    cb.checked=!!s.done; note.value=s.note||""; if(cb.checked) it.classList.add("done");
+    const save=()=>{ state[id]={done:cb.checked,note:note.value}; persist(); };
+    cb.addEventListener("change",()=>{ it.classList.toggle("done",cb.checked); save(); refresh(); });
+    note.addEventListener("input",save);
+  });
+  listEl.appendChild(sec);
+});
+function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} const s=document.getElementById("saved"); s.classList.add("show"); clearTimeout(window._st); window._st=setTimeout(()=>s.classList.remove("show"),800); }
+function refresh(){ const done=Object.values(state).filter(x=>x&&x.done).length; document.getElementById("count").textContent=done+" / "+total; document.getElementById("fill").style.width=(total?Math.round(100*done/total):0)+"%"; }
+refresh();
+document.getElementById("resetBtn").onclick=()=>{ if(confirm("Clear all ticks and notes?")){ state={}; persist(); location.reload(); } };
+document.getElementById("copyBtn").onclick=()=>{
+  let out="YDK Decoder test results\n\n";
+  SECTIONS.forEach(([title,items])=>{ out+=title+"\n"; items.forEach(([id,text])=>{ const s=state[id]||{}; out+=(s.done?"[x] ":"[ ] ")+id+" "+text+(s.note?("  — "+s.note):"")+"\n"; }); out+="\n"; });
+  navigator.clipboard.writeText(out).then(()=>{ const b=document.getElementById("copyBtn"); b.textContent="Copied!"; setTimeout(()=>b.textContent="Copy results",1200); });
+};
+</script>
+</body>
+</html>

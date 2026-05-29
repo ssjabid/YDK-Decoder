@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-29-phase6L-backup-drill-cheatsheet` |
+| Decoder | `2026-05-29-phase6M-modal-refactor` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,18 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6L — Batch E: backup nudge + combo drill + matchup cheat-sheet (May 29 2026, latest)
+### Phase 6M — modal-shell refactor + tickable checklist (May 29 2026, latest)
+- **`runChoiceModal(opts)`** — one shared shell for "pick/fill in" modals
+  (open / cleanup / Esc / backdrop / listener removal in one place).
+  `pickTournamentType`, `addRoundFlow`, and `pickFromList` now all use it
+  (~3 copies of boilerplate → 1). `opts`: `title/icon/confirmText/cancelText`,
+  `render(msgEl, api)` (call `api.setValid(bool)`), `getResult()`,
+  `cancelValue`, `enterConfirms`. All 3 verified live, no regressions.
+- **`docs/test-checklist.html`** — standalone interactive checklist (open in
+  browser): real checkboxes + per-item note fields, progress bar, auto-saves
+  to localStorage, "Copy results" + "Reset". Mirrors `docs/TEST_CHECKLIST.md`.
+
+### Phase 6L — Batch E: backup nudge + combo drill + matchup cheat-sheet (May 29 2026)
 - **Auto-backup nudge** (`renderBackupNudge`, host `#backup-nudge`): amber banner
   when there's real data + no backup in 7 days (or ever). "Back up now" exports +
   stamps `ydk_last_backup`; "Remind me tomorrow" snoozes 24h
