@@ -6354,7 +6354,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6G-round-form";
+const YDK_BUILD = "2026-05-29-phase6H-mulligan-opener-and-set-fix";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -7528,6 +7528,42 @@ function markMulliganSteps(steps) {
   return steps;
 }
 
+// Flag effect-driven placements that are actually face-down SETS. When a
+// card is "Placed X from Deck/GY to S-N" AND a companion "Set X in S-N"
+// line follows, the card went FACE-DOWN (e.g. Elara setting a DoomZ
+// Spell/Trap from the Deck). Without this, describeStep sees "Placed
+// <Equip Spell> from Deck" and mis-narrates it as an EQUIP-to-a-monster.
+// The companion "Set" line is a reliable DuelingBook signal: an equip
+// places the card face-up attached to a monster with NO "Set" line, while
+// a face-down set always emits the explicit "Set X in S-N". Flagging the
+// surviving (deduped) "Placed" step lets describeStep narrate correctly.
+function markFaceDownSets(steps) {
+  if (!Array.isArray(steps)) return steps;
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+    if (!s || s.action !== "Set") continue;
+    const d = s.detail || "";
+    if (!/^Placed\b/i.test(d)) continue;
+    if (!/from\s+(?:Deck|GY|banished)\b/i.test(d)) continue;
+    const card = (s.cards && s.cards[0]) || null;
+    const zoneMatch = d.match(/to\s+(S-\d+)\b/i);
+    const zone = zoneMatch ? zoneMatch[1] : null;
+    if (!card || !zone) continue;
+    for (let j = i + 1; j < Math.min(steps.length, i + 5); j++) {
+      const t = steps[j];
+      if (!t || t.action !== "Set") continue;
+      const td = t.detail || "";
+      const tCard = (t.cards && t.cards[0]) || null;
+      if (/^Set\b/i.test(td) && td.indexOf(zone) >= 0 && (tCard === card || td.indexOf(card) >= 0)) {
+        s._faceDownSet = true;
+        t._faceDownSet = true;
+        break;
+      }
+    }
+  }
+  return steps;
+}
+
 // Was this combo's prefix a Solo Mode mulligan? Used to decide whether to
 // surface a one-line banner ("drew & returned 5 cards") in place of the
 // hidden noise so the user knows nothing was lost.
@@ -7994,6 +8030,15 @@ function describeStep(step) {
                           /from\s+(?:Deck|GY|banished)\b/i.test(detail);
     const sourceMatch = detail.match(/from\s+(Deck|GY|banished)\b/i);
     const source = sourceMatch ? sourceMatch[1] : "Deck";
+
+    // Face-down set by effect (markFaceDownSets flagged a companion "Set X
+    // in S-N" line). This OVERRIDES the equip branch below — e.g. Elara
+    // SETS a DoomZ Spell/Trap from the Deck face-down; it only becomes an
+    // equip later if its own effect activates. Without this, an Equip-Spell
+    // card placed face-down was wrongly narrated as "Equip … to <monster>".
+    if (step._faceDownSet) {
+      return `Set ${c0} face-down from ${source} (by effect)`;
+    }
 
     if (isEffectPlace && isEquipSpell(c0)) {
       const equipInfo = inferEquipTarget(step, c0);
@@ -15363,13 +15408,57 @@ function renderEndboardPiece(rawEntry) {
 // ════════════════════════════════════════════════════════════════════════
 const OPENER_SIZES = [1, 2, "other"];
 
+// For Solo Mode combos that open with a full mulligan (draw N → return all
+// N), the recorded `openingHand` is the PRE-mulligan draw — every card of
+// which got shuffled back. The REAL opener is what the player set up after
+// the mulligan: the cards they added to hand (search / recover) before
+// their first actual board play. Returns an array of card names, or null
+// when this isn't a mulligan combo (caller falls back to openingHand).
+function computeEffectiveOpener(combo) {
+  const steps = (combo && combo.steps) || [];
+  if (!steps.length) return null;
+  // Leading Draw block
+  let i = 0;
+  while (i < steps.length && steps[i] && steps[i].action === "Draw") i++;
+  if (i < 2) return null; // too few draws to be a mulligan
+  // Matching Return-to-deck block
+  let j = i;
+  while (j < steps.length && steps[j] && steps[j].action === "Return" &&
+         /from\s+hand/i.test(steps[j].detail || "") &&
+         /to\s+(?:top|bottom)?\s*(?:of\s+)?deck\b/i.test(steps[j].detail || "")) j++;
+  if (j === i) return null; // no return block — not a mulligan
+  // Collect cards added to hand before the first real play
+  const opener = [];
+  const PLAY = new Set(["Normal Summon", "Special Summon", "Set", "Activate", "Overlay", "Tribute Summon", "Flip Summon"]);
+  for (let k = j; k < steps.length; k++) {
+    const s = steps[k];
+    if (!s) continue;
+    if (s.action === "Search" || (s.action === "Return" && /to\s+hand\b/i.test(s.detail || ""))) {
+      let nm = (s.cards && s.cards[0]) || null;
+      if (!nm) {
+        const m = (s.detail || "").match(/(?:Added|Returned)\s+"?(.+?)"?\s+from\s+/i);
+        if (m) nm = m[1];
+      }
+      if (nm) opener.push(nm);
+      continue;
+    }
+    if (PLAY.has(s.action)) break; // first real play — opener is locked in
+  }
+  const uniq = Array.from(new Set(opener.filter(Boolean)));
+  return uniq.length ? uniq : null;
+}
+
 function getComboOpenerSize(combo) {
   if (!combo) return 1;
   const override = combo.userOpenerSize;
   if (override === "other" || override === 1 || override === 2) return override;
-  const auto = (combo.openingHand || []).filter(Boolean).length;
-  if (auto === 1) return 1;
-  if (auto === 2) return 2;
+  // Mulligan combos: bucket by the EFFECTIVE opener (post-mulligan), not
+  // the discarded pre-mulligan draw. A 1-card Amalthe line stays a 1-card
+  // combo even though its recorded hand was a 5-card mulligan.
+  const eff = computeEffectiveOpener(combo);
+  const count = eff ? eff.length : (combo.openingHand || []).filter(Boolean).length;
+  if (count === 1) return 1;
+  if (count === 2) return 2;
   return "other";
 }
 
@@ -15695,6 +15784,9 @@ function renderExtractedCombo(combo) {
   // Mark Solo Mode mulligan steps (leading Draw + matching Return block) so
   // the renderers can hide them universally without losing simulator state.
   markMulliganSteps(simulated);
+  // Flag effect-driven face-down sets (e.g. Elara setting a DoomZ S/T from
+  // Deck) so describeStep narrates "Set face-down" instead of "Equip".
+  markFaceDownSets(simulated);
   const allSteps = simulated.filter(s => !s._truncated);
   const mulliganSummary = getMulliganSummary(allSteps);
   const coreSteps = filterCoreSteps(allSteps);
@@ -15795,21 +15887,25 @@ function renderExtractedCombo(combo) {
   // so the user gets context even if the hand is empty (legacy v1 extractions).
   const hasHand = Array.isArray(combo.openingHand) && combo.openingHand.length;
   const isLegacyV1 = !combo.version || combo.version < 2;
-  if (hasHand || combo.isSolo || isLegacyV1) {
+  // For Solo Mode mulligan combos, the real opener is the post-mulligan
+  // hand (what the player searched/set up), not the discarded pre-mulligan
+  // draw. Show that as the opening hand so a 1-card line reads as 1 card.
+  const effectiveOpener = computeEffectiveOpener(combo);
+  const displayHand = effectiveOpener || (hasHand ? combo.openingHand : []);
+  if (displayHand.length || combo.isSolo || isLegacyV1) {
     const oh = document.createElement("div");
     oh.className = "combo-section-block";
     const label = document.createElement("div");
     label.className = "combo-section-label";
-    const count = combo.openingHand ? combo.openingHand.length : 0;
-    // Drop the "Solo Mode" badge — it's noise the user doesn't care about.
-    // Keep the legacy-extraction warning since it actually means re-extract.
+    const count = displayHand.length;
     label.innerHTML = `Opening hand (${count})` +
+      (effectiveOpener ? ` <span class="combo-section-hint" style="font-weight:500;color:var(--text-faint);font-size:11px;">· real opener after mulligan</span>` : "") +
       (isLegacyV1 ? ` <span class="combo-badge stale">v1 extraction — re-extract for accurate hand</span>` : "");
     oh.appendChild(label);
-    if (hasHand) {
+    if (displayHand.length) {
       const row = document.createElement("div");
       row.className = "opening-hand-row";
-      combo.openingHand.forEach(name => row.appendChild(renderNamedCard(name)));
+      displayHand.forEach(name => row.appendChild(renderNamedCard(name)));
       oh.appendChild(row);
     } else if (combo.isSolo) {
       const note = document.createElement("div");
@@ -16840,7 +16936,10 @@ function renderCombos() {
 
       // ── Left side: cropped art of the FIRST opening-hand card ──
       // Each combo gets a distinct visual identity from its opener.
-      const hand = Array.isArray(c.openingHand) ? c.openingHand.filter(Boolean) : [];
+      // Prefer the effective post-mulligan opener so the tile art + thumbs
+      // show the real starter (e.g. Amalthe), not the discarded mulligan draw.
+      const effOpener = computeEffectiveOpener(c);
+      const hand = effOpener || (Array.isArray(c.openingHand) ? c.openingHand.filter(Boolean) : []);
       const handSize = hand.length;
       const openerCard = hand[0] ? lookupCardByName(hand[0]) : null;
       const artId = openerCard && openerCard.id;

@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-29-phase6G-round-form` |
+| Decoder | `2026-05-29-phase6H-mulligan-opener-and-set-fix` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,29 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6G — guided tournament round form (May 29 2026, latest)
+### Phase 6H — mulligan opener + face-down-set narration (May 29 2026, latest)
+Two extraction-accuracy fixes, verified against Abid's real Amalthe combo JSON.
+
+- **Effective opener for Solo Mode mulligan combos.** `computeEffectiveOpener(combo)`
+  detects the leading draw→return-all block and returns the REAL opener = cards
+  searched/added to hand before the first board play. A 1-card Amalthe line whose
+  recorded `openingHand` was the 5 discarded mulligan cards now buckets as
+  **1-card** (not "Other/mulligan"), and the open combo + tile show Amalthe as the
+  opening hand (with a "real opener after mulligan" tag). Used by
+  `getComboOpenerSize`, the opening-hand render, and the combo tile art/thumbs.
+- **Face-down set vs equip.** `markFaceDownSets(steps)` flags a "Placed X from
+  Deck/GY to S-N" step that has a companion explicit "Set X in S-N" line — a
+  reliable DuelingBook signal that the card went FACE-DOWN (e.g. Elara setting a
+  DoomZ S/T from Deck). `describeStep` now narrates "Set X face-down (by effect)"
+  for those, instead of mis-narrating an Equip Spell as "Equip … to <monster>".
+  ADRASTEIA equipped from GY (no companion Set line) still reads as "Equip".
+
+Both are decoder-side only — combo-import-helper.js untouched. These are
+targeted correctness fixes; the general solution is the planned card-knowledge
+base (see ROADMAP "smarter combo engine"), which will drive narration from each
+card's actual effect text rather than log-pattern signals.
+
+### Phase 6G — guided tournament round form (May 29 2026)
 Logging a round used to append a blank inline row of selects the user had to
 decode. Replaced with a guided modal (`addRoundFlow(format, t)`):
 - **Opponent** — pre-selected buttons built from the format's matchups, plus
