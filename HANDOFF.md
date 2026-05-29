@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-29-phase6J-kb-api-coverage-loader` |
+| Decoder | `2026-05-29-phase6K-board-breaker` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,38 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6J — KB via API + name aliases + validation + loading screen (May 29 2026, latest)
+### Phase 6K — Board Breaker (going-second practice) (May 29 2026, latest)
+The Practice tab is renamed **Playtest** with two modes:
+- **Goldfish — your openers** (the existing going-first hand/combo matcher).
+- **Break boards — going 2nd** (new): pick an opponent + one of their saved
+  end-board profiles, shuffle a going-second hand, and work out whether you
+  can break it.
+
+Design choice (guided, not a solver): the app sets up the PUZZLE and tracks
+results; it does NOT auto-decide if you break the board (that needs full
+interaction-rule simulation and would rob the practice). It:
+- lists the opponent's board pieces with a **disruption tag** (Negate /
+  Removal / Floodgate / Just a body) + note, KB hover;
+- highlights your drawn **board breakers** (accent) and **handtraps** (blue)
+  via the KB roles;
+- shows a **rough gauge** ("N breakers + M handtraps vs K disruptions") as a
+  hint, explicitly "not a verdict";
+- lets you self-assess **Broke it / Partial / Couldn't** + a line note, logged
+  as a per-(deck,opponent) tally in `ydk_bb_streak`.
+
+Data: opponent **end-board profiles** stored on the opponent deck
+(`deck.endboards = [{ endboardId, name, pieces:[{card, disruption, note}] }]`),
+reusable across formats. Build them in the inline **board editor**
+(`renderBbEditor`): add cards via the autocomplete picker, tag each
+disruption, or **import a combo's end board**. Multiple profiles per
+opponent cover Full vs Half boards. If the active format has a matchup vs
+that opponent, its going-second **side plan is auto-applied** to the shuffle.
+
+Key functions: `renderBoardBreaker`, `renderBbEditor`, `bbShuffle`,
+`bbGaugeAndAssess`, `bbOpponentDecks`, `bbSidePlan`, `ensureDeckEndboards`,
+`pickFromList`. Mode toggle: `wirePlaytestModes` + `_playtestMode`.
+
+### Phase 6J — KB via API + name aliases + validation + loading screen (May 29 2026)
 Three things in one pass.
 
 - **Authored the combo's splash cards from the YGOPRODeck API** (not invented —

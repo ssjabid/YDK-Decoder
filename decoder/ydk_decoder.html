@@ -6094,6 +6094,119 @@
     #ydk-loading-overlay { transition: none; }
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     BOARD BREAKER (Playtest → Break boards) — Phase 6K
+     ════════════════════════════════════════════════════════════════ */
+  .playtest-modebar {
+    display: flex; gap: 6px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border); padding-bottom: 2px;
+  }
+  .playtest-mode-btn {
+    background: none; border: none; color: var(--text-dim);
+    font: inherit; font-size: 13px; font-weight: 500;
+    padding: 9px 16px; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -3px;
+    transition: color var(--motion-base), border-color var(--motion-base);
+  }
+  .playtest-mode-btn:hover { color: var(--text); }
+  .playtest-mode-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .bb-empty, .bb-empty-hint {
+    color: var(--text-dim); font-size: 13px; line-height: 1.6;
+    padding: 16px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .bb-empty-hint { background: none; border: none; padding: 8px 0; font-size: 12px; }
+
+  .bb-bar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+  .bb-field { display: flex; flex-direction: column; gap: 4px; }
+  .bb-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 600; }
+  .bb-select {
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 7px 10px; font: inherit; font-size: 13px; min-width: 160px;
+  }
+  .bb-select:focus { outline: none; border-color: var(--accent); }
+  .bb-edit-btn, .bb-shuffle-btn { height: 34px; }
+
+  .bb-sideplan { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; padding: 6px 10px; background: var(--bg-card); border-radius: var(--radius-sm); }
+  .bb-sideplan-label { color: var(--text-faint); margin-right: 4px; }
+  .bb-sideplan .bb-in { color: var(--success); }
+  .bb-sideplan .bb-out { color: var(--role-handtrap, #c45f7a); }
+
+  .bb-puzzle { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .bb-puzzle { grid-template-columns: 1fr; } }
+  .bb-col { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; box-shadow: var(--shadow-sm); }
+  .bb-col-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 600; margin-bottom: 12px; }
+
+  .bb-piece {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 10px; margin-bottom: 7px; border-radius: var(--radius-sm);
+    background: var(--bg-elevated); border-left: 3px solid var(--border-strong);
+    cursor: default;
+  }
+  .bb-piece.is-negate    { border-left-color: var(--role-handtrap, #c45f7a); }
+  .bb-piece.is-removal   { border-left-color: var(--role-boss, #d86a4a); }
+  .bb-piece.is-floodgate { border-left-color: var(--role-floodgate, #8c4a4a); }
+  .bb-piece.is-body      { border-left-color: var(--border-strong); }
+  .bb-piece-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; min-width: 120px; }
+  .bb-piece-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); background: rgba(255,255,255,0.06); padding: 2px 7px; border-radius: 3px; }
+  .bb-piece-note { font-size: 11px; color: var(--text-faint); width: 100%; }
+
+  .bb-hand-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .bb-handcard {
+    width: 84px; border-radius: var(--radius-sm); overflow: hidden;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    position: relative; cursor: default; transition: transform var(--motion-fast), box-shadow var(--motion-base);
+  }
+  .bb-handcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .bb-handcard.is-breaker  { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .bb-handcard.is-handtrap { border-color: var(--role-searcher, #5fa8c4); box-shadow: 0 0 0 1px var(--role-searcher, #5fa8c4); }
+  .bb-handcard-img { width: 100%; display: block; }
+  .bb-handcard-name { font-size: 10px; line-height: 1.3; padding: 4px 5px; color: var(--text-dim); }
+  .bb-handcard-tag { position: absolute; top: 3px; left: 3px; font-size: 8px; text-transform: uppercase; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+  .bb-handcard-tag.is-breaker { background: var(--accent); color: #fff; }
+  .bb-handcard-tag.is-handtrap { background: var(--role-searcher, #5fa8c4); color: #fff; }
+
+  .bb-assess { margin-top: 16px; padding: 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
+  .bb-gauge { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); margin-bottom: 12px; }
+  .bb-gauge-stat strong { color: var(--text); font-size: 15px; }
+  .bb-gauge-stat.is-dis strong { color: var(--role-handtrap, #c45f7a); }
+  .bb-gauge-vs { color: var(--text-faint); }
+  .bb-gauge-hint { font-size: 11px; color: var(--text-faint); font-style: italic; }
+  .bb-assess-q { font-size: 13px; color: var(--text); margin-bottom: 8px; font-weight: 500; }
+  .bb-assess-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+  .bb-assess-btn { font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text); cursor: pointer; transition: all var(--motion-fast); }
+  .bb-assess-btn.is-break:hover  { border-color: var(--success); color: var(--success); background: rgba(111,200,142,0.12); }
+  .bb-assess-btn.is-partial:hover { border-color: var(--warning); color: var(--warning); background: rgba(229,169,60,0.12); }
+  .bb-assess-btn.is-no:hover     { border-color: var(--role-handtrap, #c45f7a); color: var(--role-handtrap, #c45f7a); background: rgba(196,95,122,0.12); }
+  .bb-assess-notes { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font: inherit; font-size: 13px; }
+  .bb-assess-notes:focus { outline: none; border-color: var(--accent); }
+  .bb-tally { margin-top: 10px; font-size: 12px; color: var(--text-dim); }
+  .bb-tally strong { color: var(--text); }
+
+  /* Board-definition editor */
+  .bb-editor { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; box-shadow: var(--shadow-md); }
+  .bb-editor-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+  .bb-editor-head strong { font-size: 14px; }
+  .bb-editor-sub { font-size: 11px; color: var(--text-faint); flex: 1; }
+  .bb-editor-close { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; line-height: 1; }
+  .bb-editor-close:hover { color: var(--text); }
+  .bb-editor-profrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .bb-editor-pieces { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .bb-editor-piece { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .bb-editor-piece-name { font-size: 13px; color: var(--text); min-width: 150px; flex: 1; cursor: help; }
+  .bb-editor-piece-dis { min-width: 110px; }
+  .bb-editor-piece-note { flex: 2; min-width: 140px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 8px; font: inherit; font-size: 12px; }
+  .bb-editor-piece-note:focus { outline: none; border-color: var(--accent); }
+  .bb-editor-piece-del { background: none; border: none; color: var(--text-faint); font-size: 16px; cursor: pointer; padding: 0 4px; }
+  .bb-editor-piece-del:hover { color: var(--role-handtrap, #c45f7a); }
+  .bb-editor-addrow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .bb-pick-list { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow-y: auto; text-align: left; }
+  .bb-pick-opt { text-align: left; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+  .bb-pick-opt:hover { border-color: var(--accent); }
+  .bb-pick-opt.is-active { border-color: var(--accent); background: var(--accent-soft); }
+
 </style>
 </head>
 <body>
@@ -6218,7 +6331,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="decks">Decks</button>
     <button class="tab" data-tab="format">Format</button>
-    <button class="tab" data-tab="practice">Practice</button>
+    <button class="tab" data-tab="practice">Playtest</button>
     <span class="tab-spacer"></span>
     <button class="tab tab-icon" data-tab="settings" title="Settings">⚙</button>
   </div>
@@ -6404,6 +6517,16 @@
        suggestions on the right. Going first/second toggle changes the
        hand size + handtrap relevance. -->
   <div id="tab-practice" class="hidden">
+    <!-- Playtest has two modes: Goldfish (your openers, going first) and
+         Break boards (going second vs an opponent's end board). -->
+    <div class="playtest-modebar">
+      <button class="playtest-mode-btn active" data-mode="goldfish" type="button">Goldfish — your openers</button>
+      <button class="playtest-mode-btn" data-mode="break" type="button">Break boards — going 2nd</button>
+    </div>
+    <div id="playtest-break" class="hidden">
+      <div id="board-breaker"><!-- rendered by renderBoardBreaker() --></div>
+    </div>
+    <div id="playtest-goldfish">
     <div class="practice-grid">
       <section class="practice-draw">
         <div class="practice-draw-head">
@@ -6429,6 +6552,7 @@
         </div>
       </section>
     </div>
+    </div><!-- /playtest-goldfish -->
   </div>
 </div>
 
@@ -6469,7 +6593,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6J-kb-api-coverage-loader";
+const YDK_BUILD = "2026-05-29-phase6K-board-breaker";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -16661,6 +16785,17 @@ function shuffleArr(arr) {
 }
 
 function renderPracticeTab() {
+  // Sync Playtest mode (Goldfish vs Break boards) visibility + render the
+  // board breaker if that's the active mode.
+  const gf = document.getElementById("playtest-goldfish");
+  const bk = document.getElementById("playtest-break");
+  if (gf) gf.classList.toggle("hidden", _playtestMode !== "goldfish");
+  if (bk) bk.classList.toggle("hidden", _playtestMode !== "break");
+  if (typeof _playtestMode !== "undefined" && _playtestMode === "break") {
+    if (typeof renderBoardBreaker === "function") renderBoardBreaker();
+    return;
+  }
+
   const handEl = document.getElementById("practice-hand");
   const linesEl = document.getElementById("practice-lines-list");
   const streakEl = document.getElementById("practice-streak");
@@ -16918,6 +17053,507 @@ function renderPracticeLines(hand, deck) {
     });
     // Don't auto-redraw — let the user shuffle when ready
   }));
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// BOARD BREAKER (Playtest → "Break boards")
+// Going-second practice: pick an opponent deck + one of its saved end-board
+// profiles (Full / Half / etc.), apply your matchup side plan, shuffle a
+// going-second hand, and work out whether you can break it. The app is a
+// PUZZLE GENERATOR + tracker, not a solver — it sets up the board + your
+// hand, highlights your breakers/handtraps (via the KB roles), shows a
+// rough breakers-vs-disruptions gauge as a hint, and YOU self-assess
+// Break / Partial / No (logged as a per-matchup tally).
+// ════════════════════════════════════════════════════════════════════════
+const BB_STREAK_KEY = "ydk_bb_streak"; // { "deckId:oppId": {tries,breaks,partials} }
+let _bbOppDeckId = null;
+let _bbEndboardId = null;
+let _bbHand = null;        // { ids:[], names:[] }
+
+const BB_DISRUPTIONS = [
+  { value: "negate",    label: "Negate",      cls: "is-negate" },
+  { value: "removal",   label: "Removal",     cls: "is-removal" },
+  { value: "floodgate", label: "Floodgate",   cls: "is-floodgate" },
+  { value: "body",      label: "Just a body", cls: "is-body" },
+];
+
+function loadBbStreaks() { try { return JSON.parse(localStorage.getItem(BB_STREAK_KEY) || "{}") || {}; } catch (_) { return {}; } }
+function saveBbStreaks(m) { try { localStorage.setItem(BB_STREAK_KEY, JSON.stringify(m)); } catch (_) {} }
+
+// A card's roles — KB first (authored), then classify() fallback.
+function bbCardRoles(name) {
+  const fx = (typeof getCardFx === "function") ? getCardFx(name) : null;
+  if (fx && Array.isArray(fx.roles) && fx.roles.length) return fx.roles;
+  const card = lookupCardByName(name);
+  if (card && typeof classify === "function") { const r = classify(card); return (r && r.roles) || []; }
+  return [];
+}
+function bbIsBreaker(name) { const r = bbCardRoles(name); return r.includes("Board breaker") || r.includes("Stopper"); }
+function bbIsHandtrap(name) { return bbCardRoles(name).includes("Handtrap"); }
+
+// Opponent decks to choose from — the active format's matchups first, then
+// any matchup-role deck in the library.
+function bbOpponentDecks() {
+  const decks = loadDecks();
+  const fmt = (typeof getActiveFormat === "function") ? getActiveFormat() : null;
+  if (fmt && Array.isArray(fmt.matchups) && fmt.matchups.length) {
+    const out = fmt.matchups.map(m => decks.find(d => d.deckId === m.opponentDeckId)).filter(Boolean);
+    if (out.length) return out;
+  }
+  return decks.filter(d => d.role === "matchup");
+}
+function ensureDeckEndboards(deck) { if (!Array.isArray(deck.endboards)) deck.endboards = []; return deck.endboards; }
+function makeEndboardProfile(name) {
+  return { endboardId: "eb_" + Date.now() + "_" + Math.random().toString(36).slice(2, 5), name: name || "Typical board", pieces: [] };
+}
+
+// Side plan for this opponent from the active format's matchup (if any).
+function bbSidePlan(oppDeckId) {
+  const fmt = (typeof getActiveFormat === "function") ? getActiveFormat() : null;
+  if (!fmt) return null;
+  const m = (fmt.matchups || []).find(x => x.opponentDeckId === oppDeckId);
+  if (!m || !m.sideboard || !m.sideboard.goingSecond) return null;
+  const sb = m.sideboard.goingSecond;
+  if (!(sb.in || []).length && !(sb.out || []).length) return null;
+  return { in: sb.in || [], out: sb.out || [] };
+}
+
+function renderBoardBreaker() {
+  const root = document.getElementById("board-breaker");
+  if (!root) return;
+  root.innerHTML = "";
+
+  const myDeck = (function () { const id = getActiveDeckId(); return id ? loadDecks().find(d => d.deckId === id) : null; })();
+  if (!myDeck) {
+    root.innerHTML = `<div class="bb-empty"><strong>Pick your deck first</strong> — use the deck switcher in the header.</div>`;
+    return;
+  }
+  const opps = bbOpponentDecks();
+  if (!opps.length) {
+    root.innerHTML = `<div class="bb-empty"><strong>No opponent decks yet.</strong> Add some in <em>Format → + Import opponent .ydk</em>, then come back to practice breaking their board.</div>`;
+    return;
+  }
+  if (!_bbOppDeckId || !opps.find(d => d.deckId === _bbOppDeckId)) _bbOppDeckId = opps[0].deckId;
+  const opp = opps.find(d => d.deckId === _bbOppDeckId);
+  ensureDeckEndboards(opp);
+  if (!_bbEndboardId || !opp.endboards.find(e => e.endboardId === _bbEndboardId)) {
+    _bbEndboardId = opp.endboards[0] ? opp.endboards[0].endboardId : null;
+  }
+
+  // ── Control bar ──
+  const bar = document.createElement("div");
+  bar.className = "bb-bar";
+
+  const oppWrap = document.createElement("label");
+  oppWrap.className = "bb-field";
+  oppWrap.innerHTML = `<span class="bb-field-label">Opponent</span>`;
+  const oppSel = document.createElement("select");
+  oppSel.className = "bb-select";
+  opps.forEach(d => { const o = document.createElement("option"); o.value = d.deckId; o.textContent = d.name; if (d.deckId === _bbOppDeckId) o.selected = true; oppSel.appendChild(o); });
+  oppSel.onchange = () => { _bbOppDeckId = oppSel.value; _bbEndboardId = null; _bbHand = null; renderBoardBreaker(); };
+  oppWrap.appendChild(oppSel);
+  bar.appendChild(oppWrap);
+
+  const ebWrap = document.createElement("label");
+  ebWrap.className = "bb-field";
+  ebWrap.innerHTML = `<span class="bb-field-label">Their board</span>`;
+  const ebSel = document.createElement("select");
+  ebSel.className = "bb-select";
+  if (!opp.endboards.length) {
+    const o = document.createElement("option"); o.textContent = "— none defined —"; ebSel.appendChild(o); ebSel.disabled = true;
+  } else {
+    opp.endboards.forEach(e => { const o = document.createElement("option"); o.value = e.endboardId; o.textContent = `${e.name} (${e.pieces.length} pieces)`; if (e.endboardId === _bbEndboardId) o.selected = true; ebSel.appendChild(o); });
+  }
+  ebSel.onchange = () => { _bbEndboardId = ebSel.value; renderBoardBreaker(); };
+  ebWrap.appendChild(ebSel);
+  bar.appendChild(ebWrap);
+
+  const editBtn = document.createElement("button");
+  editBtn.type = "button"; editBtn.className = "btn is-secondary bb-edit-btn";
+  editBtn.textContent = opp.endboards.length ? "Edit boards" : "+ Define their board";
+  editBtn.onclick = () => renderBbEditor(opp);
+  bar.appendChild(editBtn);
+
+  const shuffleBtn = document.createElement("button");
+  shuffleBtn.type = "button"; shuffleBtn.className = "btn is-primary bb-shuffle-btn";
+  shuffleBtn.textContent = "🎲 Shuffle going 2nd (6)";
+  shuffleBtn.onclick = () => { bbShuffle(myDeck); };
+  bar.appendChild(shuffleBtn);
+
+  root.appendChild(bar);
+
+  // ── Side plan note ──
+  const plan = bbSidePlan(_bbOppDeckId);
+  if (plan) {
+    const planEl = document.createElement("div");
+    planEl.className = "bb-sideplan";
+    planEl.innerHTML = `<span class="bb-sideplan-label">Side plan (going 2nd) applied:</span> ` +
+      (plan.in.length ? `<span class="bb-in">+ ${plan.in.map(escapeHtml).join(", ")}</span>` : "") +
+      (plan.out.length ? ` <span class="bb-out">− ${plan.out.map(escapeHtml).join(", ")}</span>` : "");
+    root.appendChild(planEl);
+  }
+
+  // ── Puzzle area ──
+  const eb = opp.endboards.find(e => e.endboardId === _bbEndboardId);
+  const puzzle = document.createElement("div");
+  puzzle.className = "bb-puzzle";
+
+  // Their board
+  const boardCol = document.createElement("div");
+  boardCol.className = "bb-col bb-board-col";
+  boardCol.innerHTML = `<div class="bb-col-title">${escapeHtml(opp.name)}'s board${eb ? " — " + escapeHtml(eb.name) : ""}</div>`;
+  if (!eb || !eb.pieces.length) {
+    const hint = document.createElement("div");
+    hint.className = "bb-empty-hint";
+    hint.textContent = "No board defined. Click \"" + (opp.endboards.length ? "Edit boards" : "+ Define their board") + "\" to build their typical end board + disruptions.";
+    boardCol.appendChild(hint);
+  } else {
+    eb.pieces.forEach(p => boardCol.appendChild(bbPieceChip(p)));
+  }
+  puzzle.appendChild(boardCol);
+
+  // Your hand
+  const handCol = document.createElement("div");
+  handCol.className = "bb-col bb-hand-col";
+  handCol.innerHTML = `<div class="bb-col-title">Your hand (going 2nd)</div>`;
+  if (!_bbHand) {
+    const hint = document.createElement("div");
+    hint.className = "bb-empty-hint";
+    hint.textContent = "Shuffle a going-second hand to start the puzzle.";
+    handCol.appendChild(hint);
+  } else {
+    const handRow = document.createElement("div");
+    handRow.className = "bb-hand-row";
+    _bbHand.names.forEach((nm, i) => handRow.appendChild(bbHandCard(nm, _bbHand.ids[i])));
+    handCol.appendChild(handRow);
+  }
+  puzzle.appendChild(handCol);
+  root.appendChild(puzzle);
+
+  // ── Gauge + self-assessment (only once a hand is drawn) ──
+  if (_bbHand && eb) {
+    root.appendChild(bbGaugeAndAssess(myDeck, opp, eb));
+  }
+}
+
+// A board piece chip with disruption tag + KB hover.
+function bbPieceChip(p) {
+  const chip = document.createElement("div");
+  const dis = BB_DISRUPTIONS.find(d => d.value === p.disruption) || BB_DISRUPTIONS[3];
+  chip.className = "bb-piece " + dis.cls;
+  chip.innerHTML = `<span class="bb-piece-name">${escapeHtml(p.card)}</span>` +
+    `<span class="bb-piece-tag">${dis.label}</span>` +
+    (p.note ? `<span class="bb-piece-note">${escapeHtml(p.note)}</span>` : "");
+  const card = lookupCardByName(p.card);
+  if (card && (card.desc || (typeof getCardFx === "function" && getCardFx(p.card)))) attachPreviewHover(chip, card);
+  return chip;
+}
+
+// A hand card — highlights breakers (accent) and handtraps (blue), KB hover.
+function bbHandCard(name, id) {
+  const el = document.createElement("div");
+  const breaker = bbIsBreaker(name), ht = bbIsHandtrap(name);
+  el.className = "bb-handcard" + (breaker ? " is-breaker" : "") + (ht ? " is-handtrap" : "");
+  const img = createImage(id, name || "", null);
+  if (img) { img.className = "bb-handcard-img"; el.appendChild(img); }
+  const lbl = document.createElement("div");
+  lbl.className = "bb-handcard-name";
+  lbl.textContent = name || ("#" + id);
+  el.appendChild(lbl);
+  if (breaker) { const t = document.createElement("span"); t.className = "bb-handcard-tag is-breaker"; t.textContent = "breaker"; el.appendChild(t); }
+  else if (ht) { const t = document.createElement("span"); t.className = "bb-handcard-tag is-handtrap"; t.textContent = "handtrap"; el.appendChild(t); }
+  const card = lookupCardByName(name);
+  if (card && (card.desc || (typeof getCardFx === "function" && getCardFx(name)))) attachPreviewHover(el, card);
+  return el;
+}
+
+function bbShuffle(myDeck) {
+  const dl = (typeof getDeckPrimaryDecklist === "function") ? getDeckPrimaryDecklist(myDeck) : null;
+  let main = ((dl && dl.main) || myDeck.main || []).map(String);
+  if (!main.length) { showComboToast("Your deck has no main-deck cards to draw from.", "error"); return; }
+  // Apply the going-second side plan (swap names): remove "out" copies, add "in" copies.
+  const plan = bbSidePlan(_bbOppDeckId);
+  if (plan) {
+    const idOf = (nm) => { const c = lookupCardByName(nm); return c && c.id ? String(c.id) : null; };
+    (plan.out || []).forEach(nm => { const id = idOf(nm); if (id) { const i = main.indexOf(id); if (i >= 0) main.splice(i, 1); } });
+    (plan.in || []).forEach(nm => { const id = idOf(nm); if (id) main.push(id); });
+  }
+  const shuffled = shuffleArr(main);
+  const ids = shuffled.slice(0, Math.min(6, shuffled.length));
+  const names = ids.map(id => {
+    const cached = (typeof INLINE_CACHE !== "undefined" ? INLINE_CACHE[id] : null) || (typeof loadCardCache === "function" ? loadCardCache()[id] : null);
+    if (cached && cached.name) return cached.name;
+    if (typeof NAME_INDEX === "object") { for (const k in NAME_INDEX) { if (NAME_INDEX[k] && String(NAME_INDEX[k].id) === String(id)) return NAME_INDEX[k].name; } }
+    return null;
+  });
+  _bbHand = { ids, names };
+  renderBoardBreaker();
+}
+
+// Gauge (hint, not verdict) + Break/Partial/No self-assessment + tally.
+function bbGaugeAndAssess(myDeck, opp, eb) {
+  const wrap = document.createElement("div");
+  wrap.className = "bb-assess";
+
+  const names = (_bbHand.names || []).filter(Boolean);
+  const breakers = names.filter(bbIsBreaker);
+  const handtraps = names.filter(bbIsHandtrap);
+  const disruptions = (eb.pieces || []).filter(p => p.disruption && p.disruption !== "body");
+
+  const gauge = document.createElement("div");
+  gauge.className = "bb-gauge";
+  gauge.innerHTML =
+    `<span class="bb-gauge-stat"><strong>${breakers.length}</strong> board breaker${breakers.length === 1 ? "" : "s"}</span>` +
+    `<span class="bb-gauge-stat"><strong>${handtraps.length}</strong> handtrap${handtraps.length === 1 ? "" : "s"}</span>` +
+    `<span class="bb-gauge-vs">vs</span>` +
+    `<span class="bb-gauge-stat is-dis"><strong>${disruptions.length}</strong> disruption${disruptions.length === 1 ? "" : "s"}</span>` +
+    `<span class="bb-gauge-hint">— a rough gauge, not a verdict. Work out the actual line.</span>`;
+  wrap.appendChild(gauge);
+
+  const q = document.createElement("div");
+  q.className = "bb-assess-q";
+  q.textContent = "Can you break this board? Think it through, then record it:";
+  wrap.appendChild(q);
+
+  const key = myDeck.deckId + ":" + opp.deckId;
+  const btnRow = document.createElement("div");
+  btnRow.className = "bb-assess-btns";
+  [["break", "✓ Broke it", "is-break"], ["partial", "~ Partial", "is-partial"], ["no", "✗ Couldn't", "is-no"]].forEach(([val, label, cls]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "bb-assess-btn " + cls;
+    b.textContent = label;
+    b.onclick = () => {
+      const m = loadBbStreaks();
+      const rec = m[key] || { tries: 0, breaks: 0, partials: 0 };
+      rec.tries++;
+      if (val === "break") rec.breaks++;
+      else if (val === "partial") rec.partials++;
+      m[key] = rec; saveBbStreaks(m);
+      if (typeof showSaveToast === "function") showSaveToast("Logged");
+      renderBoardBreaker(); // refresh tally + clears prompt for next shuffle feel
+    };
+    btnRow.appendChild(b);
+  });
+  wrap.appendChild(btnRow);
+
+  // notes
+  const notes = document.createElement("input");
+  notes.type = "text"; notes.className = "bb-assess-notes";
+  notes.placeholder = "Line / notes — e.g. \"Duster backrow, Dark Ruler the negates, push for game\"";
+  notes.addEventListener("keydown", e => e.stopPropagation());
+  wrap.appendChild(notes);
+
+  // tally
+  const m = loadBbStreaks();
+  const rec = m[key];
+  if (rec && rec.tries) {
+    const tally = document.createElement("div");
+    tally.className = "bb-tally";
+    const pct = Math.round(100 * rec.breaks / rec.tries);
+    tally.innerHTML = `vs <strong>${escapeHtml(opp.name)}</strong>: broke <strong>${rec.breaks}</strong> / ${rec.tries} (${pct}%)` +
+      (rec.partials ? ` · ${rec.partials} partial` : "");
+    wrap.appendChild(tally);
+  }
+  return wrap;
+}
+
+// ── Board-definition editor (modal-style overlay rendered into the page) ──
+function renderBbEditor(opp) {
+  ensureDeckEndboards(opp);
+  const root = document.getElementById("board-breaker");
+  if (!root) return;
+  // Build a simple inline editor panel at the top of the board breaker.
+  let panel = document.getElementById("bb-editor");
+  if (panel) panel.remove();
+  panel = document.createElement("div");
+  panel.id = "bb-editor";
+  panel.className = "bb-editor";
+
+  const head = document.createElement("div");
+  head.className = "bb-editor-head";
+  head.innerHTML = `<strong>Define ${escapeHtml(opp.name)}'s end boards</strong> <span class="bb-editor-sub">— what they typically have + the disruptions to play around</span>`;
+  const close = document.createElement("button");
+  close.type = "button"; close.className = "bb-editor-close"; close.textContent = "✕";
+  close.onclick = () => { panel.remove(); };
+  head.appendChild(close);
+  panel.appendChild(head);
+
+  // Profile selector row
+  const profRow = document.createElement("div");
+  profRow.className = "bb-editor-profrow";
+  const profSel = document.createElement("select");
+  profSel.className = "bb-select";
+  opp.endboards.forEach(e => { const o = document.createElement("option"); o.value = e.endboardId; o.textContent = e.name; if (e.endboardId === _bbEndboardId) o.selected = true; profSel.appendChild(o); });
+  if (!opp.endboards.length) { const o = document.createElement("option"); o.textContent = "(no boards yet)"; profSel.appendChild(o); profSel.disabled = true; }
+  profSel.onchange = () => { _bbEndboardId = profSel.value; renderBbEditor(opp); };
+  profRow.appendChild(profSel);
+
+  const newBtn = document.createElement("button");
+  newBtn.type = "button"; newBtn.className = "btn is-secondary";
+  newBtn.textContent = "+ New board";
+  newBtn.onclick = async () => {
+    const name = await ydkPrompt({ icon: "🛡", title: "New end-board profile", message: "Name it — e.g. \"Full board\", \"Half board\", \"Went second into them\".", placeholder: "Full board", confirmText: "Create" });
+    if (name === null) return;
+    const prof = makeEndboardProfile((name || "").trim() || "Typical board");
+    opp.endboards.push(prof); _bbEndboardId = prof.endboardId;
+    persistDeck(opp); renderBbEditor(opp);
+  };
+  profRow.appendChild(newBtn);
+
+  if (opp.endboards.length) {
+    const renBtn = document.createElement("button");
+    renBtn.type = "button"; renBtn.className = "btn is-ghost"; renBtn.textContent = "Rename";
+    renBtn.onclick = async () => {
+      const cur = opp.endboards.find(e => e.endboardId === _bbEndboardId); if (!cur) return;
+      const name = await ydkPrompt({ icon: "✎", title: "Rename board", value: cur.name, confirmText: "Save" });
+      if (name === null) return; cur.name = (name || "").trim() || cur.name; persistDeck(opp); renderBbEditor(opp);
+    };
+    profRow.appendChild(renBtn);
+    const delBtn = document.createElement("button");
+    delBtn.type = "button"; delBtn.className = "btn is-danger"; delBtn.textContent = "Delete board";
+    delBtn.onclick = async () => {
+      const ok = await ydkConfirm({ icon: "🗑", title: "Delete this board profile?", confirmText: "Delete", danger: true });
+      if (!ok) return;
+      opp.endboards = opp.endboards.filter(e => e.endboardId !== _bbEndboardId);
+      _bbEndboardId = opp.endboards[0] ? opp.endboards[0].endboardId : null;
+      persistDeck(opp); renderBbEditor(opp); renderBoardBreaker();
+    };
+    profRow.appendChild(delBtn);
+  }
+  panel.appendChild(profRow);
+
+  const prof = opp.endboards.find(e => e.endboardId === _bbEndboardId);
+  if (prof) {
+    const piecesBox = document.createElement("div");
+    piecesBox.className = "bb-editor-pieces";
+    if (!prof.pieces.length) {
+      const hint = document.createElement("div"); hint.className = "bb-empty-hint";
+      hint.textContent = "No pieces yet. Add the monsters/backrow they typically end on, and tag each one's disruption.";
+      piecesBox.appendChild(hint);
+    }
+    prof.pieces.forEach((p, i) => piecesBox.appendChild(bbEditorPieceRow(opp, prof, p, i)));
+    panel.appendChild(piecesBox);
+
+    const addRow = document.createElement("div");
+    addRow.className = "bb-editor-addrow";
+    const addBtn = document.createElement("button");
+    addBtn.type = "button"; addBtn.className = "btn is-secondary"; addBtn.textContent = "+ Add card";
+    addBtn.onclick = async () => {
+      const picked = await pickCardByName({ icon: "🛡", title: "Add a board piece", message: "Pick the card they end on. You'll tag its disruption next.", placeholder: "Search a card…" });
+      if (!picked || !picked.name) return;
+      prof.pieces.push({ card: picked.name, disruption: "negate", note: "" });
+      persistDeck(opp); renderBbEditor(opp);
+    };
+    addRow.appendChild(addBtn);
+
+    const importBtn = document.createElement("button");
+    importBtn.type = "button"; importBtn.className = "btn is-ghost"; importBtn.textContent = "Import from a combo's end board";
+    importBtn.onclick = () => bbImportFromCombo(opp, prof);
+    addRow.appendChild(importBtn);
+    panel.appendChild(addRow);
+  }
+
+  root.insertBefore(panel, root.firstChild);
+}
+
+function bbEditorPieceRow(opp, prof, p, i) {
+  const row = document.createElement("div");
+  row.className = "bb-editor-piece";
+  const nm = document.createElement("span");
+  nm.className = "bb-editor-piece-name"; nm.textContent = p.card;
+  const card = lookupCardByName(p.card);
+  if (card && (card.desc || getCardFx(p.card))) attachPreviewHover(nm, card);
+  row.appendChild(nm);
+
+  const sel = document.createElement("select");
+  sel.className = "bb-select bb-editor-piece-dis";
+  BB_DISRUPTIONS.forEach(d => { const o = document.createElement("option"); o.value = d.value; o.textContent = d.label; if (d.value === p.disruption) o.selected = true; sel.appendChild(o); });
+  sel.onchange = () => { p.disruption = sel.value; persistDeck(opp); };
+  row.appendChild(sel);
+
+  const note = document.createElement("input");
+  note.type = "text"; note.className = "bb-editor-piece-note"; note.value = p.note || "";
+  note.placeholder = "note (e.g. omni-negate, targets on summon)";
+  note.addEventListener("blur", () => { p.note = note.value; persistDeck(opp); });
+  note.addEventListener("keydown", e => e.stopPropagation());
+  row.appendChild(note);
+
+  const del = document.createElement("button");
+  del.type = "button"; del.className = "bb-editor-piece-del"; del.textContent = "×";
+  del.onclick = () => { prof.pieces.splice(i, 1); persistDeck(opp); renderBbEditor(opp); };
+  row.appendChild(del);
+  return row;
+}
+
+// Import end-board pieces from a saved combo's end board (any combo).
+async function bbImportFromCombo(opp, prof) {
+  const combos = loadSavedCombos().filter(c => Array.isArray(c.endboard) && c.endboard.length);
+  if (!combos.length) { ydkAlert({ title: "No combos with end boards", message: "Extract a combo (with an end board) first, then you can import its pieces here." }); return; }
+  // Build a quick chooser via the modal message area (reuse ydkModal shell).
+  const names = combos.map(c => getComboDisplayTitle(c));
+  const pickIdx = await pickFromList("Import from which combo's end board?", names);
+  if (pickIdx == null) return;
+  const eb = combos[pickIdx].endboard || [];
+  eb.forEach(entry => {
+    const cardName = (typeof entry === "string") ? entry : (entry && entry.card);
+    if (!cardName) return;
+    if (prof.pieces.some(p => p.card === cardName)) return; // dedupe
+    prof.pieces.push({ card: cardName, disruption: "negate", note: "" });
+  });
+  persistDeck(opp); renderBbEditor(opp);
+}
+
+// Minimal list-chooser modal (reuses the shared modal shell). Resolves the
+// chosen index or null.
+function pickFromList(title, items) {
+  return new Promise((resolve) => {
+    const backdrop = document.getElementById("ydk-modal-backdrop");
+    const titleEl = document.getElementById("ydk-modal-title");
+    const msgEl = document.getElementById("ydk-modal-message");
+    const iconEl = document.getElementById("ydk-modal-icon");
+    const inputRow = document.getElementById("ydk-modal-input-row");
+    const cancelBtn = document.getElementById("ydk-modal-cancel");
+    const confirmBtn = document.getElementById("ydk-modal-confirm");
+    if (!backdrop) { resolve(null); return; }
+    titleEl.textContent = title; iconEl.textContent = "📋"; if (inputRow) inputRow.hidden = true;
+    let chosen = null;
+    const list = document.createElement("div"); list.className = "bb-pick-list";
+    items.forEach((it, i) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "bb-pick-opt";
+      b.textContent = it;
+      b.onclick = () => { chosen = i; list.querySelectorAll(".bb-pick-opt").forEach(x => x.classList.remove("is-active")); b.classList.add("is-active"); confirmBtn.disabled = false; };
+      list.appendChild(b);
+    });
+    msgEl.innerHTML = ""; msgEl.appendChild(list);
+    confirmBtn.textContent = "Import"; cancelBtn.textContent = "Cancel"; confirmBtn.classList.remove("is-danger"); confirmBtn.disabled = true;
+    backdrop.hidden = false;
+    const cleanup = (v) => { backdrop.hidden = true; confirmBtn.disabled = false; confirmBtn.removeEventListener("click", ok); cancelBtn.removeEventListener("click", no); backdrop.removeEventListener("click", bd); document.removeEventListener("keydown", key, true); msgEl.innerHTML = ""; resolve(v); };
+    const ok = () => { if (chosen != null) cleanup(chosen); };
+    const no = () => cleanup(null);
+    const bd = (e) => { if (e.target === backdrop) cleanup(null); };
+    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); cleanup(null); } };
+    confirmBtn.addEventListener("click", ok); cancelBtn.addEventListener("click", no); backdrop.addEventListener("click", bd); document.addEventListener("keydown", key, true);
+  });
+}
+
+// Playtest mode toggle (Goldfish ↔ Break boards)
+let _playtestMode = "goldfish";
+(function wirePlaytestModes() {
+  document.addEventListener("DOMContentLoaded", () => {
+    const bar = document.querySelector(".playtest-modebar");
+    if (!bar) return;
+    bar.addEventListener("click", (e) => {
+      const btn = e.target.closest(".playtest-mode-btn");
+      if (!btn) return;
+      _playtestMode = btn.dataset.mode || "goldfish";
+      bar.querySelectorAll(".playtest-mode-btn").forEach(b => b.classList.toggle("active", b === btn));
+      const gf = document.getElementById("playtest-goldfish");
+      const bk = document.getElementById("playtest-break");
+      if (gf) gf.classList.toggle("hidden", _playtestMode !== "goldfish");
+      if (bk) bk.classList.toggle("hidden", _playtestMode !== "break");
+      if (_playtestMode === "break") renderBoardBreaker();
+    });
+  });
 })();
 
 // Render the deck-filter pill strip at the top of the combo picker.
