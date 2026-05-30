@@ -4551,7 +4551,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    align-items: start;
+    align-items: stretch;   /* both panels share the tallest height = balanced */
   }
   @media (max-width: 1100px) {
     .practice-grid { grid-template-columns: 1fr; }
@@ -4608,7 +4608,8 @@
     gap: 8px;
     justify-content: center;
     align-items: center;
-    min-height: 200px;
+    flex: 1;            /* fills the panel so the hand stays centred, no dead gap */
+    min-height: 172px;
     padding: 14px 0;
   }
   .practice-hand-empty {
@@ -4707,17 +4708,21 @@
     border-radius: 8px;
     padding: 18px;
     display: flex; flex-direction: column; gap: 12px;
-    min-height: 320px;
   }
   .practice-lines-list {
     display: flex; flex-direction: column;
     gap: 8px;
+    flex: 1;                    /* fill the panel height */
+    justify-content: center;    /* a few lines sit centred, not floating at the top */
   }
+  /* When there are several lines, top-align them so they don't overflow oddly. */
+  .practice-lines-list.is-full { justify-content: flex-start; }
   .practice-lines-empty {
     color: var(--text-faint);
     font-size: 12px;
     padding: 24px;
     text-align: center;
+    margin: auto 0;            /* vertically centred in the panel */
   }
   .practice-line {
     background: var(--bg);
@@ -6652,7 +6657,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-30-phase6O-meta-loader";
+const YDK_BUILD = "2026-05-30-phase6P-testing-layout-balance";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -17409,6 +17414,8 @@ function renderPracticeLines(hand, deck) {
 
     linesEl.appendChild(row);
   }
+  // 5+ lines → top-align (they fill the panel); fewer → centred (looks intentional).
+  linesEl.classList.toggle("is-full", result.combos.length > 4);
 }
 
 (function wirePracticeTab() {
