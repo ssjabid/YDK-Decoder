@@ -61,7 +61,7 @@ export default function App() {
         ))}
       </nav>
 
-      <main>
+      <main key={tab} className="tab-content">
         {tab === "decks" && <DecksTab dataVersion={dataVersion} reload={reload} />}
         {tab === "format" && <FormatTab dataVersion={dataVersion} />}
         {tab === "testing" && <TestingTab dataVersion={dataVersion} />}
