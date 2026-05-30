@@ -15,11 +15,13 @@ export default function CardsView({ deck }) {
 
   const [cards, setCards] = useState({});
   const [loading, setLoading] = useState(true);
-  const [preview, setPreview] = useState(null); // { card, rect }
+  const [hover, setHover] = useState(null);   // { card, rect } — transient
+  const [pinned, setPinned] = useState(null); // { card, rect } — sticky on click
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    setPinned(null);
     fetchCards([...ids.main, ...ids.extra, ...ids.side]).then(({ map }) => {
       if (alive) { setCards(map); setLoading(false); }
     });
@@ -30,18 +32,23 @@ export default function CardsView({ deck }) {
   const extraGroups = useMemo(() => groupExtraByType(countCopies(ids.extra), cards), [ids, cards]);
   const sideGroups = useMemo(() => groupByFrame(countCopies(ids.side), cards), [ids, cards]);
 
+  // Click toggles a sticky preview; clicking the same card again unpins.
+  const onPick = (card, rect) =>
+    setPinned((p) => (p && p.card.id === card.id ? null : { card, rect }));
+  const shown = pinned || hover;
+
   return (
-    <div className="cards-view" onMouseLeave={() => setPreview(null)}>
+    <div className="cards-view" onMouseLeave={() => setHover(null)}>
       {loading && <div className="cards-loading">Loading card data…</div>}
-      <GroupedSection title="Main Deck" total={ids.main.length} groups={mainGroups} onHover={setPreview} />
-      <GroupedSection title="Extra Deck" total={ids.extra.length} groups={extraGroups} onHover={setPreview} />
-      <GroupedSection title="Side Deck" total={ids.side.length} groups={sideGroups} onHover={setPreview} />
-      {preview && <CardPreview card={preview.card} rect={preview.rect} />}
+      <GroupedSection title="Main Deck" total={ids.main.length} groups={mainGroups} onHover={setHover} onPick={onPick} />
+      <GroupedSection title="Extra Deck" total={ids.extra.length} groups={extraGroups} onHover={setHover} onPick={onPick} />
+      <GroupedSection title="Side Deck" total={ids.side.length} groups={sideGroups} onHover={setHover} onPick={onPick} />
+      {shown && <CardPreview card={shown.card} rect={shown.rect} pinned={!!pinned} onClose={() => setPinned(null)} />}
     </div>
   );
 }
 
-function GroupedSection({ title, total, groups, onHover }) {
+function GroupedSection({ title, total, groups, onHover, onPick }) {
   if (!total) return null;
   const subs = Object.entries(groups).filter(([, arr]) => arr.length);
   return (
@@ -54,7 +61,7 @@ function GroupedSection({ title, total, groups, onHover }) {
         <div className="cards-subgroup" key={label}>
           <div className="cards-subgroup-label">{label} · {arr.reduce((n, e) => n + e.qty, 0)}</div>
           <div className="cards-grid">
-            {arr.map((e) => <CardTile key={e.id} entry={e} onHover={onHover} />)}
+            {arr.map((e) => <CardTile key={e.id} entry={e} onHover={onHover} onPick={onPick} />)}
           </div>
         </div>
       ))}
@@ -62,7 +69,7 @@ function GroupedSection({ title, total, groups, onHover }) {
   );
 }
 
-function CardTile({ entry, onHover }) {
+function CardTile({ entry, onHover, onPick }) {
   const { id, card, qty } = entry;
   const urls = getImageUrls(id);
   const [urlIdx, setUrlIdx] = useState(0);
@@ -77,6 +84,7 @@ function CardTile({ entry, onHover }) {
       title={name}
       style={{ "--stripe": stripe }}
       onMouseEnter={(e) => card && onHover({ card, rect: e.currentTarget.getBoundingClientRect() })}
+      onClick={(e) => card && onPick(card, e.currentTarget.getBoundingClientRect())}
     >
       <span className="card-tile-stripe" />
       {src ? (

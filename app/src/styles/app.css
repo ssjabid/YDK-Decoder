@@ -109,7 +109,7 @@
 }
 .card-tile-name {
   position: absolute; left: 0; right: 0; bottom: 0;
-  padding: 4px 5px;
+  padding: 4px 5px 7px;
   background: linear-gradient(180deg, transparent, rgba(0,0,0,0.85));
   color: #fff; font-size: 9px; line-height: 1.2; text-align: center;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -206,30 +206,36 @@
 }
 .deck-group-label:first-child { padding-top: 4px; }
 
-/* ── Card tile role stripe + subgroups ── */
+/* ── Card tile role accent (slim line at the foot, not a banner over art) ── */
 .card-tile-stripe {
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: var(--stripe, var(--role-engine)); z-index: 1;
+  position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: var(--stripe, var(--role-engine)); z-index: 3;
 }
+.card-tile { cursor: pointer; }
 .cards-subgroup { margin-bottom: 14px; }
 .cards-subgroup-label {
   font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--text-faint); font-weight: 600; margin-bottom: 7px;
 }
 
-/* ── Hover preview ── */
+/* ── Card preview (hover + click-to-pin) ── */
 .card-preview {
-  z-index: 50; width: 300px;
-  display: flex; gap: 12px;
+  z-index: 50; width: 420px;
+  display: flex; gap: 14px;
   background: var(--bg-elevated); border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md); padding: 12px;
+  border-radius: var(--radius-md); padding: 14px;
   box-shadow: var(--shadow-lg); pointer-events: none;
+  animation: preview-in 120ms ease-out;
 }
-.card-preview-img { width: 86px; border-radius: 4px; flex-shrink: 0; align-self: flex-start; }
-.card-preview-body { min-width: 0; }
-.card-preview-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-.card-preview-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-.card-preview-text { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+@keyframes preview-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.card-preview.is-pinned { pointer-events: auto; cursor: pointer; box-shadow: 0 0 0 1px var(--accent), var(--shadow-lg); }
+.card-preview-img { width: 168px; border-radius: 6px; flex-shrink: 0; align-self: flex-start; box-shadow: var(--shadow-sm); }
+.card-preview-body { min-width: 0; display: flex; flex-direction: column; }
+.card-preview-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.card-preview-meta { font-size: 10.5px; color: var(--text-faint); margin-bottom: 9px; }
+.card-preview-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.card-preview-text { font-size: 12.5px; color: var(--text-dim); line-height: 1.6; }
+.card-preview-pinhint { margin-top: 10px; font-size: 9.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; }
 .role-chip {
   font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--role); border: 1px solid var(--role);
@@ -488,8 +494,9 @@
   transition: background var(--motion-fast), border-color var(--motion-fast);
 }
 .deck-tile:hover { background: var(--bg-hover); color: var(--text); }
-.deck-tile.active { background: var(--accent-dim); border-color: var(--accent-soft); color: var(--text); }
-.deck-tile-stripe { position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 3px; background: var(--role-engine); }
+.deck-tile.active { background: var(--bg-hover); border-color: var(--border-strong); color: var(--text); }
+.deck-tile.active .deck-tile-stripe { width: 4px; }
+.deck-tile-stripe { position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 3px; background: var(--role-engine); transition: width var(--motion-fast); }
 .deck-tile.is-matchup .deck-tile-stripe { background: var(--role-handtrap); }
 .deck-tile-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
 .deck-tile-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
