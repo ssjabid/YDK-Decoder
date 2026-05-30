@@ -3,7 +3,7 @@
  "exportedAt": "2026-05-30T00:00:00.000Z",
  "appBuild": "meta-import",
  "counts": {
-  "decks": 16,
+  "decks": 17,
   "combos": 0,
   "cachedCards": 0
  },
@@ -191,8 +191,8 @@
     "primaryDecklistId": "dl_meta_artmage_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Artmage spellcaster combo into negates.",
+     "endboard": "Nerva the Power Patron of Creation, Medius the Pure, Artmage Power Patron",
+     "howItWins": "Same shell as Power Patron — Medius the Pure + Artmage Power Patron Fusion line into Artmage Fusion monsters/traps for negation. Pure-Artmage as its own top deck is largely unverified; treat as the Power Patron Artmage hybrid.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -206,7 +206,7 @@
    },
    {
     "deckId": "deck_meta_branded",
-    "name": "Branded",
+    "name": "Branded / Despia",
     "role": "matchup",
     "ydkContent": "#created by Branded\n#main\n62962630\n62962630\n62962630\n73819701\n73819701\n68468459\n95515789\n95515789\n45883110\n55273560\n55273560\n19304410\n19096726\n42141493\n42141493\n42141493\n14558128\n14558128\n14558128\n44362883\n36637374\n29948294\n29948294\n29948294\n1984618\n1984618\n1984618\n30271097\n30271097\n30271097\n98829635\n98829635\n98829635\n24299458\n24299458\n48130397\n48130397\n48130397\n75500286\n17751597\n#extra\n72272462\n87746184\n87746184\n44146295\n70534340\n3410461\n24915933\n24915933\n41373230\n51409648\n76666602\n76666602\n54757758\n53971455\n78397661\n!side\n94145021\n94145021\n60242223\n33854624\n24224830\n18144507\n14532163\n14532163\n6325660\n6325660\n84749824\n84749824\n78114463\n78114463\n41420027\n",
     "counts": {
@@ -386,8 +386,205 @@
     "primaryDecklistId": "dl_meta_branded_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Fusion midrange; ends on Mirrorjade (non-targeting banish each turn) + backrow, grinds with GY recursion.",
+     "endboard": "Mirrorjade the Iceblade Dragon, Masquerade the Blazing Dragon, Branded in Red, Dramaturge of Despia",
+     "howItWins": "Albaz Fusion midrange — Branded Fusion / Branded in Red/White summon a wall of Fusion bosses (often on YOUR turn), then grind with recursion + burn. Control/midrange, not an OTK.",
+     "strengths": "",
+     "weaknesses": "",
+     "keyRatios": "",
+     "techCards": []
+    },
+    "keyCards": [],
+    "source": "meta-import",
+    "notes": "Imported from a ygoprodeck tournament list (May 2026). Refine as the meta shifts.",
+    "createdAt": "2026-05-30T00:00:00.000Z",
+    "updatedAt": "2026-05-30T00:00:00.000Z"
+   },
+   {
+    "deckId": "deck_meta_clown-crew",
+    "name": "Clown Crew",
+    "role": "matchup",
+    "ydkContent": "#created by ygoprodeck extract\n#main\n42759961\n42759961\n42759961\n82159583\n82159583\n82159583\n46485778\n91800273\n72634965\n47084486\n73642296\n14558128\n14558128\n59438930\n59438930\n97268402\n97268402\n27204311\n57847269\n20448151\n20448151\n20448151\n83232904\n83232904\n14283055\n14283055\n14283055\n96729612\n96729612\n96729612\n24224830\n10045474\n10045474\n10045474\n97045737\n97045737\n97045737\n6325660\n6325660\n6547248\n70058649\n#extra\n31533473\n31533473\n26435595\n53589300\n73898890\n65741786\n29301450\n93172951\n93172951\n93172951\n91237821\n91237821\n91237821\n93039339\n93039339\n!side\n46502744\n46502744\n42141493\n42141493\n42141493\n84192580\n73642296\n94145021\n94145021\n81674782\n81674782\n84749824\n84749824\n41420027\n7811875\n",
+    "counts": {
+     "main": 41,
+     "extra": 15,
+     "side": 15,
+     "total": 71
+    },
+    "main": [
+     "42759961",
+     "42759961",
+     "42759961",
+     "82159583",
+     "82159583",
+     "82159583",
+     "46485778",
+     "91800273",
+     "72634965",
+     "47084486",
+     "73642296",
+     "14558128",
+     "14558128",
+     "59438930",
+     "59438930",
+     "97268402",
+     "97268402",
+     "27204311",
+     "57847269",
+     "20448151",
+     "20448151",
+     "20448151",
+     "83232904",
+     "83232904",
+     "14283055",
+     "14283055",
+     "14283055",
+     "96729612",
+     "96729612",
+     "96729612",
+     "24224830",
+     "10045474",
+     "10045474",
+     "10045474",
+     "97045737",
+     "97045737",
+     "97045737",
+     "6325660",
+     "6325660",
+     "6547248",
+     "70058649"
+    ],
+    "extra": [
+     "31533473",
+     "31533473",
+     "26435595",
+     "53589300",
+     "73898890",
+     "65741786",
+     "29301450",
+     "93172951",
+     "93172951",
+     "93172951",
+     "91237821",
+     "91237821",
+     "91237821",
+     "93039339",
+     "93039339"
+    ],
+    "side": [
+     "46502744",
+     "46502744",
+     "42141493",
+     "42141493",
+     "42141493",
+     "84192580",
+     "73642296",
+     "94145021",
+     "94145021",
+     "81674782",
+     "81674782",
+     "84749824",
+     "84749824",
+     "41420027",
+     "7811875"
+    ],
+    "decklists": [
+     {
+      "decklistId": "dl_meta_clown-crew_main",
+      "name": "Main build",
+      "ydkContent": "#created by ygoprodeck extract\n#main\n42759961\n42759961\n42759961\n82159583\n82159583\n82159583\n46485778\n91800273\n72634965\n47084486\n73642296\n14558128\n14558128\n59438930\n59438930\n97268402\n97268402\n27204311\n57847269\n20448151\n20448151\n20448151\n83232904\n83232904\n14283055\n14283055\n14283055\n96729612\n96729612\n96729612\n24224830\n10045474\n10045474\n10045474\n97045737\n97045737\n97045737\n6325660\n6325660\n6547248\n70058649\n#extra\n31533473\n31533473\n26435595\n53589300\n73898890\n65741786\n29301450\n93172951\n93172951\n93172951\n91237821\n91237821\n91237821\n93039339\n93039339\n!side\n46502744\n46502744\n42141493\n42141493\n42141493\n84192580\n73642296\n94145021\n94145021\n81674782\n81674782\n84749824\n84749824\n41420027\n7811875\n",
+      "counts": {
+       "main": 41,
+       "extra": 15,
+       "side": 15,
+       "total": 71
+      },
+      "main": [
+       "42759961",
+       "42759961",
+       "42759961",
+       "82159583",
+       "82159583",
+       "82159583",
+       "46485778",
+       "91800273",
+       "72634965",
+       "47084486",
+       "73642296",
+       "14558128",
+       "14558128",
+       "59438930",
+       "59438930",
+       "97268402",
+       "97268402",
+       "27204311",
+       "57847269",
+       "20448151",
+       "20448151",
+       "20448151",
+       "83232904",
+       "83232904",
+       "14283055",
+       "14283055",
+       "14283055",
+       "96729612",
+       "96729612",
+       "96729612",
+       "24224830",
+       "10045474",
+       "10045474",
+       "10045474",
+       "97045737",
+       "97045737",
+       "97045737",
+       "6325660",
+       "6325660",
+       "6547248",
+       "70058649"
+      ],
+      "extra": [
+       "31533473",
+       "31533473",
+       "26435595",
+       "53589300",
+       "73898890",
+       "65741786",
+       "29301450",
+       "93172951",
+       "93172951",
+       "93172951",
+       "91237821",
+       "91237821",
+       "91237821",
+       "93039339",
+       "93039339"
+      ],
+      "side": [
+       "46502744",
+       "46502744",
+       "42141493",
+       "42141493",
+       "42141493",
+       "84192580",
+       "73642296",
+       "94145021",
+       "94145021",
+       "81674782",
+       "81674782",
+       "84749824",
+       "84749824",
+       "41420027",
+       "7811875"
+      ],
+      "notes": "",
+      "createdAt": "2026-05-30T00:00:00.000Z",
+      "updatedAt": "2026-05-30T00:00:00.000Z"
+     }
+    ],
+    "primaryDecklistId": "dl_meta_clown-crew_main",
+    "methodology": {
+     "summary": "",
+     "endboard": "Vanity's Fiend, Vanity's Ruler, Clown Crew Biancaviso",
+     "howItWins": "Tribute-Summon FLOODGATE control — makes disposable tribute fodder, Tribute Summons Clown Crew Biancaviso (draw / negate face-up cards) AND Tribute-Summon-only floodgates (Vanity's Ruler / Vanity's Fiend) to lock you out, then grinds. Splashes a Nouvelles ritual package. Rogue, not tier-1.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -401,7 +598,7 @@
    },
    {
     "deckId": "deck_meta_dracotail",
-    "name": "Dracotail",
+    "name": "Dracotail (Branded)",
     "role": "matchup",
     "ydkContent": "#created by Dracotail\n#main\n75003700\n75003700\n75003700\n1498449\n1498449\n1498449\n84477320\n7375867\n70871153\n44482554\n73819701\n73819701\n68468459\n95515789\n55273560\n42141493\n42141493\n42141493\n84192580\n84192580\n84192580\n14558128\n14558128\n14558128\n73642296\n73642296\n27204311\n27204311\n6153210\n32548318\n32548318\n32548318\n44362883\n44362883\n30271097\n30271097\n24299458\n24299458\n80208225\n5431722\n#extra\n33760966\n33760966\n79755671\n42125140\n89851827\n87746184\n44146295\n38811586\n70534340\n3410461\n51409648\n76666602\n72578374\n29301450\n78397661\n!side\n87126721\n87126721\n87126721\n27204311\n1984618\n1984618\n1984618\n4227096\n4227096\n4227096\n24224830\n15693423\n15693423\n15693423\n69932023\n",
     "counts": {
@@ -581,8 +778,8 @@
     "primaryDecklistId": "dl_meta_dracotail_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Fast Fusion dragons + floats (frequently Branded engine).",
+     "endboard": "Dracotail Mululu, Dracotail Shaulas, Dracotail Arthalion, Mirrorjade the Iceblade Dragon",
+     "howItWins": "Fusion combo/control — Dracotail Faimena is a near-one-card starter (discard to Fusion Summon), chaining Dracotail fusions + a trap suite; often splashes the Branded engine for Mirrorjade.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -786,8 +983,8 @@
     "primaryDecklistId": "dl_meta_elfnote_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Synchro fairies (Power Patron engine) climbing into negates/removal + traps.",
+     "endboard": "Junora the Power Patron of Tuning, Elfnote Seraphim Strelitzia, Baronne de Fleur, Rhapsodia of Madness",
+     "howItWins": "'Singer' fairies shuffle into the center zone to trigger + Synchro-climb. Elfnote Power Patron raises a center monster's Level +3 and immediately Synchro Summons — laddering into a wall of Synchro negates capped by Junora's WIDE field-negate.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -981,8 +1178,8 @@
     "primaryDecklistId": "dl_meta_fairy-tail-magistus_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Magistus equip engine + Fairy Tail - Snow control; loops Snow + Magistus equips.",
+     "endboard": "Teller of the Magistus, Zoroa, the Magistus Verethragna, Fairy Tail - Snow",
+     "howItWins": "Spellcaster engine fusing the Magistus equip package with Fairy Tail control. Fairy Tail - Wiccat 'double Foolish' fuels a search/recursion loop; ends on negates and grinds with Snow recursion + Magistus equips.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -1178,8 +1375,8 @@
     "primaryDecklistId": "dl_meta_lunalight_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Fusion beatdown (Sabre Dancer / Cat Dancer) + GY recursion.",
+     "endboard": "Lunalight Liger Dancer, Lunalight Silver Hound, S:P Little Knight",
+     "howItWins": "Going-first Fusion combo (post-Duelist Advance) — a one-card Gold Leo line builds a sticky Liger Dancer board, then double-attacks + grinds via GY recursion.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -1373,8 +1570,8 @@
     "primaryDecklistId": "dl_meta_maliss_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Banish-and-return Link combos + the Maliss <C> trap set as disruption.",
+     "endboard": "Maliss Q Hearts Crypter, Maliss in the Mirror, Maliss <C> TB-11, Maliss <C> MTP-07",
+     "howItWins": "Cyberse Link-climbing combo that abuses BANISHMENT — Special Summons monsters back from banish to chain into Link bosses + a self-recurring loop, then grinds with the Maliss <C> disruption traps. Can OTK with Accesscode.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -1388,7 +1585,7 @@
    },
    {
     "deckId": "deck_meta_mitsurugi-ryzeal",
-    "name": "Mitsurugi Ryzeal",
+    "name": "Mitsurugi-Ryzeal",
     "role": "matchup",
     "ydkContent": "#created by Mitsurugi Ryzeal\n#main\n13332685\n13332685\n13332685\n19899073\n55397172\n18176525\n82782870\n40543231\n8633261\n8633261\n34022970\n72238166\n35844557\n84433129\n42141493\n42141493\n42141493\n23434538\n23434538\n27204311\n14558127\n14558127\n38814750\n38814750\n49036338\n45171524\n45171524\n45171524\n81560239\n49721684\n13048472\n6798031\n7477101\n7477101\n7477101\n85106525\n24299458\n24299458\n24299458\n24224830\n24224830\n17954937\n#extra\n34909328\n7511613\n63767246\n46772449\n44698398\n66011101\n1269512\n45852939\n11398059\n90590303\n9940036\n32530043\n5088741\n49678559\n40673853\n!side\n84192580\n84192580\n84192580\n91800273\n94145021\n94145021\n94145021\n65681983\n18144507\n54693926\n54693926\n58921041\n58921041\n23002292\n23002292\n",
     "counts": {
@@ -1572,8 +1769,8 @@
     "primaryDecklistId": "dl_meta_mitsurugi-ryzeal_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Ritual control + Ryzeal Rank-4 Xyz package; disruption via traps + detaches.",
+     "endboard": "Ame no Murakumo no Mitsurugi, Ryzeal Detonator, D/D/D Wave High King Caesar, Mitsurugi Prayers",
+     "howItWins": "Mitsurugi grind core + a Rank-4 Ryzeal package (Ryzeal Detonator = free repeatable destroy). More going-second power and more layers than pure Mitsurugi.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -1767,8 +1964,8 @@
     "primaryDecklistId": "dl_meta_mitsurugi_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Ritual DARK warriors; floats + grinds with traps (Great Purification / Tempest).",
+     "endboard": "Ame no Murakumo no Mitsurugi, Futsu no Mitama no Mitsurugi, Mitsurugi Great Purification, Mitsurugi Prayers",
+     "howItWins": "Reptile Ritual engine — one starter (Ame no Habakiri) becomes a wall of recurring Ritual monsters + searched traps, then grinds behind repeated negates and a board-wipe.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -1966,8 +2163,8 @@
     "primaryDecklistId": "dl_meta_power-patron_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Power Patron engine (DoomZ cousins) into Xyz negates; Artmage splash.",
+     "endboard": "Nerva the Power Patron of Creation, Medius the Pure, Artmage Power Patron",
+     "howItWins": "Pendulum-flavored Fusion ladder — Medius the Pure adds/Special Summons Artmage Power Patron, Fusion-summons up the line, closes on Nerva (destruction-immune while a Field Spell is active) + the Nervedo Pendulum negate. Usually the Power Patron Artmage hybrid.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -2161,8 +2358,8 @@
     "primaryDecklistId": "dl_meta_predaplant_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Fusion (Albaz/Branded) toolbox; contact-fusion into big bodies.",
+     "endboard": "Predaplant Dragostapelia, Mirrorjade the Iceblade Dragon, Branded Fusion",
+     "howItWins": "Albaz/Branded fusion toolbox — spreads Predator Counters (turning your monsters into Lv1 fusion fodder), negates with Dragostapelia, OTKs with Triphyovertum. Mostly a Genesys/OCG/rogue pick in TCG.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -2356,8 +2553,8 @@
     "primaryDecklistId": "dl_meta_radiant-typhoon_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Engine/control splash (Radiant Typhoon enables an Xyz/Synchro shell).",
+     "endboard": "Varuroon, Radiant Typhoon Mandate, Totem Bird, Shiina, Twin Tempests of Celestial Thunder",
+     "howItWins": "Quick-Play-Spell control/grind — its monsters trigger off activating quick-plays (Super Poly, Forbidden Droplet, Called by). Grinds with searchers + a monster-negate boss, recycles quick-plays, wins the long game. Often a Runick hybrid.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -2551,8 +2748,8 @@
     "primaryDecklistId": "dl_meta_sky-striker_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Spell-based control; Engage draws, Kagari/Shizuku grind, Hornet Drones tokens, Widow Anchor steals.",
+     "endboard": "Sky Striker Ace - Shizuku, Sky Striker Mecha - Widow Anchor, Sky Striker Mecha - Shark Cannon, Sky Striker Mecha - Eagle Booster",
+     "howItWins": "Spell-based control/grind — loops Sky Striker Mobilize - Engage! via the Ace monsters to out-resource you, disrupts with Widow Anchor / Shark Cannon. Wants its OWN monster zones EMPTY (most Quick-Plays need controlling no monsters).",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -2746,8 +2943,8 @@
     "primaryDecklistId": "dl_meta_vanquish-soul_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Attribute-toolbox beatdown (Razen / Caesar) + K9 engine; resource grind.",
+     "endboard": "Vanquish Soul Caesar Valius, Vanquish Soul Pluton HG, K9-17 Ripper",
+     "howItWins": "Vanquish Soul K9 — a hand-resource 'tag-fighter' beatdown: reveal monsters in hand to fuel attribute effects, tag fighters in/out, grind resources. K9 adds bodies + punishes handtraps.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -2761,7 +2958,7 @@
    },
    {
     "deckId": "deck_meta_white-forest",
-    "name": "White Forest",
+    "name": "White Forest (Azamina)",
     "role": "matchup",
     "ydkContent": "#created by White Forest\n#main\n61980241\n61980241\n61980241\n38648860\n98385955\n98385955\n98385955\n23151193\n60145298\n53765052\n72270339\n72270339\n42141493\n42141493\n42141493\n14558128\n14558128\n14558128\n4398189\n4398189\n4398189\n99289828\n3496543\n78293584\n24081957\n94845588\n66328392\n80845034\n80845034\n80845034\n22283204\n24299458\n24299458\n35726888\n35726888\n24224830\n25311006\n49299410\n62995268\n64998567\n#extra\n14307929\n77313225\n41924516\n5800323\n79415624\n4891376\n22850702\n29301450\n37818794\n59400890\n58071334\n46174776\n46396218\n73391962\n85065943\n!side\n84192580\n84192580\n84192580\n27204311\n27204311\n75652080\n75652080\n35269904\n35269904\n10045474\n10045474\n10045474\n31849106\n85442146\n38511382\n",
     "counts": {
@@ -2941,8 +3138,8 @@
     "primaryDecklistId": "dl_meta_white-forest_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Synchro engine — White Forest spells trigger off Synchro/Sinful Spoils; Azamina splash.",
+     "endboard": "Azamina Ilia Silvia, Chaos Angel, S:P Little Knight, Sinful Spoils of the White Forest",
+     "howItWins": "Synchro Spellcasters/Illusions whose Special Summons + Sinful Spoils cards trigger White Forest spells to grind, then lock you out with a stacked multi-disruption board. Azamina splash adds a recyclable negate (Ilia Silvia).",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -2956,7 +3153,7 @@
    },
    {
     "deckId": "deck_meta_yummy",
-    "name": "Yummy",
+    "name": "Yummy (Azamina)",
     "role": "matchup",
     "ydkContent": "#created by Yummy\n#main\n31425736\n31425736\n31425736\n10966439\n10966439\n10966439\n68810435\n4215180\n72270339\n72270339\n72270339\n38648860\n97631303\n42141493\n42141493\n42141493\n14558128\n14558128\n14558128\n97268402\n97268402\n97268402\n73642296\n73642296\n73642296\n94145021\n94145021\n27204311\n29369059\n66975205\n52340444\n63166095\n80845034\n80845034\n80845034\n66328392\n94845588\n24224830\n10045474\n10045474\n10045474\n#extra\n31603289\n93192592\n67098897\n15123983\n15665977\n77313225\n14307929\n46396218\n73391962\n59400890\n63288573\n63013339\n29301450\n41999284\n30581601\n!side\n49036338\n38814750\n74203495\n74203495\n53765052\n46502744\n46502744\n84192580\n84192580\n27204311\n93360904\n15693423\n15693423\n15693423\n26334139\n",
     "counts": {
@@ -3138,8 +3335,8 @@
     "primaryDecklistId": "dl_meta_yummy_main",
     "methodology": {
      "summary": "",
-     "endboard": "",
-     "howItWins": "Fiend/Azamina swarm into Fusion negates (often Fiendsmith).",
+     "endboard": "Azamina Ilia Silvia, Fiendsmith's Desirae, S:P Little Knight, Yummy Snatchy",
+     "howItWins": "LIGHT-Beast Synchro combo (Cupsy/Cooky/Lollipo + Yummy Way Synchros) that swarms cheaply and, in the Azamina/Fiendsmith build, converts into multiple Fusion omni-negates.",
      "strengths": "",
      "weaknesses": "",
      "keyRatios": "",
@@ -3163,20 +3360,50 @@
      {
       "matchupId": "m_meta_artmage",
       "opponentDeckId": "deck_meta_artmage",
-      "tier": "tier1",
-      "howTheyWin": "Artmage spellcaster combo into negates.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "tier": "tier2",
+      "howTheyWin": "Same shell as Power Patron — Medius the Pure + Artmage Power Patron Fusion line into Artmage Fusion monsters/traps for negation. Pure-Artmage as its own top deck is largely unverified; treat as the Power Patron Artmage hybrid.",
+      "gameplanFirst": "Their negate triggers off responding to their OWN effects — play around held handtraps rather than a board negate. Bait the Artmage negate trap with a non-essential effect, then resolve your payoff.",
+      "gameplanSecond": "Use non-destruction removal (boss leans on Field-Spell destruction immunity) — banish/bounce/tribute. BEWARE the Artmage trap that bounces ALL your Spells/Traps to hand if they control 3+ monster Types — don't over-rely on backrow. Clear the Field Spell, then remove the boss.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Medius"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "On the search engine"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Multi-SS Fusion lines"
+       },
+       {
+        "name": "Cosmic Cyclone",
+        "side": "good",
+        "notes": "Pop the Field Spell"
+       },
+       {
+        "name": "Lava Golem",
+        "side": "good",
+        "notes": "Tribute the boss away"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the first Artmage search.",
-      "chokepointOurs": "Break the board going second.",
+      "chokepointTheirs": "Ash/Droll Medius the Pure (the search that assembles the Fusion). Veiler/Imperm the first Artmage or Power Patron effect to stop the Fusion + negate sequence.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Nerva the Power Patron of Creation",
+       "Medius the Pure",
+       "Artmage Power Patron"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3192,19 +3419,108 @@
       "matchupId": "m_meta_branded",
       "opponentDeckId": "deck_meta_branded",
       "tier": "tier1",
-      "howTheyWin": "Fusion midrange; ends on Mirrorjade (non-targeting banish each turn) + backrow, grinds with GY recursion.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Albaz Fusion midrange — Branded Fusion / Branded in Red/White summon a wall of Fusion bosses (often on YOUR turn), then grind with recursion + burn. Control/midrange, not an OTK.",
+      "gameplanFirst": "They run few hard negates, so a clean board usually beats them — but DON'T over-commit LIGHT/DARK monsters into an open Super Polymerization, and respect Bystials (Druiswurm / Lubellion banishing your LIGHT/DARK).",
+      "gameplanSecond": "Mirrorjade is the threat and it PUNISHES removal — if it leaves the field by YOUR card it wipes your monsters at the End Phase. Out it with NON-destruction: your own Super Polymerization (eats it as fusion material) is the best tech, or banish/bounce, or spend its banish first then push. Clear Branded backrow.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On the REAL Branded Fusion, not the bait"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Kills the search engine"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "They extend with many summons, few negates"
+       },
+       {
+        "name": "Super Polymerization",
+        "side": "good",
+        "notes": "Eats Mirrorjade/Chimera — non-targeting, dodges End-Phase wipe"
+       },
+       {
+        "name": "Bystial Druiswurm",
+        "side": "good",
+        "notes": "Banish their Albaz/Despia GY fuel"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash Branded Fusion / Aluber's search; Ghost Belle the GY recursion.",
-      "chokepointOurs": "Mirrorjade survives battle/floats — bounce or banish it, don't try to destroy it; Duster/Storm their backrow.",
+      "chokepointTheirs": "Ash Branded Fusion (their best starter) — but they BAIT Ash with Branded Opening / Lubellion first, so save it for the real Branded Fusion. Aluber the Jester of Despia is the secondary Ash target. Droll & Lock Bird kills the search chain.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Mirrorjade the Iceblade Dragon",
+       "Masquerade the Blazing Dragon",
+       "Branded in Red",
+       "Dramaturge of Despia"
+      ],
+      "sideboard": {
+       "goingFirst": {
+        "in": [],
+        "out": []
+       },
+       "goingSecond": {
+        "in": [],
+        "out": []
+       }
+      }
+     },
+     {
+      "matchupId": "m_meta_clown-crew",
+      "opponentDeckId": "deck_meta_clown-crew",
+      "tier": "rogue",
+      "howTheyWin": "Tribute-Summon FLOODGATE control — makes disposable tribute fodder, Tribute Summons Clown Crew Biancaviso (draw / negate face-up cards) AND Tribute-Summon-only floodgates (Vanity's Ruler / Vanity's Fiend) to lock you out, then grinds. Splashes a Nouvelles ritual package. Rogue, not tier-1.",
+      "gameplanFirst": "Resolve your board BEFORE they Tribute Summon a Vanity floodgate, and end on disruption that does NOT need to Special Summon (set traps / in-hand handtraps) so a resolved Vanity's Ruler/Fiend doesn't brick your follow-up.",
+      "gameplanSecond": "The lock is the Vanity floodgate (SS-lock: Ruler stops only YOUR Special Summons; Fiend stops BOTH). DON'T fight it with Special Summons — use NON-SS outs: Dark Ruler No More / Forbidden Droplet (turn off the body's effect), Evenly Matched (ignores it entirely), or Imperm to open a SS window. Remove the floodgate, THEN commit Special Summons.",
+      "keyTargets": [],
+      "techCardsThatShine": [],
+      "counterCards": [
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Rehearsal / Biancaviso"
+       },
+       {
+        "name": "Ghost Belle & Haunted Mansion",
+        "side": "good",
+        "notes": "On the GY Ritual effect"
+       },
+       {
+        "name": "Dark Ruler No More",
+        "side": "good",
+        "notes": "Turns off Vanity's lock for the turn — no SS needed"
+       },
+       {
+        "name": "Forbidden Droplet",
+        "side": "good",
+        "notes": "Non-SS out to the floodgate"
+       },
+       {
+        "name": "Evenly Matched",
+        "side": "good",
+        "notes": "Ignores the SS-lock entirely"
+       }
+      ],
+      "relatedComboIds": [],
+      "freeformNotes": "",
+      "chokepointTheirs": "Ash the Clown Crew Rehearsal / Biancaviso line (the fodder + floodgate engine); Ghost Belle the GY-banish Ritual effect. Droll hurts (it's a draw/search deck). No fodder = no Vanity tribute.",
+      "chokepointOurs": "",
+      "priorityFirst": [],
+      "prioritySecond": [],
+      "targetEndboard": [
+       "Vanity's Fiend",
+       "Vanity's Ruler",
+       "Clown Crew Biancaviso"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3220,19 +3536,50 @@
       "matchupId": "m_meta_dracotail",
       "opponentDeckId": "deck_meta_dracotail",
       "tier": "tier1",
-      "howTheyWin": "Fast Fusion dragons + floats (frequently Branded engine).",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Fusion combo/control — Dracotail Faimena is a near-one-card starter (discard to Fusion Summon), chaining Dracotail fusions + a trap suite; often splashes the Branded engine for Mirrorjade.",
+      "gameplanFirst": "Their disruption is bounce + negate, not destruction. Summon key monsters in DEFENSE to dodge Dracotail Horn (bounces Attack-position monsters), and don't let your win hinge on one bounce-able body.",
+      "gameplanSecond": "Mass monster removal (Raigeki / Dark Hole / DRNM) is WEAK — their answers live in hand/GY/backrow. Stop the backrow + deny Fusion fuel instead. If Mirrorjade is up, out it via Super Poly / banish (not your own destruction). Watch for Red-Eyes Dark Dragoon in some builds.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Ghost Belle & Haunted Mansion",
+        "side": "good",
+        "notes": "Shuts Trap activations + GY"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Faimena / first Fusion"
+       },
+       {
+        "name": "Retaliating \"C\"",
+        "side": "good",
+        "notes": "Pseudo-Dimension Shifter; their Spells trigger it"
+       },
+       {
+        "name": "Dimension Shifter",
+        "side": "good",
+        "notes": "Denies GY fusion fuel"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Caps the search chain"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the Ketu/Rahu (or Branded Fusion) search.",
-      "chokepointOurs": "Break the boss; watch for fusion floats on removal.",
+      "chokepointTheirs": "Ash / Ghost Belle on Dracotail Faimena (the one-card starter / first Fusion) — deny the first Fusion and they often have NO board. Belle is great: it also shuts their Trap activations.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Dracotail Mululu",
+       "Dracotail Shaulas",
+       "Dracotail Arthalion",
+       "Mirrorjade the Iceblade Dragon"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3248,19 +3595,50 @@
       "matchupId": "m_meta_elfnote",
       "opponentDeckId": "deck_meta_elfnote",
       "tier": "tier1",
-      "howTheyWin": "Synchro fairies (Power Patron engine) climbing into negates/removal + traps.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "'Singer' fairies shuffle into the center zone to trigger + Synchro-climb. Elfnote Power Patron raises a center monster's Level +3 and immediately Synchro Summons — laddering into a wall of Synchro negates capped by Junora's WIDE field-negate.",
+      "gameplanFirst": "Junora negates your whole FACE-UP field, not one card — so commit interruption as SET/face-down disruption (set traps, held handtraps), NOT a face-up negate they'll shut off. Force them to use Power Patron early, then handtrap it.",
+      "gameplanSecond": "Junora only negates EFFECTS of face-up cards — stats remain, so ATTACK over it or use battle/removal that doesn't activate into the negate. Non-chain removal (Lava Golem / Kaiju tribute) works around it. Clear Junora/Strelitzia first (they protect + rebuild). Forbidden Droplet (non-targeting) is strong.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Maxx \"C\"",
+        "side": "good",
+        "notes": "It over-extends hard"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "It searches a lot"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Heavy Special Summoning"
+       },
+       {
+        "name": "Effect Veiler",
+        "side": "good",
+        "notes": "On Power Patron"
+       },
+       {
+        "name": "Forbidden Droplet",
+        "side": "good",
+        "notes": "Non-targeting board breaker"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the Power Patron / Elfnote search; Imperm the Synchro body.",
-      "chokepointOurs": "Stop the first Synchro; break the board going second.",
+      "chokepointTheirs": "Elfnote Power Patron is the linchpin (Level-up + immediate Synchro + searches an Elfnote). Imperm/Veiler/Ash it or the first center-zone trigger BEFORE Junora's wide negate comes online. Maxx C / Droll / Fuwalos wreck it (over-extends + searches a lot).",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Junora the Power Patron of Tuning",
+       "Elfnote Seraphim Strelitzia",
+       "Baronne de Fleur",
+       "Rhapsodia of Madness"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3276,19 +3654,49 @@
       "matchupId": "m_meta_fairy-tail-magistus",
       "opponentDeckId": "deck_meta_fairy-tail-magistus",
       "tier": "tier1",
-      "howTheyWin": "Magistus equip engine + Fairy Tail - Snow control; loops Snow + Magistus equips.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Spellcaster engine fusing the Magistus equip package with Fairy Tail control. Fairy Tail - Wiccat 'double Foolish' fuels a search/recursion loop; ends on negates and grinds with Snow recursion + Magistus equips.",
+      "gameplanFirst": "They can out-negate your handtraps (Teller/Zoroa negate; Zoroa also pops). Lead with a board they can't simply out-negate and pressure with Maxx C. They recur from GY (Snow + Wiccat sends) so Dimension Shifter is strong.",
+      "gameplanSecond": "Deal with Teller (omni-negate) FIRST — bait or remove it before your key play. Watch Zoroa negating + popping. 'No-negate' breakers (Dark Ruler No More, Forbidden Droplet, Evenly Matched into their backrow/equips) push through; clear Magistus equip-spells first.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Wiccat's send"
+       },
+       {
+        "name": "Infinite Impermanence",
+        "side": "good",
+        "notes": "On the first Magistus/Fairy Tail effect"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Teller/Zoroa only arrive ~5 summons in"
+       },
+       {
+        "name": "Dimension Shifter",
+        "side": "good",
+        "notes": "Hits their GY recursion"
+       },
+       {
+        "name": "Dark Ruler No More",
+        "side": "good",
+        "notes": "Break through the negates second"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the Magistus / Snow search; Imperm the equip target.",
-      "chokepointOurs": "Remove the equipped boss; out-grind.",
+      "chokepointTheirs": "Ash Fairy Tail - Wiccat's send (it kicks out the main advantage engine). Imperm/Veiler the first Magistus/Fairy Tail effect. Droll is NOT especially good here (deck has low-ceiling plays + Called by / Verre Magic).",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Teller of the Magistus",
+       "Zoroa, the Magistus Verethragna",
+       "Fairy Tail - Snow"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3303,20 +3711,50 @@
      {
       "matchupId": "m_meta_lunalight",
       "opponentDeckId": "deck_meta_lunalight",
-      "tier": "tier1",
-      "howTheyWin": "Fusion beatdown (Sabre Dancer / Cat Dancer) + GY recursion.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "tier": "rogue",
+      "howTheyWin": "Going-first Fusion combo (post-Duelist Advance) — a one-card Gold Leo line builds a sticky Liger Dancer board, then double-attacks + grinds via GY recursion.",
+      "gameplanFirst": "Hold interaction for the cards that lead to Liger Dancer (don't waste it early). Build a board that survives a Liger wipe — Liger only destroys SPECIAL-Summoned monsters, so a Normal-Summoned body or a continuous floodgate survives.",
+      "gameplanSecond": "Liger is unaffected by non-Lunalight effects — targeted removal/negation bounces off. Out it with TRIBUTE-based removal: Kaiju, Lava Golem, or Ra Sphere Mode (tribute its monsters away). Don't flood Special-Summoned monsters into an unanswered Liger (feeds its wipe).",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Infinite Impermanence",
+        "side": "good",
+        "notes": "On Gold Leo"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Silver Hound"
+       },
+       {
+        "name": "Lava Golem",
+        "side": "good",
+        "notes": "Tribute Liger away — ignores its immunity"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Punishes the combo"
+       },
+       {
+        "name": "Dimension Shifter",
+        "side": "good",
+        "notes": "Hurts GY recursion"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the first searcher.",
-      "chokepointOurs": "Remove the boss; they fold to disruption + board breakers.",
+      "chokepointTheirs": "Imperm on Lunalight Gold Leo (one-card starter) + Ash on Lunalight Silver Hound (deck-SS GY effect). Disrupt BEFORE Liger resolves — once Liger lands you usually lose. Droll alone isn't enough.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Lunalight Liger Dancer",
+       "Lunalight Silver Hound",
+       "S:P Little Knight"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3332,19 +3770,50 @@
       "matchupId": "m_meta_maliss",
       "opponentDeckId": "deck_meta_maliss",
       "tier": "tier1",
-      "howTheyWin": "Banish-and-return Link combos + the Maliss <C> trap set as disruption.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Cyberse Link-climbing combo that abuses BANISHMENT — Special Summons monsters back from banish to chain into Link bosses + a self-recurring loop, then grinds with the Maliss <C> disruption traps. Can OTK with Accesscode.",
+      "gameplanFirst": "Build HARD negates / spot removal, NOT banish-pile hate (they recur from banish). Their traps need a face-up Maliss monster to fire — pre-emptively removing their first Maliss monster turns off the set traps. Dimension Shifter is strong (deck routes through GY/banish).",
+      "gameplanSecond": "Clear the set Maliss <C> traps first (each needs a face-up Maliss monster — removing/banishing their on-board Maliss BRICKS them). The danger card is Hearts Crypter — its banish CAN'T be negated when it points to a monster, so disrupt it on activation/cost or remove it before committing. DRNM/Droplet help push.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Maxx \"C\"",
+        "side": "good",
+        "notes": "Best — it's a combo deck"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On White Rabbit / first trap"
+       },
+       {
+        "name": "Infinite Impermanence",
+        "side": "good",
+        "notes": "Spot-negate the starter"
+       },
+       {
+        "name": "Dimension Shifter",
+        "side": "good",
+        "notes": "Deck routes through GY/banish"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Punishes the Link climb"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the first <P> search; bait the <C> traps before your real play.",
-      "chokepointOurs": "Clear the <C> traps, then push.",
+      "chokepointTheirs": "Imperm/Veiler/Ash Maliss P White Rabbit (the one-card starter that sets a Maliss Trap from deck). The engine isn't great at playing through established boards + folds to spot removal. Banish floodgates are WEAK (they recur from banish).",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Maliss Q Hearts Crypter",
+       "Maliss in the Mirror",
+       "Maliss <C> TB-11",
+       "Maliss <C> MTP-07"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3359,20 +3828,46 @@
      {
       "matchupId": "m_meta_mitsurugi-ryzeal",
       "opponentDeckId": "deck_meta_mitsurugi-ryzeal",
-      "tier": "tier1",
-      "howTheyWin": "Ritual control + Ryzeal Rank-4 Xyz package; disruption via traps + detaches.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "tier": "tier2",
+      "howTheyWin": "Mitsurugi grind core + a Rank-4 Ryzeal package (Ryzeal Detonator = free repeatable destroy). More going-second power and more layers than pure Mitsurugi.",
+      "gameplanFirst": "Same as Mitsurugi — don't fold to one negate/wipe, keep discard fodder for Murakumo. Respect Ryzeal Detonator's free destroy on YOUR turn; bait its detach with a low-value card first.",
+      "gameplanSecond": "Nibiru (same window as Mitsurugi). Detonator is a DESTROY effect — use non-destruction (Kaiju/Lava Golem/bounce) so you don't feed it. Clear Murakumo without triggering its re-summon wipe on yourself.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Infinite Impermanence",
+        "side": "good",
+        "notes": "Specifically strong on the Ice Ryzeal step"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Ice / the search"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Punishes the double-engine searching"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Tribute the board"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the first Ryzeal/Mitsurugi search; Droll caps the chains.",
-      "chokepointOurs": "Handtraps over breakers game 1; side breakers for the backrow.",
+      "chokepointTheirs": "Ash/Imperm on ICE Ryzeal — pilots openly fear 'Ash or Imperm on Ice'; it stops the line cold with no follow-up. On the Mitsurugi side, Droll/Ash the search.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Ame no Murakumo no Mitsurugi",
+       "Ryzeal Detonator",
+       "D/D/D Wave High King Caesar",
+       "Mitsurugi Prayers"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3388,19 +3883,45 @@
       "matchupId": "m_meta_mitsurugi",
       "opponentDeckId": "deck_meta_mitsurugi",
       "tier": "tier1",
-      "howTheyWin": "Ritual DARK warriors; floats + grinds with traps (Great Purification / Tempest).",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Reptile Ritual engine — one starter (Ame no Habakiri) becomes a wall of recurring Ritual monsters + searched traps, then grinds behind repeated negates and a board-wipe.",
+      "gameplanFirst": "Build a board that doesn't fold to one negate or one wipe. Murakumo's negate is a soft 'discard-or-negate' — keep a SPARE card to feed the discard so your key effect resolves. End on disruption that doesn't need monsters on board (set traps) so Murakumo's re-summon wipe whiffs.",
+      "gameplanSecond": "Nibiru is strong (tribute their board after they've used self-revives; discard Nibiru itself to dodge Murakumo's discard gate). Non-targeting/non-destruction wipes (Kaiju/Lava Golem) get under the trap negates. Bait Great Purification with a throwaway effect first.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Best card — multi-search turn bricks"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On the first searcher"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Tribute the Reptile board"
+       },
+       {
+        "name": "Ghost Belle & Haunted Mansion",
+        "side": "good",
+        "notes": "Hits GY revival / trap recursion"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the Magatama / Prayers search; bait or clear their traps.",
-      "chokepointOurs": "Backrow removal first, then push through the bodies.",
+      "chokepointTheirs": "Droll & Lock Bird is the single best card — they make MULTIPLE searches per turn, and Droll after their first add nearly bricks them. Ash the first searcher (Aramasa/Kusanagi/Saji) also cuts the chain. Belle hits GY revival.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Ame no Murakumo no Mitsurugi",
+       "Futsu no Mitama no Mitsurugi",
+       "Mitsurugi Great Purification",
+       "Mitsurugi Prayers"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3415,20 +3936,50 @@
      {
       "matchupId": "m_meta_power-patron",
       "opponentDeckId": "deck_meta_power-patron",
-      "tier": "tier1",
-      "howTheyWin": "Power Patron engine (DoomZ cousins) into Xyz negates; Artmage splash.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "tier": "tier2",
+      "howTheyWin": "Pendulum-flavored Fusion ladder — Medius the Pure adds/Special Summons Artmage Power Patron, Fusion-summons up the line, closes on Nerva (destruction-immune while a Field Spell is active) + the Nervedo Pendulum negate. Usually the Power Patron Artmage hybrid.",
+      "gameplanFirst": "Their main interaction (Nervedo negate) triggers off THEIR plays, so on your turn you mostly fear held handtraps, not a board negate. Set up normally; just don't walk a key effect into a held negate, and be ready to remove the Field Spell next turn.",
+      "gameplanSecond": "Nerva is destruction-immune ONLY while a card is active in the Field Spell Zone — clear/disable the Field Spell first (Cosmic Cyclone, Feather Duster), OR just use NON-destruction removal (banish/bounce/Kaiju/Lava Golem) to ignore the immunity. Remove Nerva, then the support.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Medius the Pure"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Best vs the search engine"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Multi-SS Fusion lines"
+       },
+       {
+        "name": "Cosmic Cyclone",
+        "side": "good",
+        "notes": "Pop the Field Spell -> strips Nerva immunity"
+       },
+       {
+        "name": "Lava Golem",
+        "side": "good",
+        "notes": "Tribute Nerva away (ignores immunity)"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the Power Patron / Artmage search.",
-      "chokepointOurs": "Break the Xyz board; remove the equipped boss.",
+      "chokepointTheirs": "Ash Blossom / Droll & Lock Bird on Medius the Pure (the search that assembles the Fusion line) — the two best counters. Imperm/Veiler on Medius or the first Power Patron. Disrupting the Field Spell strips Nerva's destruction immunity.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Nerva the Power Patron of Creation",
+       "Medius the Pure",
+       "Artmage Power Patron"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3443,20 +3994,50 @@
      {
       "matchupId": "m_meta_predaplant",
       "opponentDeckId": "deck_meta_predaplant",
-      "tier": "tier1",
-      "howTheyWin": "Fusion (Albaz/Branded) toolbox; contact-fusion into big bodies.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "tier": "rogue",
+      "howTheyWin": "Albaz/Branded fusion toolbox — spreads Predator Counters (turning your monsters into Lv1 fusion fodder), negates with Dragostapelia, OTKs with Triphyovertum. Mostly a Genesys/OCG/rogue pick in TCG.",
+      "gameplanFirst": "Big danger is their Super Polymerization eating YOUR monsters on your turn (Predator Counters enable it) — avoid presenting two same-attribute monsters that complete a fusion. Their pure board is weak, so a normal board usually holds.",
+      "gameplanSecond": "Remove Dragostapelia (the negate) by non-targeting/banish, or attack over it once its negate is spent; Mirrorjade caveat applies (Super Poly/banish, not destruction). Your own Super Poly is great vs their fat fusion bodies.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Branded Fusion"
+       },
+       {
+        "name": "Infinite Impermanence",
+        "side": "good",
+        "notes": "On the engine Predaplant"
+       },
+       {
+        "name": "Nibiru, the Primal Being",
+        "side": "good",
+        "notes": "Low-negate extending board"
+       },
+       {
+        "name": "Dimension Shifter",
+        "side": "good",
+        "notes": "Denies GY/fusion fuel"
+       },
+       {
+        "name": "Super Polymerization",
+        "side": "good",
+        "notes": "Eats their fusion bodies"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the Fusion starter (Branded Fusion / Predaplant search).",
-      "chokepointOurs": "Break the fusion board.",
+      "chokepointTheirs": "Ash Branded Fusion / their first big Fusion spell; Imperm the engine Predaplant that makes counters. NOTE: Super Polymerization is NOT Ash-able.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Predaplant Dragostapelia",
+       "Mirrorjade the Iceblade Dragon",
+       "Branded Fusion"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3472,19 +4053,50 @@
       "matchupId": "m_meta_radiant-typhoon",
       "opponentDeckId": "deck_meta_radiant-typhoon",
       "tier": "tier1",
-      "howTheyWin": "Engine/control splash (Radiant Typhoon enables an Xyz/Synchro shell).",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Quick-Play-Spell control/grind — its monsters trigger off activating quick-plays (Super Poly, Forbidden Droplet, Called by). Grinds with searchers + a monster-negate boss, recycles quick-plays, wins the long game. Often a Runick hybrid.",
+      "gameplanFirst": "They're reactive control holding quick-play breakers (Super Poly, Forbidden Droplet/Crown) — DON'T over-commit into Super Polymerization. Diversify your monster types/attributes to dodge Super Poly, keep a follow-up, and play around Varuroon's monster-effect negate + Mandate (turns MST into an omni-negate).",
+      "gameplanSecond": "Watch Shiina (their breaker: a monster trigger bounces all face-up monsters except itself; a S/T trigger bounces all S/T). Respect their set Spells. Bait Varuroon's monster-effect negate first, then deal with backrow. Denko Sekka / Anti-Spell Fragrance / Anti-Magic Arrows shut down their Spell-heavy plan.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Krosea / Meghala"
+       },
+       {
+        "name": "Infinite Impermanence",
+        "side": "good",
+        "notes": "On Krosea / Meghala"
+       },
+       {
+        "name": "Denko Sekka",
+        "side": "good",
+        "notes": "Shuts their set Spells"
+       },
+       {
+        "name": "Anti-Spell Fragrance",
+        "side": "good",
+        "notes": "Taxes their Spell-heavy plan"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Vs the searching"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Confirm from a guide — newer; Ash the enabler search.",
-      "chokepointOurs": "Break the board; play around its disruption (verify).",
+      "chokepointTheirs": "Imperm/Ash Radiant Typhoon Krosea (the double-searcher) and Meghala (the ONLY card that Special Summons from Deck) — deny those and the setup chokes. Ash also hits their search triggers.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Varuroon",
+       "Radiant Typhoon Mandate",
+       "Totem Bird",
+       "Shiina, Twin Tempests of Celestial Thunder"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3500,19 +4112,50 @@
       "matchupId": "m_meta_sky-striker",
       "opponentDeckId": "deck_meta_sky-striker",
       "tier": "tier1",
-      "howTheyWin": "Spell-based control; Engage draws, Kagari/Shizuku grind, Hornet Drones tokens, Widow Anchor steals.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Spell-based control/grind — loops Sky Striker Mobilize - Engage! via the Ace monsters to out-resource you, disrupts with Widow Anchor / Shark Cannon. Wants its OWN monster zones EMPTY (most Quick-Plays need controlling no monsters).",
+      "gameplanFirst": "A clogged board punishes THEM, not you — almost every Sky Striker Quick-Play needs THEM to control no monsters, so forcing a monster onto THEIR field (Kaiju / Lava Golem / a token) shuts off Widow Anchor + Shark Cannon on your turn. Set up normally; just respect Widow Anchor on your key monster.",
+      "gameplanSecond": "Little to physically 'break' (low board) — the fight is resources + backrow. Clear their set Mecha Spells (Widow Anchor / Shark Cannon are the disruption). Put a monster on their field (Kaiju) to disable Quick-Plays. Ghost Reaper can pre-emptively banish Kagari.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Best — chokes the Engage snowball"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "Negate an Engage"
+       },
+       {
+        "name": "Lava Golem",
+        "side": "good",
+        "notes": "Force a monster onto their field — shuts off Quick-Plays"
+       },
+       {
+        "name": "Ghost Reaper & Winter Cherries",
+        "side": "good",
+        "notes": "Snipe Kagari / Multirole"
+       },
+       {
+        "name": "Lightning Storm",
+        "side": "good",
+        "notes": "Their set Mecha Spells"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Droll / Ash the Engage chain; they want an EMPTY board — clog it.",
-      "chokepointOurs": "Don't over-extend into their Spells; go wide and fast.",
+      "chokepointTheirs": "Droll & Lock Bird is the premier answer — stops the search after their first add and chokes the Engage snowball. Ash negates an Engage. Cursed Seal of the Forbidden Spell permanently locks Engage. Stopping repeated Engages collapses them.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Sky Striker Ace - Shizuku",
+       "Sky Striker Mecha - Widow Anchor",
+       "Sky Striker Mecha - Shark Cannon",
+       "Sky Striker Mecha - Eagle Booster"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3527,20 +4170,50 @@
      {
       "matchupId": "m_meta_vanquish-soul",
       "opponentDeckId": "deck_meta_vanquish-soul",
-      "tier": "tier1",
-      "howTheyWin": "Attribute-toolbox beatdown (Razen / Caesar) + K9 engine; resource grind.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "tier": "tier2",
+      "howTheyWin": "Vanquish Soul K9 — a hand-resource 'tag-fighter' beatdown: reveal monsters in hand to fuel attribute effects, tag fighters in/out, grind resources. K9 adds bodies + punishes handtraps.",
+      "gameplanFirst": "They're a grind/beatdown deck, not an OTK — a normal disruptive board is fine. Respect Caesar Valius's free destroy and its EARTH 'unaffected this turn' mode. Force them to commit before you tag interruption (they tag-out to dodge).",
+      "gameplanSecond": "Attrition + non-targeting removal. Forbidden Droplet / Dark Ruler No More turn off Caesar/K9 negates for the push; Evenly Matched is great (they go wide). Caesar can become unaffected — prefer mass non-targeting wipes over single-target removal.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Infinite Impermanence",
+        "side": "good",
+        "notes": "Trap — slips past K9 Ripper's negate"
+       },
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Anti-search"
+       },
+       {
+        "name": "Thunder King Rai-Oh",
+        "side": "good",
+        "notes": "Anti-search / anti-reveal"
+       },
+       {
+        "name": "Forbidden Droplet",
+        "side": "good",
+        "notes": "Push through Caesar/K9 negates"
+       },
+       {
+        "name": "Evenly Matched",
+        "side": "good",
+        "notes": "They go wide"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the K9 / VS search.",
-      "chokepointOurs": "Their bosses are beatdown-y — out-grind + remove Caesar.",
+      "chokepointTheirs": "Ash Vanquish Soul Razen (main searcher). BUT K9-17 'Ripper' negates monster effects activated in hand/GY — i.e. it negates your Ash/Veiler. So lead with Infinite Impermanence (a Trap — dodges Ripper) or hold the monster handtrap until Ripper is spent. Their tag-out dodges targeted disruption.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Vanquish Soul Caesar Valius",
+       "Vanquish Soul Pluton HG",
+       "K9-17 Ripper"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3556,19 +4229,50 @@
       "matchupId": "m_meta_white-forest",
       "opponentDeckId": "deck_meta_white-forest",
       "tier": "tier1",
-      "howTheyWin": "Synchro engine — White Forest spells trigger off Synchro/Sinful Spoils; Azamina splash.",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "Synchro Spellcasters/Illusions whose Special Summons + Sinful Spoils cards trigger White Forest spells to grind, then lock you out with a stacked multi-disruption board. Azamina splash adds a recyclable negate (Ilia Silvia).",
+      "gameplanFirst": "Play around Ilia Silvia's omni-negate (it costs a tribute — bait it on a non-essential effect first), then resolve your payoff. Expect a non-targeting banish (Chaos Angel / S:P), so don't rely on one fragile board piece.",
+      "gameplanSecond": "Clear the omni-negate (Ilia Silvia) first — bait or remove WITHOUT targeting. Use NON-targeting / NON-destruction removal (their Synchros gain protection from Rciela / Illusion effects): Kaiju, Lava Golem, send/banish, or Evenly Matched. Avoid pure destruction. Watch Silvera's Book of Eclipse flipping your board face-down.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Droll & Lock Bird",
+        "side": "good",
+        "notes": "Chokes the search loop"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Elzette / Silvy / Hallowed Azamina"
+       },
+       {
+        "name": "Effect Veiler",
+        "side": "good",
+        "notes": "Cleaner than Imperm — they fuel off Imperm"
+       },
+       {
+        "name": "Evenly Matched",
+        "side": "good",
+        "notes": "They hold multiple cards"
+       },
+       {
+        "name": "Forbidden Droplet",
+        "side": "good",
+        "notes": "Non-targeting out"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the White Forest / Sinful Spoils search.",
-      "chokepointOurs": "Stop the first Synchro; clear the board.",
+      "chokepointTheirs": "Imperm/Ash the early starter (Elzette / Silvy) before it converts into multiple bodies; Droll & Lock Bird chokes the repeated searching; Ash the Ilia Silvia / Hallowed Azamina line to deny the recyclable negate. They run cards that turn your DEAD handtraps into fuel, so one handtrap rarely ends them.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Azamina Ilia Silvia",
+       "Chaos Angel",
+       "S:P Little Knight",
+       "Sinful Spoils of the White Forest"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3584,19 +4288,50 @@
       "matchupId": "m_meta_yummy",
       "opponentDeckId": "deck_meta_yummy",
       "tier": "tier1",
-      "howTheyWin": "Fiend/Azamina swarm into Fusion negates (often Fiendsmith).",
-      "gameplanFirst": "",
-      "gameplanSecond": "",
+      "howTheyWin": "LIGHT-Beast Synchro combo (Cupsy/Cooky/Lollipo + Yummy Way Synchros) that swarms cheaply and, in the Azamina/Fiendsmith build, converts into multiple Fusion omni-negates.",
+      "gameplanFirst": "It's a combo deck — Maxx C / Mulcharmy pressure is strong. The Azamina layer makes them hard to handtrap outside the Standby Phase, so end on disruption that doesn't rely on perfect timing. Dimension Shifter shuts the Fiendsmith GY engine off hard.",
+      "gameplanSecond": "'No-negate' sweepers shine — Dark Ruler No More turns off the Fusion negates so you can push; Forbidden Droplet neuters Snatchy + omni-negates. Bystials are great (all Fiendsmith are LIGHT — banish their GY LIGHTs). Remove the omni-negate Fusion (Ilia Silvia / Desirae) before your main play.",
       "keyTargets": [],
       "techCardsThatShine": [],
-      "counterCards": [],
+      "counterCards": [
+       {
+        "name": "Maxx \"C\"",
+        "side": "good",
+        "notes": "Best vs a combo deck"
+       },
+       {
+        "name": "Ash Blossom & Joyous Spring",
+        "side": "good",
+        "notes": "On Cupsy's search / Fiendsmith GY"
+       },
+       {
+        "name": "Dimension Shifter",
+        "side": "good",
+        "notes": "Shuts the Fiendsmith GY engine"
+       },
+       {
+        "name": "Bystial Druiswurm",
+        "side": "good",
+        "notes": "Banish their LIGHT Fiendsmith GY"
+       },
+       {
+        "name": "Dark Ruler No More",
+        "side": "good",
+        "notes": "Turn off the Fusion negates"
+       }
+      ],
       "relatedComboIds": [],
       "freeformNotes": "",
-      "chokepointTheirs": "Ash the first search; Belle the Fiendsmith/Azamina GY plays.",
-      "chokepointOurs": "Break the Fusion board with non-targeting removal.",
+      "chokepointTheirs": "Maxx C / Imperm on the first Synchro is cleanest. Ash the Cupsy Yummy Way search or (Fiendsmith build) the Engraver/Lacrima GY setup. NOTE: Yummy Snatchy's Field-Spell placement CANNOT be Ash'd.",
+      "chokepointOurs": "",
       "priorityFirst": [],
       "prioritySecond": [],
-      "targetEndboard": [],
+      "targetEndboard": [
+       "Azamina Ilia Silvia",
+       "Fiendsmith's Desirae",
+       "S:P Little Knight",
+       "Yummy Snatchy"
+      ],
       "sideboard": {
        "goingFirst": {
         "in": [],
@@ -3610,7 +4345,7 @@
      }
     ],
     "tournaments": [],
-    "notes": "Auto-built from ygoprodeck tournament lists. Pick your deck as primary, then refine each matchup's plan. Define their end boards in Testing -> Going second to practise breaking them.",
+    "notes": "Auto-built from ygoprodeck tournament lists + researched strategy (see docs/META_2026-05.md). Pick your deck as primary, then refine each matchup. Each opponent's typical end board is pre-filled — open Testing -> Going second to practise breaking it.",
     "createdAt": "2026-05-30T00:00:00.000Z",
     "updatedAt": "2026-05-30T00:00:00.000Z"
    }

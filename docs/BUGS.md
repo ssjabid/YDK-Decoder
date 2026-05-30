@@ -1,8 +1,20 @@
 # Known Bugs
 
-Status as of **2026-05-28**. ✅ = fixed and verified. 🚧 = open / partial.
+Status as of **2026-05-30**. ✅ = fixed and verified. 🚧 = open / partial.
 "Polish punch list" at the bottom is for small UI niggles to gather and
 batch-fix during the next pass.
+
+---
+
+## ✅ Phase 6O fixes (verified live 2026-05-30)
+
+- ✅ **Role-recovery banner false positive.** After importing the meta pack,
+  every deck is `role:"matchup"`, which tripped
+  `detectMatchupDecksThatShouldBePrimary()` → the scary "all your decks are
+  marked as Matchup" banner. Now the detector ignores meta-import decks
+  (`source === "meta-import"` or `deckId` prefix `deck_meta_`) and only flags a
+  user's *own* flipped decks. *Verified: detector returns null with only meta
+  decks loaded; banner absent.*
 
 ---
 

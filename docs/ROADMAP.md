@@ -10,6 +10,15 @@ current build. The "In progress / next" section is the active queue.
 > plus a data-loss-class cross-reference gap on deck delete. All verified live.
 > See `docs/BUGS.md` → "Audit pass 1". No feature-queue changes.
 >
+> **2026-05-30 — Phase 6O: meta pack + one-click loader.** 17 researched TCG
+> matchup decks (incl. Clown Crew) bundled in `meta-decks/`, with cited strategy
+> per deck (`docs/META_2026-05.md`). New **Settings → ⚡ Load meta decks** imports
+> them in one click with fully pre-filled matchups (end boards / chokepoints /
+> game-plans / handtraps), re-runnable to refresh. **Testing → Going second →
+> ⚡ Use their typical board** seeds the Board Breaker from the matchup plan.
+> Fixed the role-recovery banner false positive (meta decks no longer flagged).
+> Tournament-prep run-through: `docs/TOURNAMENT_PREP_TESTPLAN.md`.
+>
 > **2026-05-29 — Phases 6G–6L shipped.** Guided tournament round form (6G);
 > mulligan effective-opener + face-down-set narration fix (6H); **card
 > knowledge base** authored from the YGOPRODeck API with DuelingBook↔official

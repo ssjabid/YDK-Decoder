@@ -1,7 +1,7 @@
 # HANDOFF — YDK Decoder
 
 Snapshot of the project state for whoever picks this up next (including future-me).
-Last updated: **2026-05-28**.
+Last updated: **2026-05-30**.
 
 ---
 
@@ -22,7 +22,7 @@ The extension and decoder communicate via `localStorage` injection (decoder owns
 
 | Component | Current build |
 |---|---|
-| Decoder | `2026-05-29-phase6M-modal-refactor` |
+| Decoder | `2026-05-30-phase6O-meta-loader` |
 | Extension manifest | `1.5.0` |
 | Service worker | `sw-build-2026-04-26-combo-deckid-stamp` |
 | Deck extractor (content script) | `deck-extractor-2026-04-26-v6-content-script` |
@@ -51,7 +51,37 @@ SW + deck-extractor builds are in their respective console logs.
 - Per-combo **collapsible notes** panel (`<details>` element, click outside to commit + close, `Cmd/Ctrl+Enter` saves, `Esc` discards)
 - Five view modes: Full / Core / Cluster / Compact / Diagram (dropdown picker)
 
-### Phase 6M — modal-shell refactor + tickable checklist (May 29 2026, latest)
+### Phase 6O — meta pack + one-click loader + Board-Breaker tie-in (May 30 2026, LATEST)
+- **17 meta matchup decks** (TCG, May 2026) extracted from ygoprodeck tournament
+  lists → `meta-decks/*.ydk` (added **Clown Crew** this session). Built into
+  `meta-decks/meta-matchups-backup.json` by `scripts/build_meta_backup.py`, whose
+  `INTEL` dict now carries **researched + cited** strategy per deck (see
+  `docs/META_2026-05.md`). Each matchup is **fully pre-filled**: `howTheyWin`,
+  `targetEndboard` (named cards), `chokepointTheirs`, `gameplanFirst/Second`,
+  `counterCards` (recommended handtraps), and a `tier`.
+- **⚡ Load meta decks** button — **Settings → Meta decks**. `loadMetaMatchups()`
+  fetches the bundled JSON over localhost and smart-merges: adds/refreshes the
+  `deck_meta_*` decks (preserving user `keyCards`/`notes`) and refreshes the
+  researched fields on each matchup in `fmt_meta_may2026` while **keeping** the
+  user's tournament journal, freeform notes, side plans and priority steps.
+  Re-runnable to pull the latest research. Falls back gracefully off-localhost
+  (clear alert). Manual paths (Settings → Restore, Format → + Import .ydk) still work.
+- **Role-recovery banner false-positive fixed** — `detectMatchupDecksThatShouldBePrimary()`
+  now ignores `meta-import` decks (`source === "meta-import"` / `deckId` prefix
+  `deck_meta_`), so loading the pack no longer triggers the "all your decks are
+  Matchup" scare. Only genuinely-flipped *user* decks are flagged.
+- **Board Breaker ⚡ "Use their typical board"** — Testing → Going second seeds an
+  end-board profile straight from the matchup's `targetEndboard`
+  (`bbSeedProfileFromMatchup`, disruption inferred from card roles). Also a
+  **⚡ Pull from matchup plan** button inside the board editor. Ties the meta intel
+  directly into going-second practice.
+- New reusable script: `scripts/resolve_ydk.py` (passcodes → card names via API);
+  `scripts/check_html_js.py` (extract inline scripts → `node --check`).
+- All verified live on localhost (preview): loader merge (17 decks, pre-filled
+  matchups render), banner suppressed, board-breaker seed builds pieces, 0 console
+  errors, all 4 tabs render.
+
+### Phase 6M — modal-shell refactor + tickable checklist (May 29 2026)
 - **`runChoiceModal(opts)`** — one shared shell for "pick/fill in" modals
   (open / cleanup / Esc / backdrop / listener removal in one place).
   `pickTournamentType`, `addRoundFlow`, and `pickFromList` now all use it

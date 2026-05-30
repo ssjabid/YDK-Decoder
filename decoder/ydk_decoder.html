@@ -6477,6 +6477,19 @@
         </div>
       </section>
 
+      <section class="settings-section">
+        <h2 class="settings-section-title">Meta decks</h2>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Load / refresh meta matchups</div>
+            <div class="settings-hint">One click imports the bundled May 2026 TCG meta pack — opponent decks + a "Meta - May 2026" format with how-they-win, end boards, chokepoints and going-first/second plans pre-filled. Re-run anytime to refresh to the latest research. <strong>Keeps</strong> your own decks and tournament journal; refreshes the meta intel. <em>Requires running on localhost.</em></div>
+          </div>
+          <div class="settings-control">
+            <button type="button" id="settings-load-meta-btn" class="settings-btn">⚡ Load meta decks</button>
+          </div>
+        </div>
+      </section>
+
       <section class="settings-section settings-section-danger">
         <h2 class="settings-section-title">Danger zone</h2>
         <div class="settings-row">
@@ -6639,7 +6652,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-30-phase6N-testing-tab-fixes";
+const YDK_BUILD = "2026-05-30-phase6O-meta-loader";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -9425,6 +9438,16 @@ function refreshSettingsTab() {
     });
   }
 
+  // Meta pack — one-click load / refresh
+  const loadMetaBtn = document.getElementById("settings-load-meta-btn");
+  if (loadMetaBtn) loadMetaBtn.addEventListener("click", async () => {
+    loadMetaBtn.disabled = true;
+    const orig = loadMetaBtn.textContent;
+    loadMetaBtn.textContent = "Loading…";
+    try { if (typeof loadMetaMatchups === "function") await loadMetaMatchups(); }
+    finally { loadMetaBtn.disabled = false; loadMetaBtn.textContent = orig; }
+  });
+
   // Danger zone — clear combos
   const clearBtn = document.getElementById("settings-clear-combos-btn");
   if (clearBtn) clearBtn.addEventListener("click", async () => {
@@ -9776,20 +9799,27 @@ function saveDecks(arr) {
 function detectMatchupDecksThatShouldBePrimary() {
   try {
     const decks = loadDecks();
-    const allMatchup = decks.length > 0 && decks.every(d => d.role === "matchup");
-    if (!allMatchup) {
-      // Soft heuristic: any matchup deck that has combos linked to it
-      // (combos.deckId === deck.deckId) is almost certainly a flipped
-      // primary deck. Real opponent decks don't have your combos.
-      const combos = loadSavedCombos();
-      const matchupDecksWithCombos = decks.filter(d =>
-        d.role === "matchup" && combos.some(c => c.deckId === d.deckId)
-      );
-      if (!matchupDecksWithCombos.length) return null;
-      return { kind: "with-combos", decks: matchupDecksWithCombos };
+    if (!decks.length) return null;
+    // Meta-import decks (the bundled opponent pack) are INTENTIONALLY matchup
+    // decks — never treat them as "flipped primaries". Excluding them stops
+    // the recovery banner firing just because you loaded the meta pack.
+    const isMeta = d => d && (d.source === "meta-import" ||
+      (typeof d.deckId === "string" && d.deckId.indexOf("deck_meta_") === 0));
+    const suspects = decks.filter(d => d.role === "matchup" && !isMeta(d));
+    if (!suspects.length) return null; // only meta imports are matchup → nothing to recover
+
+    // If every one of the user's OWN (non-meta) decks is a matchup deck, the
+    // user almost certainly didn't intend that — offer to convert them back.
+    const ownDecks = decks.filter(d => !isMeta(d));
+    if (ownDecks.length > 0 && ownDecks.every(d => d.role === "matchup")) {
+      return { kind: "all-matchup", decks: suspects };
     }
-    // All decks are matchup — the user almost certainly didn't intend that
-    return { kind: "all-matchup", decks };
+    // Soft heuristic: a (non-meta) matchup deck that has your combos linked to
+    // it is almost certainly a flipped primary. Real opponent decks don't.
+    const combos = loadSavedCombos();
+    const withCombos = suspects.filter(d => combos.some(c => c.deckId === d.deckId));
+    if (!withCombos.length) return null;
+    return { kind: "with-combos", decks: withCombos };
   } catch (_) { return null; }
 }
 
@@ -9806,8 +9836,8 @@ function renderRoleRecoveryBanner() {
   const banner = document.createElement("div");
   banner.className = "deck-recovery-banner role-recovery-banner";
   const msg = result.kind === "all-matchup"
-    ? `<strong>Heads up — all ${result.decks.length} of your decks are marked as Matchup.</strong>` +
-      `<span>An earlier bug may have flipped your primary decks. Restore them as "My deck" so they show under My Decks?</span>`
+    ? `<strong>Heads up — ${result.decks.length} of your own deck${result.decks.length === 1 ? " is" : "s are"} marked as Matchup.</strong>` +
+      `<span>An earlier bug may have flipped your primary decks (the bundled meta decks are excluded). Restore them as "My deck" so they show under My Decks?</span>`
     : `<strong>${result.decks.length} matchup deck${result.decks.length === 1 ? " has" : "s have"} your combos linked to them.</strong>` +
       `<span>These were probably flipped from My deck → Matchup by an earlier bug. Convert them back?</span>`;
   banner.innerHTML =
@@ -14901,6 +14931,121 @@ async function runRestoreFromFile(file) {
   if (typeof renderFormatTab === "function") { try { renderFormatTab(); } catch (_) {} }
 }
 
+// ============================================================
+// ONE-CLICK META PACK LOADER
+// ============================================================
+// Fetches the bundled meta-decks/meta-matchups-backup.json (served from the
+// same origin on localhost) and imports it, so the user never has to run the
+// python script or hunt for the JSON. Re-running REFRESHES the meta pack to
+// the latest research while preserving the user's own decks, combos and
+// tournament journal. Requires localhost (fetch of a relative path fails on
+// file://). Default deck-notes string must match build_meta_backup.py.
+const META_PACK_URL = "../meta-decks/meta-matchups-backup.json";
+const META_DECK_DEFAULT_NOTES = "Imported from a ygoprodeck tournament list (May 2026). Refine as the meta shifts.";
+
+function isMetaImportDeck(d) {
+  return !!d && (d.source === "meta-import" ||
+    (typeof d.deckId === "string" && d.deckId.indexOf("deck_meta_") === 0));
+}
+
+async function loadMetaMatchups() {
+  let json;
+  try {
+    const res = await fetch(META_PACK_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    json = await res.json();
+  } catch (e) {
+    await ydkAlert({
+      icon: "⚠",
+      title: "Couldn't load the meta pack",
+      message: `The bundled meta pack couldn't be fetched. Make sure you're running on localhost ` +
+               `(e.g. <code>py -m http.server 8000</code>) and opened the app at ` +
+               `<code>localhost:8000/decoder/ydk_decoder.html</code> — not from a <code>file://</code> path. ` +
+               `<br><br><span class="settings-hint">(${(e && e.message) ? escapeHtmlSafe(e.message) : "fetch failed"})</span>`,
+    });
+    return;
+  }
+  const data = json && json.data;
+  if (!data || !Array.isArray(data.decks)) {
+    showComboToast("Meta pack file is malformed.", "error");
+    return;
+  }
+
+  const packDeckIds = new Set(data.decks.map(d => d && d.deckId).filter(Boolean));
+  const existingDecks = loadDecks();
+  const alreadyHave = existingDecks.some(d => packDeckIds.has(d.deckId));
+
+  const ok = await ydkConfirm({
+    icon: "⚡",
+    title: alreadyHave ? "Refresh the meta pack?" : "Load the meta pack?",
+    message: `Imports <strong>${data.decks.length}</strong> opponent decks + a "Meta - May 2026" format with ` +
+             `how-they-win, end boards, chokepoints and going-first/second plans pre-filled.<br><br>` +
+             `Your own decks, combos and tournament journal are <strong>kept</strong>.` +
+             (alreadyHave
+               ? ` The researched plan text (gameplans, chokepoints, end boards, recommended cards) on these meta ` +
+                 `matchups will be <strong>refreshed</strong> to the latest — your freeform notes, side-deck plans ` +
+                 `and priority steps are kept.`
+               : ``),
+    confirmText: alreadyHave ? "Refresh meta pack" : "Load meta pack",
+  });
+  if (!ok) return;
+
+  // ── Decks: refresh existing meta decks (preserve user keyCards + notes), add new ──
+  const byId = new Map(existingDecks.map(d => [d.deckId, d]));
+  let added = 0, refreshed = 0;
+  for (const incoming of data.decks) {
+    if (!incoming || !incoming.deckId) continue;
+    const prev = byId.get(incoming.deckId);
+    if (prev) {
+      if (Array.isArray(prev.keyCards) && prev.keyCards.length) incoming.keyCards = prev.keyCards;
+      if (prev.notes && prev.notes !== META_DECK_DEFAULT_NOTES) incoming.notes = prev.notes;
+      refreshed++;
+    } else {
+      added++;
+    }
+    byId.set(incoming.deckId, incoming);
+  }
+  saveDecks(Array.from(byId.values()));
+
+  // ── Format: merge pack format, refreshing researched fields, keeping the journal ──
+  const packFmt = (data.formats || [])[0];
+  let fmtMsg = "";
+  if (packFmt) {
+    const formats = loadFormats();
+    const localFmt = formats.find(f => f && f.formatId === packFmt.formatId);
+    if (!localFmt) {
+      formats.push(packFmt);
+      fmtMsg = ` · added "${packFmt.name}"`;
+    } else {
+      // Refresh only the researched fields; keep everything the user authored
+      // (freeformNotes, sideboard, priority steps, relatedComboIds, chokepointOurs)
+      // and the tournament journal.
+      const REFRESH = ["howTheyWin", "gameplanFirst", "gameplanSecond",
+                       "chokepointTheirs", "targetEndboard", "counterCards", "tier"];
+      const byOpp = new Map((localFmt.matchups || []).map(m => [m.opponentDeckId, m]));
+      (packFmt.matchups || []).forEach(pm => {
+        const lm = byOpp.get(pm.opponentDeckId);
+        if (lm) {
+          REFRESH.forEach(k => { lm[k] = pm[k]; });
+        } else {
+          (localFmt.matchups = localFmt.matchups || []).push(pm);
+        }
+      });
+      localFmt.updatedAt = new Date().toISOString();
+      fmtMsg = ` · refreshed "${localFmt.name}"`;
+    }
+    saveFormats(formats);
+    if (!getActiveFormatId()) setActiveFormatId(packFmt.formatId);
+  }
+
+  showComboToast(`Meta pack: +${added} new, ${refreshed} refreshed${fmtMsg}`);
+  if (typeof refreshDeckSwitcher === "function") refreshDeckSwitcher();
+  if (typeof renderDeckSwitcherList === "function") renderDeckSwitcherList();
+  if (typeof renderDecksLibrary === "function") renderDecksLibrary();
+  if (typeof renderDecksTab === "function") { try { renderDecksTab(); } catch (_) {} }
+  if (typeof renderFormatTab === "function") { try { renderFormatTab(); } catch (_) {} }
+}
+
 // NOTE: backup/restore buttons are wired in wireSettingsTab() against the
 // real DOM ids (settings-backup-btn / settings-restore-btn /
 // settings-restore-input). An earlier wireBackupRestore() IIFE here wired
@@ -17342,6 +17487,38 @@ function bbSidePlan(oppDeckId) {
   return { in: sb.in || [], out: sb.out || [] };
 }
 
+// The opponent's typical end board as recorded on the active format's matchup
+// (targetEndboard). This is what the meta pack pre-fills, so the Board Breaker
+// can seed a board to practise against in one click — no manual entry.
+function bbMatchupEndboard(oppDeckId) {
+  const fmt = (typeof getActiveFormat === "function") ? getActiveFormat() : null;
+  if (!fmt) return [];
+  const m = (fmt.matchups || []).find(x => x.opponentDeckId === oppDeckId);
+  return (m && Array.isArray(m.targetEndboard)) ? m.targetEndboard.filter(Boolean) : [];
+}
+
+// Best-effort disruption tag from a card's roles (user can fix it in the editor).
+function bbInferDisruption(name) {
+  const roles = bbCardRoles(name);
+  if (roles.includes("Floodgate")) return "floodgate";
+  if (roles.includes("Board breaker") || roles.includes("Stopper") || roles.includes("Removal")) return "removal";
+  if (roles.includes("Negation") || roles.includes("Handtrap")) return "negate";
+  return "negate"; // most end-board bosses negate; refine per card
+}
+
+// Seed a board profile from the matchup's targetEndboard. Dedupes against
+// whatever's already in the profile. Returns how many pieces were added.
+function bbSeedProfileFromMatchup(opp, prof) {
+  const names = bbMatchupEndboard(opp.deckId);
+  let added = 0;
+  names.forEach(n => {
+    if (prof.pieces.some(p => p.card === n)) return;
+    prof.pieces.push({ card: n, disruption: bbInferDisruption(n), note: "" });
+    added++;
+  });
+  return added;
+}
+
 function renderBoardBreaker() {
   const root = document.getElementById("board-breaker");
   if (!root) return;
@@ -17397,6 +17574,24 @@ function renderBoardBreaker() {
   editBtn.textContent = opp.endboards.length ? "Edit boards" : "+ Define their board";
   editBtn.onclick = () => renderBbEditor(opp);
   bar.appendChild(editBtn);
+
+  // One-click: if they have no board yet but the matchup plan has a typical
+  // end board pre-filled (e.g. from the meta pack), seed it instantly.
+  if (!opp.endboards.length && bbMatchupEndboard(opp.deckId).length) {
+    const seedBtn = document.createElement("button");
+    seedBtn.type = "button"; seedBtn.className = "btn is-primary bb-seed-btn";
+    seedBtn.textContent = "⚡ Use their typical board";
+    seedBtn.title = "Build their board from the matchup plan's end board";
+    seedBtn.onclick = () => {
+      const prof = makeEndboardProfile("Typical board");
+      bbSeedProfileFromMatchup(opp, prof);
+      ensureDeckEndboards(opp).push(prof);
+      _bbEndboardId = prof.endboardId;
+      persistDeck(opp);
+      renderBoardBreaker();
+    };
+    bar.appendChild(seedBtn);
+  }
 
   const shuffleBtn = document.createElement("button");
   shuffleBtn.type = "button"; shuffleBtn.className = "btn is-primary bb-shuffle-btn";
@@ -17674,6 +17869,19 @@ function renderBbEditor(opp) {
     importBtn.type = "button"; importBtn.className = "btn is-ghost"; importBtn.textContent = "Import from a combo's end board";
     importBtn.onclick = () => bbImportFromCombo(opp, prof);
     addRow.appendChild(importBtn);
+
+    // Pull the opponent's typical board straight from the matchup plan.
+    if (bbMatchupEndboard(opp.deckId).length) {
+      const pullBtn = document.createElement("button");
+      pullBtn.type = "button"; pullBtn.className = "btn is-ghost"; pullBtn.textContent = "⚡ Pull from matchup plan";
+      pullBtn.title = "Add the end-board pieces recorded on this matchup";
+      pullBtn.onclick = () => {
+        const n = bbSeedProfileFromMatchup(opp, prof);
+        persistDeck(opp); renderBbEditor(opp);
+        showComboToast(n ? `Added ${n} piece${n === 1 ? "" : "s"} from the matchup plan` : "Already has those pieces");
+      };
+      addRow.appendChild(pullBtn);
+    }
     panel.appendChild(addRow);
   }
 
