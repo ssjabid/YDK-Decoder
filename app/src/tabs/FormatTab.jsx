@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
-import { loadFormats, getActiveFormatId, loadDecks } from "../lib/storage.js";
+import { useMemo, useReducer, useState } from "react";
+import { loadFormats, saveFormats, getActiveFormatId, loadDecks } from "../lib/storage.js";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
+const TIER_OPTIONS = [["tier1", "Tier 1"], ["tier2", "Tier 2"], ["rogue", "Rogue"]];
 
 export default function FormatTab({ dataVersion = 0 }) {
+  const [rev, bump] = useReducer((x) => x + 1, 0);
   const { format, deckNames } = useMemo(() => {
     const formats = loadFormats();
     const id = getActiveFormatId();
@@ -11,9 +13,20 @@ export default function FormatTab({ dataVersion = 0 }) {
     const names = {};
     for (const d of loadDecks()) names[d.deckId] = d.name;
     return { format: fmt, deckNames: names };
-  }, [dataVersion]);
+  }, [dataVersion, rev]);
 
   const [openId, setOpenId] = useState(null);
+
+  // Let the user dictate each matchup's tier (persisted; survives meta refresh).
+  const setTier = (matchupId, tier) => {
+    const formats = loadFormats();
+    const f = formats.find((x) => x.formatId === (format && format.formatId));
+    const m = f && (f.matchups || []).find((x) => x.matchupId === matchupId);
+    if (!m) return;
+    m.tier = tier;
+    saveFormats(formats);
+    bump();
+  };
 
   if (!format) {
     return (
@@ -56,6 +69,12 @@ export default function FormatTab({ dataVersion = 0 }) {
 
               {open && (
                 <div className="matchup-drill">
+                  <div className="drill-field">
+                    <div className="drill-label">Tier — you decide</div>
+                    <select className="bb-select" value={m.tier || "tier1"} onChange={(e) => setTier(m.matchupId, e.target.value)}>
+                      {TIER_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
                   <Field label="Main combo line (how their turn goes)" value={m.comboLine} />
                   <Field label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} />
                   <Field label="Going first vs them" value={m.gameplanFirst} />

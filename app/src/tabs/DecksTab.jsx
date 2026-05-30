@@ -349,13 +349,17 @@ const PRIORITY_DOT = { high: "var(--role-stopper)", medium: "var(--warning)", no
 
 function KeyCardRow({ deck, kc, save, force }) {
   const [open, setOpen] = useState(false);
+  const remove = () => { deck.keyCards = deck.keyCards.filter((x) => x !== kc); save(); force(); };
   return (
     <div className="key-card-row">
-      <button type="button" className="key-card-row-head" onClick={() => setOpen((o) => !o)}>
-        <span className="key-card-dot" style={{ background: PRIORITY_DOT[kc.stopPriority] || "transparent", borderColor: kc.stopPriority === "none" ? "var(--border-strong)" : "transparent" }} />
-        <span className="key-card-name">{kc.name}</span>
-        {kc.auto === false && <span className="key-card-manual">manual</span>}
-      </button>
+      <div className="key-card-row-head">
+        <button type="button" className="key-card-toggle" onClick={() => setOpen((o) => !o)}>
+          <span className="key-card-dot" style={{ background: PRIORITY_DOT[kc.stopPriority] || "transparent", borderColor: kc.stopPriority === "none" ? "var(--border-strong)" : "transparent" }} />
+          <span className="key-card-name">{kc.name}</span>
+          {kc.auto === false && <span className="key-card-manual">manual</span>}
+        </button>
+        <button type="button" className="key-card-remove" title="Remove from key cards" onClick={remove}>×</button>
+      </div>
       {open && (
         <div className="key-card-editor">
           <label className="key-card-edit-row">
@@ -368,8 +372,6 @@ function KeyCardRow({ deck, kc, save, force }) {
             onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => { kc.stopWith = e.target.value; save(); }} />
           <AutosaveTextarea value={kc.notes || ""} placeholder="Notes — why it matters, how to play around it"
             onSave={(v) => { kc.notes = v; save(); }} />
-          <button type="button" className="tech-card-del" title="Remove from key cards"
-            onClick={() => { deck.keyCards = deck.keyCards.filter((x) => x !== kc); save(); force(); }}>× Remove</button>
         </div>
       )}
     </div>

@@ -13,9 +13,11 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
   const onRight = rect.left > window.innerWidth / 2;
   const style = {
     position: "fixed",
-    top: Math.min(Math.max(rect.top - 24, 12), Math.max(12, window.innerHeight - 440)),
+    // Keep it high enough that the (scrollable) panel fits within the viewport.
+    top: Math.max(12, Math.min(rect.top - 24, window.innerHeight * 0.12)),
     [onRight ? "right" : "left"]: onRight ? (window.innerWidth - rect.left + 14) : (rect.right + 14),
   };
+  const fullText = (card.desc || "").trim() || cls.stripped[0] || "(no effect text)";
   return (
     <div className={"card-preview" + (pinned ? " is-pinned" : "")} style={style}
       onClick={pinned && onClose ? onClose : undefined}>
@@ -33,8 +35,8 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
             <span key={r} className="role-chip" style={{ "--role": ROLE_COLORS[r] }}>{r}</span>
           ))}
         </div>
-        <div className="card-preview-text">{cls.stripped[0]}</div>
-        {pinned && <div className="card-preview-pinhint">pinned · click to dismiss</div>}
+        <div className="card-preview-text">{fullText}</div>
+        {pinned && <div className="card-preview-pinhint">pinned · scroll to read · click to dismiss</div>}
       </div>
     </div>
   );

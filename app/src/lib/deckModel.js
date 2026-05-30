@@ -159,15 +159,25 @@ export function classifyKeyCardCategory(card) {
   const roles = (classify(card).roles) || [];
   if (roles.includes("Handtrap")) return "Handtrap";
   if (roles.includes("Floodgate")) return "Floodgate";
-  if (roles.includes("Starter")) return "Starter";
+  // Starter: searches a card from the Deck to hand, or Special Summons from
+  // the Deck — i.e. the cards that START a combo (what you'd hand-trap).
+  // The keyword classifier never emits "Starter" on its own, so detect it
+  // from the text here (this is why the Starter bucket was always empty).
+  const desc = card.desc || "";
+  if (/add 1[^.]*from your deck to your hand/i.test(desc) ||
+      /add[^.]*from your deck to (?:the|your) hand/i.test(desc) ||
+      /special summon[^.]*from your deck/i.test(desc)) return "Starter";
   if (roles.includes("Extender")) return "Extender";
+  if (roles.includes("Starter")) return "Starter";
   return "Tech";
 }
 
 export function extractKeyCards(deck, cardMap) {
   const dl = getDeckPrimaryDecklist(deck);
   if (!dl) return [];
-  const ids = [].concat(dl.main || [], dl.extra || [], dl.side || []).map(String);
+  // MAIN deck only — key cards are about the core deck cards you'd interact
+  // with (starters/extenders/handtraps to stop), not every Extra-deck boss.
+  const ids = (dl.main || []).map(String);
   const uniqueIds = Array.from(new Set(ids));
   const existing = Array.isArray(deck.keyCards) ? deck.keyCards : [];
   const manualByName = new Map(existing.filter((kc) => kc && kc.auto === false).map((kc) => [kc.name, kc]));
@@ -201,7 +211,7 @@ export function extractKeyCards(deck, cardMap) {
 export function countMissingCardData(deck, cardMap) {
   const dl = getDeckPrimaryDecklist(deck);
   if (!dl) return 0;
-  const ids = [].concat(dl.main || [], dl.extra || [], dl.side || []).map(String);
+  const ids = (dl.main || []).map(String);
   const uniqueIds = Array.from(new Set(ids));
   let missing = 0;
   for (const id of uniqueIds) if (!cardMap[Number(id)]) missing++;
@@ -294,7 +304,11 @@ export function buildKeyRatiosHtml(deck, cardMap) {
     const inner = urls.length
       ? `<img src="${esc(urls[0])}" alt="${esc(name)}" loading="lazy">`
       : `<span class="rt-card-mention-fallback">?</span>`;
-    return `${count}× <span class="rt-card-mention" data-card="${esc(name)}" contenteditable="false" title="${esc(name)}">${inner}${esc(name)}</span>`;
+    return `<span class="rt-ratio-count">${count}×</span> <span class="rt-card-mention" data-card="${esc(name)}" contenteditable="false" title="${esc(name)}">${inner}${esc(name)}</span>`;
   };
-  return sections.map((s) => `<h4>${esc(s.label)}</h4><p>${s.entries.map(chip).join(", ")}</p>`).join("");
+  // One card per line (indented list) with its image — readable, not a
+  // comma-jammed paragraph.
+  return sections
+    .map((s) => `<h4>${esc(s.label)}</h4><ul>${s.entries.map((e) => `<li>${chip(e)}</li>`).join("")}</ul>`)
+    .join("");
 }

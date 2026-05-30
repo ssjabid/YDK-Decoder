@@ -220,13 +220,15 @@
 
 /* ── Card preview (hover + click-to-pin) ── */
 .card-preview {
-  z-index: 50; width: 420px;
-  display: flex; gap: 14px;
+  z-index: 50; width: 420px; max-height: 82vh; overflow-y: auto;
+  display: flex; gap: 14px; align-items: flex-start;
   background: var(--bg-elevated); border: 1px solid var(--border-strong);
   border-radius: var(--radius-md); padding: 14px;
   box-shadow: var(--shadow-lg); pointer-events: none;
   animation: preview-in 120ms ease-out;
 }
+.card-preview.is-pinned { overscroll-behavior: contain; }
+.card-preview-img { position: sticky; top: 0; }
 @keyframes preview-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .card-preview.is-pinned { pointer-events: auto; cursor: pointer; box-shadow: 0 0 0 1px var(--accent), var(--shadow-lg); }
 .card-preview-img { width: 168px; border-radius: 6px; flex-shrink: 0; align-self: flex-start; box-shadow: var(--shadow-sm); }
@@ -601,12 +603,20 @@
 .key-cards-list { display: flex; flex-direction: column; gap: 2px; padding: 6px; }
 .key-cards-empty { font-size: 10px; color: var(--text-faint); font-style: italic; padding: 2px 4px; }
 .key-card-row { border-radius: var(--radius-sm); }
-.key-card-row-head {
-  display: flex; align-items: center; gap: 7px; width: 100%; text-align: left;
-  background: transparent; border: none; cursor: pointer; color: var(--text);
-  font-family: inherit; font-size: 12px; padding: 5px 6px; border-radius: var(--radius-sm);
-}
+.key-card-row-head { display: flex; align-items: center; border-radius: var(--radius-sm); }
 .key-card-row-head:hover { background: var(--bg-hover); }
+.key-card-toggle {
+  display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; text-align: left;
+  background: transparent; border: none; cursor: pointer; color: var(--text);
+  font-family: inherit; font-size: 12px; padding: 5px 6px;
+}
+.key-card-remove {
+  background: transparent; border: none; color: var(--text-faint); cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 3px 8px; opacity: 0;
+  transition: opacity var(--motion-fast), color var(--motion-fast);
+}
+.key-card-row-head:hover .key-card-remove { opacity: 1; }
+.key-card-remove:hover { color: var(--role-stopper); }
 .key-card-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid; flex-shrink: 0; }
 .key-card-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .key-card-manual { font-size: 8px; text-transform: uppercase; color: var(--text-faint); border: 1px solid var(--border); border-radius: 999px; padding: 0 5px; }
@@ -665,8 +675,11 @@
 .rt-content p:last-child { margin-bottom: 0; }
 .rt-content h3 { font-size: 14px; font-weight: 600; margin: 8px 0 4px; }
 .rt-content h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; margin: 10px 0 4px; }
-.rt-content ul, .rt-content ol { margin: 4px 0; padding-left: 20px; }
+.rt-content ul, .rt-content ol { margin: 4px 0; padding-left: 22px; }
+.rt-content li { margin-bottom: 4px; }
 .rt-content a { color: var(--accent); }
+.rt-ratio-count { color: var(--text-faint); font-size: 0.9em; margin-right: 1px; }
+.rt-content li .rt-card-mention img { width: 22px; height: 22px; }
 
 .rt-card-mention {
   display: inline-flex; align-items: center; gap: 4px; vertical-align: baseline;
