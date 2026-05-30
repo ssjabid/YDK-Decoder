@@ -1,0 +1,128 @@
+/* ───────────────────────────────────────────────────────────────────
+   Design tokens — ported verbatim from the original single-file decoder
+   (Phase 6E palette). Keeping the exact names + values so the React app
+   looks identical to the app we polished. Component CSS references these.
+   ─────────────────────────────────────────────────────────────────── */
+:root {
+  --bg: #08080a;
+  --bg-elevated: #14141a;
+  --bg-hover: #1d1d24;
+  --bg-card: #16161c;
+  --bg-card-hover: #1c1c24;
+  --border: #25252d;
+  --border-strong: #383843;
+  --border-subtle: #1c1c24;
+  --text: #ecedf0;
+  --text-dim: #92929c;
+  --text-faint: #5a5a64;
+  --accent: #e55b3c;
+  --accent-hover: #ee6e51;
+  --accent-soft: rgba(229,91,60,0.14);
+  --accent-dim: rgba(229,91,60,0.12);
+  --warning: #e5a93c;
+  --success: #6fc88e;
+
+  /* Elevation shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.25);
+  --shadow-glow: 0 0 0 1px var(--accent), 0 6px 22px rgba(229,91,60,0.22);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* Motion */
+  --motion-fast: 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-slow: 280ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --role-starter:      #d89f4a;
+  --role-extender:     #7da86e;
+  --role-searcher:     #5fa8c4;
+  --role-handtrap:     #c45f7a;
+  --role-combo:        #8a7dc4;
+  --role-boss:         #d86a4a;
+  --role-boardbreaker: #c49a5f;
+  --role-floodgate:    #8c4a4a;
+  --role-tech:         #6a7d8a;
+  --role-equip:        #a87dc4;
+  --role-engine:       #5fc49a;
+  --role-stopper:      #c45f5f;
+  --role-pendulum:     #c4a85f;
+  --role-finisher:     #d84a6a;
+}
+
+/* Light theme overrides — applied when <html data-theme="light"> */
+:root[data-theme="light"] {
+  --bg: #f4f4f6;
+  --bg-elevated: #ffffff;
+  --bg-hover: #ececf0;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f6f6f8;
+  --border: #d9d9e0;
+  --border-strong: #c2c2cc;
+  --border-subtle: #e6e6ec;
+  --text: #1a1a20;
+  --text-dim: #5a5a64;
+  --text-faint: #9a9aa4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(229,91,60,0.045) 0%, transparent 38%),
+    radial-gradient(circle at 92% 100%, rgba(95,200,142,0.025) 0%, transparent 45%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 14px; line-height: 1.55;
+  min-height: 100vh;
+  padding: 32px 24px 80px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+}
+
+.container { max-width: 1400px; margin: 0 auto; }
+
+header.app-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 22px; margin-bottom: 26px;
+  display: flex; align-items: baseline;
+  justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.app-header h1 {
+  font-size: 19px; font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.app-header h1 .accent { color: var(--accent); }
+.subtitle { color: var(--text-dim); font-size: 13px; letter-spacing: -0.005em; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+  padding: 0 2px;
+}
+.tab {
+  background: none; border: none; color: var(--text-dim);
+  padding: 11px 18px; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: -0.005em;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  border-radius: 4px 4px 0 0;
+  transition: color var(--motion-base), background var(--motion-base), border-color var(--motion-base);
+}
+.tab:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.tab.tab-icon { padding: 11px 12px; font-size: 15px; }
