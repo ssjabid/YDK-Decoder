@@ -20,6 +20,9 @@ Run:  python scripts/build_meta_backup.py   ->  meta-decks/meta-matchups-backup.
 import os, re, glob, json
 
 TS = "2026-05-30T00:00:00.000Z"
+# Bump this whenever the pack content changes — the app auto-refreshes loaded
+# meta data to the newest version on launch.
+META_VERSION = "2026-05-30-deep-v2"
 
 # Per-deck intelligence. Keyed by .ydk filename (slug).
 #   name     -> nice display name (defaults to title-cased slug)
@@ -456,6 +459,7 @@ def main():
         "createdAt": TS, "updatedAt": TS,
     }
     backup = {"version": 1, "exportedAt": TS, "appBuild": "meta-import",
+              "metaVersion": META_VERSION,
               "counts": {"decks": len(decks), "combos": 0, "cachedCards": 0},
               "data": {"decks": decks, "formats": [fmt], "activeFormatId": "fmt_meta_may2026"}}
     out = "meta-decks/meta-matchups-backup.json"

@@ -2,6 +2,7 @@
  "version": 1,
  "exportedAt": "2026-05-30T00:00:00.000Z",
  "appBuild": "meta-import",
+ "metaVersion": "2026-05-30-deep-v2",
  "counts": {
   "decks": 17,
   "combos": 0,

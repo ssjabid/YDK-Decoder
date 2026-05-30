@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStoredTheme } from "./lib/storage.js";
+import { ensureMetaFresh } from "./lib/metaPack.js";
 import DecksTab from "./tabs/DecksTab.jsx";
 import SettingsTab from "./tabs/SettingsTab.jsx";
 import FormatTab from "./tabs/FormatTab.jsx";
@@ -23,6 +24,15 @@ export default function App() {
   useEffect(() => {
     const t = getStoredTheme();
     document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+  }, []);
+
+  // Auto-refresh the meta pack if a newer bundled version exists (only if the
+  // user has already loaded it once) — so the latest lists + deep breakdowns
+  // always show without manually re-clicking "Load meta decks".
+  useEffect(() => {
+    let alive = true;
+    ensureMetaFresh().then((r) => { if (alive && r && r.updated) reload(); });
+    return () => { alive = false; };
   }, []);
 
   return (
