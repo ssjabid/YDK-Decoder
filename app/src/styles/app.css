@@ -267,3 +267,185 @@
 }
 .card-chip.is-good { border-color: rgba(95,196,154,0.4); color: var(--success); }
 .card-chip.is-bad { border-color: rgba(196,95,95,0.4); color: var(--role-stopper); }
+
+/* ════════════════════════════════════════════════════════════════════
+   TESTING TAB — going first (goldfish) + going second (board breaker)
+   ════════════════════════════════════════════════════════════════════ */
+.testing-modebar {
+  display: inline-flex; gap: 4px; margin-bottom: 18px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 4px;
+}
+.testing-mode-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-faint); font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 15px; border-radius: var(--radius-sm);
+  transition: background var(--motion-fast), color var(--motion-fast);
+}
+.testing-mode-btn:hover { color: var(--text-dim); }
+.testing-mode-btn.active { background: var(--accent-dim); color: var(--text); }
+.testing-mode-btn.active .icon { color: var(--accent); }
+
+/* Header row: deck name + consistency streak on the left, shuffle on right */
+.practice-head, .bb-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.practice-deckname { font-size: 15px; font-weight: 600; }
+.practice-streak { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+.practice-streak strong { color: var(--role-engine); }
+.link-btn {
+  background: none; border: none; color: var(--text-faint); cursor: pointer;
+  font-family: inherit; font-size: 11px; text-decoration: underline; margin-left: 8px; padding: 0;
+}
+.link-btn:hover { color: var(--accent); }
+
+/* Two equal, balanced panels (fixes the old uneven look) */
+.practice-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch;
+}
+@media (max-width: 880px) { .practice-grid { grid-template-columns: 1fr; } }
+.practice-panel {
+  display: flex; flex-direction: column;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; min-height: 320px;
+}
+.practice-panel-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-dim); font-weight: 600; margin-bottom: 14px;
+}
+.practice-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+  color: var(--text-faint); font-size: 12.5px; line-height: 1.6; padding: 12px;
+}
+.practice-empty strong { color: var(--text-dim); }
+
+/* Drawn hand — a row of face-up cards */
+.hand-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 10px; align-content: center; flex: 1;
+}
+.hand-card {
+  position: relative; aspect-ratio: 59 / 86; border-radius: var(--radius-sm);
+  background: var(--bg-card); border: 1px solid var(--border-strong); overflow: hidden;
+  animation: hand-deal 0.4s cubic-bezier(0.2,0.7,0.3,1) backwards;
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+.hand-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); z-index: 2; }
+.hand-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hand-card-noimg {
+  display: flex; align-items: center; justify-content: center; height: 100%;
+  padding: 6px; text-align: center; font-size: 9px; color: var(--text-dim);
+}
+.hand-card-name {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 5px;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.85));
+  color: #fff; font-size: 9px; line-height: 1.2; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hand-card.is-breaker { border-color: var(--role-boardbreaker); box-shadow: 0 0 0 1px var(--role-boardbreaker); }
+.hand-card.is-handtrap { border-color: var(--role-handtrap); box-shadow: 0 0 0 1px var(--role-handtrap); }
+.hand-card-tag {
+  position: absolute; top: 4px; left: 4px; z-index: 2;
+  font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 1px 5px; border-radius: 999px; color: #fff;
+}
+.hand-card-tag.is-breaker { background: var(--role-boardbreaker); }
+.hand-card-tag.is-handtrap { background: var(--role-handtrap); }
+.hand-card:nth-child(1) { animation-delay: 0ms; }
+.hand-card:nth-child(2) { animation-delay: 55ms; }
+.hand-card:nth-child(3) { animation-delay: 110ms; }
+.hand-card:nth-child(4) { animation-delay: 165ms; }
+.hand-card:nth-child(5) { animation-delay: 220ms; }
+.hand-card:nth-child(6) { animation-delay: 275ms; }
+@keyframes hand-deal { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; } }
+
+/* Playable-lines list */
+.lines-list { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: center; }
+.lines-list.is-full { justify-content: flex-start; }
+.combo-line {
+  background: var(--bg); border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong); border-radius: var(--radius-md);
+  padding: 9px 12px;
+}
+.combo-line.is-possible { border-left-color: var(--role-engine); }
+.combo-line.is-partial  { border-left-color: var(--warning); }
+.combo-line.is-no       { border-left-color: var(--border-strong); opacity: 0.62; }
+.combo-line-head { display: flex; align-items: center; gap: 8px; }
+.combo-line-status { font-size: 13px; width: 16px; text-align: center; }
+.combo-line.is-possible .combo-line-status { color: var(--role-engine); }
+.combo-line.is-partial  .combo-line-status { color: var(--warning); }
+.combo-line.is-no       .combo-line-status { color: var(--text-faint); }
+.combo-line-name { font-size: 13px; font-weight: 600; }
+.combo-line-needs { font-size: 11px; margin-top: 4px; }
+.combo-line-needs .have { color: var(--role-engine); }
+.combo-line-needs .miss { color: var(--role-stopper); }
+.combo-line-needs .muted { color: var(--text-faint); }
+
+/* ── Board breaker (going second) ── */
+.bb-field { display: flex; flex-direction: column; gap: 4px; }
+.bb-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 700; }
+.bb-select {
+  background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 10px; min-width: 200px;
+}
+.bb-sideplan {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 9px 12px; margin-bottom: 14px; font-size: 12px;
+}
+.bb-sideplan-label { color: var(--text-faint); font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.06em; }
+.bb-in { color: var(--role-engine); }
+.bb-out { color: var(--role-stopper); }
+.bb-puzzle { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+@media (max-width: 880px) { .bb-puzzle { grid-template-columns: 1fr; } }
+.bb-col {
+  display: flex; flex-direction: column;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; min-height: 300px;
+}
+.bb-col-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-dim); font-weight: 600; margin-bottom: 14px;
+}
+.bb-board { display: flex; flex-direction: column; gap: 8px; }
+.bb-piece {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong); border-radius: var(--radius-md);
+  padding: 9px 12px; cursor: default;
+}
+.bb-piece.is-negate    { border-left-color: var(--role-handtrap); }
+.bb-piece.is-removal   { border-left-color: var(--role-boardbreaker); }
+.bb-piece.is-floodgate { border-left-color: var(--role-floodgate); }
+.bb-piece.is-body      { border-left-color: var(--text-faint); }
+.bb-piece-name { flex: 1; font-size: 13px; font-weight: 600; }
+.bb-piece-tag {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-dim); background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px 8px;
+}
+.bb-assess {
+  margin-top: 16px; background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px;
+}
+.bb-gauge { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.bb-gauge-stat { font-size: 12px; color: var(--text-dim); }
+.bb-gauge-stat strong { color: var(--role-boardbreaker); font-size: 15px; }
+.bb-gauge-stat.is-dis strong { color: var(--role-handtrap); }
+.bb-gauge-vs { color: var(--text-faint); font-size: 11px; }
+.bb-gauge-hint { font-size: 11px; color: var(--text-faint); font-style: italic; }
+.bb-assess-q { font-size: 13px; color: var(--text); margin-bottom: 10px; }
+.bb-assess-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.bb-assess-btn {
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  border-radius: var(--radius-md); padding: 8px 16px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  transition: background var(--motion-fast), border-color var(--motion-fast);
+}
+.bb-assess-btn.is-break:hover   { border-color: var(--role-engine); background: rgba(95,196,154,0.12); }
+.bb-assess-btn.is-partial:hover { border-color: var(--warning); background: rgba(229,169,60,0.12); }
+.bb-assess-btn.is-no:hover      { border-color: var(--role-stopper); background: rgba(196,95,95,0.12); }
+.bb-tally { margin-top: 12px; font-size: 12px; color: var(--text-dim); }
+.bb-tally strong { color: var(--role-engine); }

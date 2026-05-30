@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchCards, getImageUrls, countCopies } from "../lib/ydk.js";
 import { classify, pickPrimaryRole, ROLE_COLORS, groupByFrame, groupExtraByType } from "../lib/classify.js";
+import CardPreview from "./CardPreview.jsx";
 
 // Renders a deck's main/extra/side, grouped + sorted like the original:
 // Monsters/Spells/Traps for main+side, by Extra type for extra. Each tile
@@ -86,33 +87,6 @@ function CardTile({ entry, onHover }) {
       )}
       {qty > 1 && <span className="card-tile-qty">×{qty}</span>}
       <span className="card-tile-name">{name}</span>
-    </div>
-  );
-}
-
-function CardPreview({ card, rect }) {
-  const urls = getImageUrls(card.id);
-  const cls = classify(card);
-  const role = pickPrimaryRole(cls.roles);
-  // Flip to the left if the tile is in the right half of the viewport.
-  const onRight = rect.left > window.innerWidth / 2;
-  const style = {
-    position: "fixed",
-    top: Math.min(Math.max(rect.top - 20, 12), window.innerHeight - 360),
-    [onRight ? "right" : "left"]: onRight ? (window.innerWidth - rect.left + 12) : (rect.right + 12),
-  };
-  return (
-    <div className="card-preview" style={style}>
-      {urls[0] && <img className="card-preview-img" src={urls[0]} alt="" />}
-      <div className="card-preview-body">
-        <div className="card-preview-name">{card.name}</div>
-        <div className="card-preview-roles">
-          {cls.roles.map((r) => (
-            <span key={r} className="role-chip" style={{ "--role": ROLE_COLORS[r] }}>{r}</span>
-          ))}
-        </div>
-        <div className="card-preview-text">{cls.stripped[0]}</div>
-      </div>
     </div>
   );
 }

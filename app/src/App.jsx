@@ -4,6 +4,7 @@ import { ensureMetaFresh } from "./lib/metaPack.js";
 import DecksTab from "./tabs/DecksTab.jsx";
 import SettingsTab from "./tabs/SettingsTab.jsx";
 import FormatTab from "./tabs/FormatTab.jsx";
+import TestingTab from "./tabs/TestingTab.jsx";
 import Icon from "./components/Icon.jsx";
 
 const TABS = [
@@ -63,7 +64,7 @@ export default function App() {
       <main>
         {tab === "decks" && <DecksTab dataVersion={dataVersion} reload={reload} />}
         {tab === "format" && <FormatTab dataVersion={dataVersion} />}
-        {tab === "testing" && <Placeholder name="Testing" />}
+        {tab === "testing" && <TestingTab dataVersion={dataVersion} />}
         {tab === "settings" && <SettingsTab reload={reload} />}
       </main>
     </div>
