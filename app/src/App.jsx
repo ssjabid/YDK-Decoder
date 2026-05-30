@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { getStoredTheme } from "./lib/storage.js";
 import DecksTab from "./tabs/DecksTab.jsx";
 import SettingsTab from "./tabs/SettingsTab.jsx";
+import FormatTab from "./tabs/FormatTab.jsx";
+import Icon from "./components/Icon.jsx";
 
 const TABS = [
-  { id: "decks", label: "Decks" },
-  { id: "format", label: "Format" },
-  { id: "testing", label: "Testing" },
-  { id: "settings", label: "⚙", icon: true },
+  { id: "decks", label: "Decks", icon: "cards" },
+  { id: "format", label: "Format", icon: "swords" },
+  { id: "testing", label: "Testing", icon: "target" },
+  { id: "settings", label: "Settings", icon: "sliders", iconOnly: true },
 ];
 
 export default function App() {
@@ -37,18 +39,20 @@ export default function App() {
         {TABS.map((t) => (
           <button
             key={t.id}
-            className={"tab" + (t.icon ? " tab-icon" : "") + (tab === t.id ? " active" : "")}
+            className={"tab" + (tab === t.id ? " active" : "")}
             onClick={() => setTab(t.id)}
             type="button"
+            title={t.label}
           >
-            {t.label}
+            <Icon name={t.icon} size={16} />
+            {!t.iconOnly && <span className="tab-label">{t.label}</span>}
           </button>
         ))}
       </nav>
 
       <main>
         {tab === "decks" && <DecksTab dataVersion={dataVersion} reload={reload} />}
-        {tab === "format" && <Placeholder name="Format" />}
+        {tab === "format" && <FormatTab dataVersion={dataVersion} />}
         {tab === "testing" && <Placeholder name="Testing" />}
         {tab === "settings" && <SettingsTab reload={reload} />}
       </main>

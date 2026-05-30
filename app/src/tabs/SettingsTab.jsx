@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getStoredTheme, setStoredTheme } from "../lib/storage.js";
 import { loadMetaPack } from "../lib/metaPack.js";
+import Icon from "../components/Icon.jsx";
 
 export default function SettingsTab({ reload }) {
   const [theme, setTheme] = useState(getStoredTheme());
@@ -53,7 +54,7 @@ export default function SettingsTab({ reload }) {
             </div>
           </div>
           <button type="button" className="btn-primary" onClick={onLoadMeta} disabled={busy}>
-            {busy ? "Loading…" : "⚡ Load meta decks"}
+            {busy ? "Loading…" : <><Icon name="summon" size={16} /> Load meta decks</>}
           </button>
         </div>
         {status && (

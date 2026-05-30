@@ -35,7 +35,8 @@ export function getImageUrls(id) {
 // (same ydk_card_cache key), then fills gaps from the API and writes them
 // back so thumbnails/text survive reloads. Returns { map, apiError }.
 export async function fetchCards(ids) {
-  const unique = [...new Set(ids)].filter((x) => Number.isFinite(x));
+  // ids may be strings (meta-pack decks store passcodes as strings) — coerce.
+  const unique = [...new Set(ids.map((x) => Number(x)))].filter((x) => Number.isFinite(x));
   const cache = loadCardCache();
   const map = {};
   const missing = [];

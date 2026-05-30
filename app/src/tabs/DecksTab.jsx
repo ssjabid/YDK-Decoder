@@ -2,11 +2,19 @@ import { useMemo, useState } from "react";
 import { loadDecks, getActiveDeckId, setActiveDeckId } from "../lib/storage.js";
 import { loadMetaPack } from "../lib/metaPack.js";
 import CardsView from "../components/CardsView.jsx";
+import Icon from "../components/Icon.jsx";
+
+// Sort: your own decks first, then matchups, alphabetical within each group.
+function sortDecks(decks) {
+  const rank = (d) => (d.role === "matchup" ? 1 : 0);
+  return [...decks].sort((a, b) =>
+    rank(a) - rank(b) || (a.name || "").localeCompare(b.name || ""));
+}
 
 // First parity milestone: list decks from the user's real localStorage and,
 // on select, show that deck's cards (parse ids -> fetch -> render grid).
 export default function DecksTab({ dataVersion = 0, reload }) {
-  const decks = useMemo(() => loadDecks(), [dataVersion]);
+  const decks = useMemo(() => sortDecks(loadDecks()), [dataVersion]);
   const [selectedId, setSelectedId] = useState(getActiveDeckId() || (decks[0] && decks[0].deckId) || null);
   const [busy, setBusy] = useState(false);
 
@@ -31,7 +39,7 @@ export default function DecksTab({ dataVersion = 0, reload }) {
             finally { setBusy(false); }
           }}
         >
-          {busy ? "Loading…" : "⚡ Load meta decks"}
+          {busy ? "Loading…" : <><Icon name="summon" size={16} /> Load meta decks</>}
         </button>
       </div>
     );
@@ -42,19 +50,25 @@ export default function DecksTab({ dataVersion = 0, reload }) {
   return (
     <div className="decks-layout">
       <aside className="decks-sidebar">
-        {decks.map((d) => {
-          const role = d.role === "matchup" ? "Matchup" : "My deck";
+        {decks.map((d, i) => {
+          const isMatchup = d.role === "matchup";
+          // Group divider when the role group changes (sorted: mine first).
+          const prev = decks[i - 1];
+          const showHeader = i === 0 || (prev && (prev.role === "matchup") !== isMatchup);
           return (
-            <button
-              key={d.deckId}
-              type="button"
-              className={"deck-row" + (d.deckId === selected.deckId ? " active" : "")}
-              onClick={() => { setSelectedId(d.deckId); setActiveDeckId(d.deckId); }}
-            >
-              <span className={"deck-role-dot " + (d.role === "matchup" ? "is-matchup" : "is-mine")} />
-              <span className="deck-row-name">{d.name}</span>
-              <span className="deck-row-meta">{role}</span>
-            </button>
+            <div key={d.deckId}>
+              {showHeader && (
+                <div className="deck-group-label">{isMatchup ? "Matchup decks" : "My decks"}</div>
+              )}
+              <button
+                type="button"
+                className={"deck-row" + (d.deckId === selected.deckId ? " active" : "")}
+                onClick={() => { setSelectedId(d.deckId); setActiveDeckId(d.deckId); }}
+              >
+                <span className={"deck-role-dot " + (isMatchup ? "is-matchup" : "is-mine")} />
+                <span className="deck-row-name">{d.name}</span>
+              </button>
+            </div>
           );
         })}
       </aside>

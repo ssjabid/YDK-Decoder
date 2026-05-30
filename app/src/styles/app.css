@@ -159,3 +159,87 @@
 }
 .theme-toggle-btn:hover { color: var(--text-dim); }
 .theme-toggle-btn.active { background: var(--bg-elevated); color: var(--text); box-shadow: var(--shadow-sm); }
+
+/* ── Tabs: icon + label ── */
+.tab { display: inline-flex; align-items: center; gap: 7px; }
+.tab .icon { opacity: 0.8; }
+.tab.active .icon { opacity: 1; color: var(--accent); }
+
+/* ── Deck list group labels ── */
+.deck-group-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-faint); font-weight: 700;
+  padding: 10px 11px 4px;
+}
+.deck-group-label:first-child { padding-top: 4px; }
+
+/* ── Card tile role stripe + subgroups ── */
+.card-tile-stripe {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--stripe, var(--role-engine)); z-index: 1;
+}
+.cards-subgroup { margin-bottom: 14px; }
+.cards-subgroup-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-faint); font-weight: 600; margin-bottom: 7px;
+}
+
+/* ── Hover preview ── */
+.card-preview {
+  z-index: 50; width: 300px;
+  display: flex; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md); padding: 12px;
+  box-shadow: var(--shadow-lg); pointer-events: none;
+}
+.card-preview-img { width: 86px; border-radius: 4px; flex-shrink: 0; align-self: flex-start; }
+.card-preview-body { min-width: 0; }
+.card-preview-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.card-preview-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.card-preview-text { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+.role-chip {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--role); border: 1px solid var(--role);
+  border-radius: 999px; padding: 1px 7px; opacity: 0.92;
+}
+
+/* ── Format tab ── */
+.format-head { margin-bottom: 18px; }
+.format-title { font-size: 18px; font-weight: 600; }
+.format-sub { font-size: 12px; color: var(--text-dim); }
+.matchup-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; align-items: start; }
+.matchup-card {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong); border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.matchup-card.tier-tier1 { border-left-color: var(--role-handtrap); }
+.matchup-card.tier-tier2 { border-left-color: var(--warning); }
+.matchup-card.tier-rogue { border-left-color: var(--text-faint); }
+.matchup-card-head {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: transparent; border: none; cursor: pointer;
+  padding: 13px 14px; text-align: left; color: var(--text); font-family: inherit;
+}
+.matchup-card-head:hover { background: var(--bg-hover); }
+.matchup-tier {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  border-radius: 999px; padding: 2px 8px; flex-shrink: 0;
+}
+.matchup-tier.tier-tier1 { background: rgba(196,95,122,0.16); color: var(--role-handtrap); }
+.matchup-tier.tier-tier2 { background: rgba(229,169,60,0.16); color: var(--warning); }
+.matchup-tier.tier-rogue { background: var(--bg); color: var(--text-faint); }
+.matchup-name { flex: 1; font-size: 14px; font-weight: 600; }
+.matchup-chevron { color: var(--text-faint); font-size: 12px; }
+.matchup-how { padding: 0 14px 12px; font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.matchup-drill { padding: 4px 14px 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+.drill-field { }
+.drill-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 700; margin-bottom: 5px; margin-top: 8px; }
+.drill-text { font-size: 12.5px; color: var(--text); line-height: 1.55; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.card-chip {
+  font-size: 11px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 999px; padding: 3px 9px; color: var(--text-dim);
+}
+.card-chip.is-good { border-color: rgba(95,196,154,0.4); color: var(--success); }
+.card-chip.is-bad { border-color: rgba(196,95,95,0.4); color: var(--role-stopper); }
