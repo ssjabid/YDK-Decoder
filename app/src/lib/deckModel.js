@@ -5,7 +5,7 @@
 // and key-card auto-extraction (6 buckets + archetype/engine detection).
 // All pure logic — no React. Mirrors the same deck shape + ydk_* keys.
 // ───────────────────────────────────────────────────────────────────
-import { parseYdk } from "./ydk.js";
+import { parseYdk, getImageUrls } from "./ydk.js";
 import {
   loadDecks, saveDecks, getActiveDeckId, setActiveDeckId,
   loadSavedCombos, saveSavedCombos, loadFormats, saveFormats,
@@ -231,7 +231,9 @@ function detectArchetypeTokens(uniqueNames) {
   return { archetypeTokens, tokensByName };
 }
 
-export function buildKeyRatiosText(deck, cardMap) {
+// Shared bucketing for key-ratio output — returns [{ label, entries }] where
+// each entry is { name, count, card }. Empty buckets are dropped.
+function keyRatioSections(deck, cardMap) {
   const dl = getDeckPrimaryDecklist(deck);
   const main = (dl && dl.main) || [];
   if (!main.length) return null;
@@ -254,7 +256,7 @@ export function buildKeyRatiosText(deck, cardMap) {
   const buckets = { engine: { Monster: [], Spell: [], Trap: [], Other: [] }, staples: { Monster: [], Spell: [], Trap: [], Other: [] } };
   for (const name of uniqueNames) {
     const card = cardByName.get(name);
-    buckets[isEng(name) ? "engine" : "staples"][classifyCardBroadType(card)].push({ name, count: counts.get(name) });
+    buckets[isEng(name) ? "engine" : "staples"][classifyCardBroadType(card)].push({ name, count: counts.get(name), card });
   }
   const sortLeaf = (a, b) => b.count - a.count || a.name.localeCompare(b.name);
   ["engine", "staples"].forEach((g) => ["Monster", "Spell", "Trap", "Other"].forEach((t) => buckets[g][t].sort(sortLeaf)));
@@ -262,12 +264,37 @@ export function buildKeyRatiosText(deck, cardMap) {
     ["engine", "Monster", "Engine — Monsters"], ["engine", "Spell", "Engine — Spells"], ["engine", "Trap", "Engine — Traps"], ["engine", "Other", "Engine — Other"],
     ["staples", "Monster", "Staples — Monsters (handtraps + tech)"], ["staples", "Spell", "Staples — Spells"], ["staples", "Trap", "Staples — Traps"], ["staples", "Other", "Staples — Other"],
   ];
-  const lines = [];
+  const out = [];
   for (const [g, t, label] of defs) {
     const entries = buckets[g][t];
-    if (!entries.length) continue;
-    lines.push(label + ":");
-    lines.push("  " + entries.map((e) => `${e.count}× ${e.name}`).join(", "));
+    if (entries.length) out.push({ label, entries });
+  }
+  return out;
+}
+
+export function buildKeyRatiosText(deck, cardMap) {
+  const sections = keyRatioSections(deck, cardMap);
+  if (!sections) return null;
+  const lines = [];
+  for (const s of sections) {
+    lines.push(s.label + ":");
+    lines.push("  " + s.entries.map((e) => `${e.count}× ${e.name}`).join(", "));
   }
   return lines.join("\n");
+}
+
+const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+// Same data, but as RTE HTML so each card becomes a hoverable @-chip.
+export function buildKeyRatiosHtml(deck, cardMap) {
+  const sections = keyRatioSections(deck, cardMap);
+  if (!sections) return null;
+  const chip = ({ name, count, card }) => {
+    const urls = card && card.id ? getImageUrls(card.id) : [];
+    const inner = urls.length
+      ? `<img src="${esc(urls[0])}" alt="${esc(name)}" loading="lazy">`
+      : `<span class="rt-card-mention-fallback">?</span>`;
+    return `${count}× <span class="rt-card-mention" data-card="${esc(name)}" contenteditable="false" title="${esc(name)}">${inner}${esc(name)}</span>`;
+  };
+  return sections.map((s) => `<h4>${esc(s.label)}</h4><p>${s.entries.map(chip).join(", ")}</p>`).join("");
 }

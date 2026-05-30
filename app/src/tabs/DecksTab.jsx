@@ -7,12 +7,13 @@ import { importDeckFromYdk } from "../lib/deckImport.js";
 import {
   getDeckPrimaryDecklist, ensureDeckShape, persistDeck, convertDeckRole, deleteDeck,
   setActiveBuild, addDecklistFromYdkText, deleteDecklist, downloadDecklist,
-  extractKeyCards, countMissingCardData, buildKeyRatiosText,
+  extractKeyCards, countMissingCardData, buildKeyRatiosHtml,
   KEY_CARD_BUCKETS, STOP_PRIORITIES,
 } from "../lib/deckModel.js";
 import { fetchCards } from "../lib/ydk.js";
 import CardsView from "../components/CardsView.jsx";
 import PanelSection from "../components/PanelSection.jsx";
+import RichNotes from "../components/RichNotes.jsx";
 import Icon from "../components/Icon.jsx";
 
 // ════════════════════════════════════════════════════════════════════
@@ -196,8 +197,8 @@ function DeckPanel({ deck, onChanged }) {
       </PanelSection>
 
       <PanelSection title="Notes — anything else about this deck" defaultOpen={false}>
-        <AutosaveTextarea value={deck.notes || ""} onSave={(v) => { deck.notes = v; save(); }}
-          placeholder="Build rationale, side-deck plans, things to remember for this deck." />
+        <RichNotes value={deck.notes || ""} onSave={(v) => { deck.notes = v; save(); }} minHeight={90}
+          placeholder="Build rationale, side-deck plans, things to remember. Type @ to mention a card." />
       </PanelSection>
 
       <PanelSection title="Combos for the active build" defaultOpen={false}>
@@ -250,7 +251,7 @@ function MethodologySection({ deck, save, cardMap }) {
       {METHOD_FIELDS.map((f) => (
         <div className="deck-field" key={f.key}>
           <div className="deck-field-label">{f.label}</div>
-          <AutosaveTextarea value={m[f.key] || ""} placeholder={f.placeholder}
+          <RichNotes value={m[f.key] || ""} placeholder={f.placeholder + " Type @ to mention a card."}
             onSave={(v) => { m[f.key] = v; save(); }} />
         </div>
       ))}
@@ -258,11 +259,11 @@ function MethodologySection({ deck, save, cardMap }) {
         <div className="deck-field-label">
           Key ratios
           <button type="button" className="deck-inline-btn"
-            onClick={() => { const t = buildKeyRatiosText(deck, cardMap); if (!t) { alert("The active build has no main-deck cards (or card data hasn't loaded yet)."); return; } m.keyRatios = t; save(); }}>
+            onClick={() => { const h = buildKeyRatiosHtml(deck, cardMap); if (!h) { alert("The active build has no main-deck cards (or card data hasn't loaded yet)."); return; } m.keyRatios = h; save(); }}>
             ↺ Auto-fill from active build
           </button>
         </div>
-        <AutosaveTextarea value={m.keyRatios || ""} placeholder="e.g. 3× Starter, 2× Extender, 3× Ash…"
+        <RichNotes value={m.keyRatios || ""} placeholder="e.g. 3× Starter, 2× Extender, 3× Ash… or auto-fill above."
           onSave={(v) => { m.keyRatios = v; save(); }} />
       </div>
       <TechCards deck={deck} save={save} />
