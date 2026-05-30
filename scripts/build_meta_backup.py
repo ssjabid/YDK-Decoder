@@ -22,7 +22,7 @@ import os, re, glob, json
 TS = "2026-05-30T00:00:00.000Z"
 # Bump this whenever the pack content changes — the app auto-refreshes loaded
 # meta data to the newest version on launch.
-META_VERSION = "2026-05-30-deep-v2"
+META_VERSION = "2026-05-31-decks-v3"
 
 # Per-deck intelligence. Keyed by .ydk filename (slug).
 #   name     -> nice display name (defaults to title-cased slug)
@@ -253,6 +253,19 @@ INTEL = {
                  ("Anti-Spell Fragrance", "good", "Taxes their Spell-heavy plan"),
                  ("Droll & Lock Bird", "good", "Vs the searching")],
   },
+  "kewl-tune": {
+    "name": "Kewl Tune", "tier": "tier2",
+    "how": "Music-themed Synchro Tuner combo — the Kewl Tune monsters + Synchro Overtake / Kewl Tune Synchro climb the Synchro ladder fast and consistently, ending on a capping board (Super Starslayer TY-PHON locks Special Summons) plus Synchro disruption. A proactive going-first combo deck that also mains its own handtrap suite (Veiler / Ash / Belle / Fuwalos).",
+    "endboard": ["Super Starslayer TY-PHON - Sky Crisis", "Kewl Tune Track Maker", "Fydraulis Harmonia"],
+    "theirs": "Ash / Imperm the Kewl Tune searcher (Cue / Reco) and Synchro Overtake — denying the search-and-Synchro engine chokes the climb. Droll hurts (it searches repeatedly). Note they main Veiler / Ash / Ghost Belle / Mulcharmy themselves, so they can fight back through a single handtrap.",
+    "first": "It's a combo deck — Maxx C / Mulcharmy / Nibiru pressure is strong. End on a board that survives a single Synchro negate; once TY-PHON locks Special Summons, prefer set / in-hand disruption over a board you'd need to rebuild.",
+    "second": "Break the Synchro negates with NON-targeting / NON-destruction outs (Forbidden Droplet, Evenly Matched, Kaiju / Lava Golem). TY-PHON is a big body that locks Special Summons — out it WITHOUT relying on your own Special Summons. Nibiru punishes the multi-summon combo turn.",
+    "counters": [("Maxx \"C\"", "good", "Best vs a combo deck"),
+                 ("Ash Blossom & Joyous Spring", "good", "On Cue / Reco / Synchro Overtake"),
+                 ("Droll & Lock Bird", "good", "It searches a lot"),
+                 ("Nibiru, the Primal Being", "good", "Heavy Special Summoning on the Synchro climb"),
+                 ("Forbidden Droplet", "good", "Non-targeting out to the negates")],
+  },
 }
 
 
@@ -370,6 +383,11 @@ DEEP = {
     "second": "Clear set Spells / Multirole; Anti-Spell Fragrance + Denko Sekka shut their Spell plan down hard. Bait Varuroon's negate, then push.",
     "endboard": ["Varuroon", "Radiant Typhoon Mandate", "Sky Striker Ace - Shizuku", "Sky Striker Mecha - Widow Anchor"],
     "weaknesses": "Control/grind — loses to multi-negate boards and to Anti-Spell Fragrance (Spell-heavy). It folds if its searchers (Krosea / Engage) are denied.",
+  },
+  "kewl-tune": {
+    "comboLine": "Open a Kewl Tune Tuner + Synchro Overtake / Kewl Tune Synchro → Synchro-climb through the Kewl Tune Extra-Deck line (Track Maker / RS / Remix / B2B) into a capping board, ending on Super Starslayer TY-PHON (Special-Summon lock) plus Synchro disruption. Fydraulis Harmonia and JJ \"Kewl Tune\" extend / recover.",
+    "theirs": "Ash / Imperm the search-and-Synchro hubs (Kewl Tune Cue / Reco / Synchro Overtake) BEFORE the climb resolves; Droll after their first add. They main Veiler / Ash / Belle / Fuwalos themselves, so one handtrap rarely ends them — pair it with pressure.",
+    "weaknesses": "Combo-reliant — Maxx C / Droll / Nibiru and non-targeting going-second sweepers (Droplet / Evenly) all bite; it leans hard on its Synchro Extra Deck, so Extra-Deck hate + non-destruction removal get under the board. (Newer archetype — this is an initial intel pass; refine as results settle.)",
   },
 }
 

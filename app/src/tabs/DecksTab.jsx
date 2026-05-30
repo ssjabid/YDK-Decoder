@@ -184,6 +184,10 @@ function DeckPanel({ deck, onChanged }) {
         </span>
       </div>
 
+      <PanelSection title="Decklist — the cards" defaultOpen={true}>
+        <CardsView deck={deck} />
+      </PanelSection>
+
       <PanelSection title="Methodology — how this deck plays" defaultOpen={true}>
         <MethodologySection deck={deck} save={save} cardMap={cardMap} />
       </PanelSection>
@@ -192,7 +196,7 @@ function DeckPanel({ deck, onChanged }) {
         <KeyCardsSection deck={deck} save={save} cardMap={cardMap} force={force} />
       </PanelSection>
 
-      <PanelSection title="Decklists — variants of this deck" defaultOpen={false}>
+      <PanelSection title="Builds — variants of this deck" defaultOpen={false}>
         <DecklistsSection deck={deck} save={save} onChanged={onChanged} />
       </PanelSection>
 
@@ -203,10 +207,6 @@ function DeckPanel({ deck, onChanged }) {
 
       <PanelSection title="Combos for the active build" defaultOpen={false}>
         <CombosSection deck={deck} />
-      </PanelSection>
-
-      <PanelSection title="Cards" defaultOpen={true}>
-        <CardsView deck={deck} />
       </PanelSection>
     </div>
   );
