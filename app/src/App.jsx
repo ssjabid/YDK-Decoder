@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getStoredTheme } from "./lib/storage.js";
 import DecksTab from "./tabs/DecksTab.jsx";
+import SettingsTab from "./tabs/SettingsTab.jsx";
 
 const TABS = [
   { id: "decks", label: "Decks" },
@@ -11,6 +12,10 @@ const TABS = [
 
 export default function App() {
   const [tab, setTab] = useState("decks");
+  // Bumped whenever localStorage data changes (e.g. after loading the meta
+  // pack) so tabs re-read from storage.
+  const [dataVersion, setDataVersion] = useState(0);
+  const reload = () => setDataVersion((v) => v + 1);
 
   // Apply persisted theme to <html data-theme> (matches the original).
   useEffect(() => {
@@ -42,10 +47,10 @@ export default function App() {
       </nav>
 
       <main>
-        {tab === "decks" && <DecksTab />}
+        {tab === "decks" && <DecksTab dataVersion={dataVersion} reload={reload} />}
         {tab === "format" && <Placeholder name="Format" />}
         {tab === "testing" && <Placeholder name="Testing" />}
-        {tab === "settings" && <Placeholder name="Settings" />}
+        {tab === "settings" && <SettingsTab reload={reload} />}
       </main>
     </div>
   );

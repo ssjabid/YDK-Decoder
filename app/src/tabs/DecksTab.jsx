@@ -1,19 +1,38 @@
 import { useMemo, useState } from "react";
 import { loadDecks, getActiveDeckId, setActiveDeckId } from "../lib/storage.js";
+import { loadMetaPack } from "../lib/metaPack.js";
 import CardsView from "../components/CardsView.jsx";
 
 // First parity milestone: list decks from the user's real localStorage and,
 // on select, show that deck's cards (parse ids -> fetch -> render grid).
-export default function DecksTab() {
-  const decks = useMemo(() => loadDecks(), []);
+export default function DecksTab({ dataVersion = 0, reload }) {
+  const decks = useMemo(() => loadDecks(), [dataVersion]);
   const [selectedId, setSelectedId] = useState(getActiveDeckId() || (decks[0] && decks[0].deckId) || null);
+  const [busy, setBusy] = useState(false);
 
   if (!decks.length) {
     return (
       <div className="placeholder">
-        No decks in this browser yet. Either open this on the same origin as your
-        data (<code>localhost:8000</code>), or use <strong>Settings → Restore</strong>
-        / <strong>⚡ Load meta decks</strong> once Settings is ported.
+        <p>No decks in this browser yet.</p>
+        <p style={{ marginTop: 8 }}>
+          Click below to load the bundled <strong>17 meta decks</strong> and see the
+          new app populated — or open this on the same origin as your existing data
+          (<code>localhost:8000</code>) to use the decks you already have.
+        </p>
+        <button
+          type="button"
+          className="btn-primary"
+          style={{ marginTop: 12 }}
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try { await loadMetaPack(); reload && reload(); }
+            catch (e) { alert("Couldn't load the meta pack: " + e.message); }
+            finally { setBusy(false); }
+          }}
+        >
+          {busy ? "Loading…" : "⚡ Load meta decks"}
+        </button>
       </div>
     );
   }
