@@ -6244,6 +6244,15 @@
   .combo-drill-controls { display: flex; gap: 8px; flex-wrap: wrap; }
   .combo-drill-empty { color: var(--text-dim); font-style: italic; padding: 12px 0; }
 
+  /* Consistency reset button (Testing → Going first) */
+  .practice-streak-reset {
+    margin-left: 10px; background: none; border: 1px solid var(--border);
+    color: var(--text-faint); border-radius: var(--radius-sm);
+    font: inherit; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 2px 8px; cursor: pointer; transition: all var(--motion-fast);
+  }
+  .practice-streak-reset:hover { border-color: var(--accent); color: var(--accent); }
+
 </style>
 </head>
 <body>
@@ -6372,7 +6381,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="decks">Decks</button>
     <button class="tab" data-tab="format">Format</button>
-    <button class="tab" data-tab="practice">Playtest</button>
+    <button class="tab" data-tab="practice">Testing</button>
     <span class="tab-spacer"></span>
     <button class="tab tab-icon" data-tab="settings" title="Settings">⚙</button>
   </div>
@@ -6561,8 +6570,8 @@
     <!-- Playtest has two modes: Goldfish (your openers, going first) and
          Break boards (going second vs an opponent's end board). -->
     <div class="playtest-modebar">
-      <button class="playtest-mode-btn active" data-mode="goldfish" type="button">Goldfish — your openers</button>
-      <button class="playtest-mode-btn" data-mode="break" type="button">Break boards — going 2nd</button>
+      <button class="playtest-mode-btn active" data-mode="goldfish" type="button">Going first — your openers</button>
+      <button class="playtest-mode-btn" data-mode="break" type="button">Going second — break their board</button>
     </div>
     <div id="playtest-break" class="hidden">
       <div id="board-breaker"><!-- rendered by renderBoardBreaker() --></div>
@@ -6571,11 +6580,7 @@
     <div class="practice-grid">
       <section class="practice-draw">
         <div class="practice-draw-head">
-          <h2 class="practice-section-title">Draw a hand</h2>
-          <div class="practice-going">
-            <button class="practice-going-btn active" data-going="first">Going first</button>
-            <button class="practice-going-btn" data-going="second">Going second</button>
-          </div>
+          <h2 class="practice-section-title">Draw an opening hand (going first — 5 cards)</h2>
         </div>
         <div id="practice-hand" class="practice-hand">
           <div class="practice-hand-empty">Click <strong>Shuffle &amp; draw</strong> to start.</div>
@@ -6634,7 +6639,7 @@
 // TOP-OF-SCRIPT marker — if you see this log, the script IS loading.
 // If NOT in console, the script tag failed to parse or was cached stale.
 // ============================================================
-const YDK_BUILD = "2026-05-29-phase6M-modal-refactor";
+const YDK_BUILD = "2026-05-30-phase6N-testing-tab-fixes";
 console.log("[YDK] Decoder script loaded — build", YDK_BUILD, "at", new Date().toISOString());
 
 // Diagnostic logger — writes to console only (the visible status bar
@@ -17018,15 +17023,8 @@ function renderPracticeTab() {
 
   if (shuffleBtn) shuffleBtn.disabled = false;
 
-  // Streak label
-  const streaks = loadPracticeStreaks();
-  const s = streaks[activeId];
-  if (s && s.hands > 0) {
-    const pct = Math.round(100 * s.hits / s.hands);
-    streakEl.innerHTML = `<strong>${s.hits}</strong> openable / ${s.hands} hands · <strong>${pct}%</strong> consistency`;
-  } else {
-    streakEl.innerHTML = `Shuffle a few hands to see your deck's consistency rate.`;
-  }
+  // Streak label + reset (shared helper)
+  renderPracticeStreak(activeId);
 
   // If we already have a hand drawn, keep showing it (e.g. user clicked
   // away and came back). Otherwise show the empty prompt.
@@ -17053,8 +17051,9 @@ function practiceShuffle() {
     showComboToast("This deck has no main-deck cards to draw from.", "error");
     return;
   }
-  const going = getPracticeGoing();
-  const handSize = going === "second" ? 6 : 5;
+  // "Going first — your openers" mode always draws the going-first 5.
+  // (Going-second testing lives in the Break-boards mode.)
+  const handSize = 5;
   const shuffled = shuffleArr(main);
   const handIds = shuffled.slice(0, Math.min(handSize, shuffled.length));
 
@@ -17081,13 +17080,35 @@ function practiceShuffle() {
 
   renderPracticeHand(_practiceLastHand, activeDeck);
   renderPracticeLines(_practiceLastHand, activeDeck);
-  // Refresh the streak label
-  const streakEl = document.getElementById("practice-streak");
-  const streaks = loadPracticeStreaks();
-  const s = streaks[activeId];
-  if (s && streakEl) {
+  renderPracticeStreak(activeId);
+}
+
+// Consistency line + a reset button. Shared by renderPracticeTab and
+// practiceShuffle so it always reflects the latest tally and can be cleared.
+function renderPracticeStreak(deckId) {
+  const el = document.getElementById("practice-streak");
+  if (!el) return;
+  el.innerHTML = "";
+  const s = loadPracticeStreaks()[deckId];
+  if (s && s.hands > 0) {
     const pct = Math.round(100 * s.hits / s.hands);
-    streakEl.innerHTML = `<strong>${s.hits}</strong> openable / ${s.hands} hands · <strong>${pct}%</strong> consistency`;
+    const txt = document.createElement("span");
+    txt.innerHTML = `<strong>${s.hits}</strong> openable / ${s.hands} hands · <strong>${pct}%</strong> consistency`;
+    el.appendChild(txt);
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "practice-streak-reset";
+    reset.textContent = "reset";
+    reset.title = "Clear this deck's consistency count";
+    reset.onclick = () => {
+      const m = loadPracticeStreaks();
+      delete m[deckId];
+      savePracticeStreaks(m);
+      renderPracticeStreak(deckId);
+    };
+    el.appendChild(reset);
+  } else {
+    el.textContent = "Shuffle a few hands to see your deck's consistency rate.";
   }
 }
 
@@ -17139,7 +17160,13 @@ function matchCombosToHand(hand, deck) {
 
   all.forEach((combo, idx) => {
     if (combo.deckId !== deck.deckId) return;
-    const need = (combo.openingHand || []).filter(Boolean);
+    // Match against the REAL starter(s), not the full recorded opening hand.
+    // For Solo-Mode mulligan combos the recorded openingHand is the discarded
+    // test hand (e.g. it included DoomZ Destruction — an END-board piece, not a
+    // requirement). computeEffectiveOpener returns the cards actually searched/
+    // set up before the first play (e.g. just Amalthe). Falls back to the
+    // recorded hand for normal combos.
+    const need = (computeEffectiveOpener(combo) || (combo.openingHand || [])).filter(Boolean);
     if (!need.length) {
       // No opening hand recorded — skip from match results (can't match)
       return;
@@ -17190,11 +17217,13 @@ function renderPracticeLines(hand, deck) {
     const statusIcon = r.status === "possible" ? "✓"
                      : r.status === "partial"  ? "⚠"
                      : "✗";
-    const statusText = r.status === "possible" ? "Playable"
+    const statusText = r.status === "possible" ? "✓ Playable"
                      : r.status === "partial"  ? `Need 1 more: ${r.missing[0]}`
                      : `Need ${r.missing.length}: ${r.missing.slice(0, 2).join(", ")}${r.missing.length > 2 ? "…" : ""}`;
 
-    const need = (c.openingHand || []).filter(Boolean);
+    // Show the real starter(s) only — same effective-opener logic as the
+    // matcher, so end-board pieces don't show up as "needed".
+    const need = (computeEffectiveOpener(c) || (c.openingHand || [])).filter(Boolean);
     const handSetForRow = new Set((hand.names || []).filter(Boolean));
     const needHtml = need.map(n =>
       handSetForRow.has(n)
@@ -17205,11 +17234,11 @@ function renderPracticeLines(hand, deck) {
     row.innerHTML = `
       <div class="practice-line-head">
         <span class="practice-line-status">${statusIcon}</span>
-        <span class="practice-line-name">${escapeHtmlSafe(c.comboName || "Untitled")}</span>
+        <span class="practice-line-name">${escapeHtmlSafe(getComboDisplayTitle(c))}</span>
         <button class="practice-line-action" data-idx="${r.idx}">Walk through →</button>
       </div>
       <div class="practice-line-needs">
-        <span style="color:var(--text-faint);">Needs:</span> ${needHtml}
+        <span style="color:var(--text-faint);">Starter${need.length === 1 ? "" : "s"}:</span> ${needHtml}
         <span style="color:var(--text-faint); margin-left: 8px;">·</span>
         <span style="margin-left:6px;">${escapeHtmlSafe(statusText)}</span>
       </div>
