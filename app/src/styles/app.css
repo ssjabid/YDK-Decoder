@@ -127,6 +127,30 @@
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:active { transform: translateY(1px); }
 .btn-primary:disabled { background: var(--bg-hover); color: var(--text-faint); box-shadow: none; cursor: not-allowed; }
+.btn-primary, .btn-secondary { display: inline-flex; align-items: center; gap: 7px; }
+.btn-secondary {
+  background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md); padding: 9px 16px;
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background var(--motion-fast), border-color var(--motion-fast);
+}
+.btn-secondary:hover { background: var(--bg-hover); border-color: var(--accent); }
+.btn-secondary:disabled { color: var(--text-faint); cursor: not-allowed; }
+
+/* Decks tab toolbar */
+.decks-toolbar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+
+.deck-panel-role {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  border-radius: 999px; padding: 2px 9px;
+}
+.deck-panel-role.is-mine { background: rgba(95,196,154,0.16); color: var(--role-engine); }
+.deck-panel-role.is-matchup { background: rgba(196,95,122,0.16); color: var(--role-handtrap); }
+.deck-howitwins {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 10px 13px; font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px;
+}
+.deck-howitwins strong { color: var(--text); }
 
 /* ── Settings ── */
 .settings { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
