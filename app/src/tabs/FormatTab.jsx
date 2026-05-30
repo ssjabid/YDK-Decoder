@@ -56,6 +56,7 @@ export default function FormatTab({ dataVersion = 0 }) {
 
               {open && (
                 <div className="matchup-drill">
+                  <Field label="Main combo line (how their turn goes)" value={m.comboLine} />
                   <Field label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} />
                   <Field label="Going first vs them" value={m.gameplanFirst} />
                   <Field label="Going second — break their board" value={m.gameplanSecond} />
@@ -79,6 +80,7 @@ export default function FormatTab({ dataVersion = 0 }) {
                       </div>
                     </div>
                   )}
+                  <Field label="How it loses / weaknesses" value={m.weaknesses} />
                 </div>
               )}
             </div>

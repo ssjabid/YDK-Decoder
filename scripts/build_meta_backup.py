@@ -253,6 +253,130 @@ INTEL = {
 }
 
 
+# ── DEEP overlay (researched May 2026 from YCS Columbus top cut + Nationals;
+#    deep-research pass). Merged OVER INTEL, so these override the shallow
+#    fields and add comboLine + weaknesses. Keyed by slug. ──
+DEEP = {
+  "branded": {
+    "comboLine": "Aluber → search Branded Fusion → Branded Fusion (Albaz + a DARK/LIGHT fodder from hand/deck) into Mirrorjade, or Albion the Sanctifire to chain more Branded spells; set Branded Banishment for an opponent-turn fusion + recovery.",
+    "theirs": "Branded Fusion is the dream Ash — but good players BAIT it with Aluber / Frightfur Patchwork / Branded Opening first, so hold Ash for the actual Branded Fusion resolution (the fuse-from-deck). Second target: Imperm on Albion's fusion-extender mid-combo. Droll only lands if BEFORE Branded Fusion is searched.",
+    "weaknesses": "Midrange, not explosive — loses the race to faster combo (Kewl Tune / Artmage) if it can't land Mirrorjade + backrow. Nibiru mid-combo (5+ summons), Droll before Branded Fusion, and non-targeting outs (Droplet / Evenly) all hurt.",
+  },
+  "dracotail": {
+    "comboLine": "Normal Lukias → add Faimena → discard Faimena (Quick — works on EITHER turn) to Fusion Summon; Lukias/Pan as material SET Dracotail traps (Pan also destroys) → Arthalion (bounces, self-revives) + Branded Fusion for Mirrorjade. Gulamel = a free pop on EVERY Dracotail activation.",
+    "theirs": "Ash Branded Fusion (free Mirrorjade) or Ketu's search; Imperm Lukias (starves the set-trap fuel) or Arthalion's bounce. Faimena fuses on YOUR turn from hand — a board they 'pass' still interrupts you.",
+    "second": "Neutralise GULAMEL first (it pops a card every time you start a play). Then out Mirrorjade via Droplet / Kaiju / Evenly (NON-destruction). Dracotail Flame negates a Spell's effects — lead with monster/trap interaction, not Cyclone. BANISH their fusions (destroying them feeds the 2-cards-to-GY self-revive).",
+    "weaknesses": "Banishment beats it (engine self-revives from GY); Nibiru mid-loop; a precise early Imperm on Lukias starves it; Droll before the search chain. Open Nibiru + Droplet/Evenly going second is its nightmare. (This is the YCS Columbus 2026 WINNING deck — respect it.)",
+  },
+  "predaplant": {
+    "comboLine": "Predaprimitive (send a Predap to GY + tutor Polymerization; locks you to Plant/Dragon) or Verte Anaconda → spread Predator Counters (drop foes to Lv1) → Dragostapelia (negates effects of monsters carrying a counter) + Starving Venom Wing Dragon (sprays more counters) → climb to Predaplant Triphyovertum (negates Extra-Deck SS, gains ATK per counter, self-revives).",
+    "theirs": "Ash Predaprimitive / Verte Anaconda (the Fusion-spell hubs); Imperm the first counter-engine fusion BEFORE counters land on your board. Nibiru on the climb to Triphyovertum.",
+    "second": "Predator Counters negate YOUR monsters' effects — lead with Spell/Trap or non-monster-effect removal (Lightning Storm / Evenly / Droplet). BANISH or tribute Triphyovertum (it self-revives from GY) — don't destroy. Then clear Dragostapelia / Wing Dragon.",
+    "weaknesses": "Reactive setup deck — one Ash/Imperm on Predaprimitive/Verte collapses the turn; slower than top combo; GY-banish hate stops Triphyovertum recursion. ROGUE in TCG (best evidence is an OCG regional Top 8).",
+  },
+  "lunalight": {
+    "comboLine": "Black Sheep (discard → add a Lunalight S/T; banish from GY = Fusion substitute) + Polymerization → Perfume Dancer (search Tiger, recur) → Kaleido Chick sends material, Tiger revives → climb the Dance-Fusion ladder to Liger Dancer.",
+    "theirs": "Ash Black Sheep or Kaleido Chick's deck-send (the consistency hubs). Imperm the fusion climb BEFORE Liger resolves — Liger is unaffected by non-Lunalight effects ONCE summoned. D.D. Crow/Belle on the GY loop / to pre-empt Crimson Fox.",
+    "second": "Liger Dancer is UNAFFECTED by your non-Lunalight effects — targeted removal/negation does nothing. Out it with a TRIBUTE: Kaiju / Lava Golem (removes it as a cost). Don't waste targeting into an open GY Crimson Fox (it negates + refunds LP). Watch S:P banishing one of yours face-down.",
+    "weaknesses": "Far better going SECOND than first — turn-1 interaction outside Liger / S:P is thin. Needs Polymerization live (Solemn / Poly-hate stalls it). Crushed by attribute/type hate (Shadow-Imprisoning Mirror, Archnemeses Protos, Bystials). ROGUE / locals-strong.",
+  },
+  "mitsurugi": {
+    "comboLine": "Searcher (Saji / Aramasa — self-tributing floaters) → add Ame no Habakiri + Mitsurugi Prayers / Ritual → Ritual-Summon up to Ame no Murakumo (on Special Summon: Raigeki-style destroy, once/turn). Tributing Mitsurugi monsters triggers their GY floats, so it reloads as it combos.",
+    "theirs": "Droll & Lock Bird is the single best card — after their FIRST search, Droll halts Prayers / Ritual / the second searcher. Ash the first searcher (Saji/Aramasa) or Prayers/Ritual. NOTE Murakumo's destroy is NOT Ash-able — spend Ash early.",
+    "second": "Saji/Aramasa make the board destruction-RESISTANT — Lightning Storm / Raigeki / DRNM are blanks. Break with NON-destruction: tribute (Kaiju / Underworld Goddess), banish, or bounce. Bait Murakumo with a throwaway, then push.",
+    "weaknesses": "Search-dependent — Droll + double handtraps choke it; lower disruption density than top combo; Special-Summon / Ritual-lock floodgates gut it; non-destruction removal walks through its protection. (YCS Columbus 2026 Top 8.)",
+  },
+  "mitsurugi-ryzeal": {
+    "comboLine": "Ryzeal starter → Rank-4 / King of the Feral Imps (the BRIDGE) → fetch the Mitsurugi enabler → run the ritual chain (Habakiri → Murakumo) AND bank Ryzeal Detonator (free repeatable destroy). Ends ~ Murakumo + Detonator + a Caesar/Photon negate + traps.",
+    "theirs": "Ash/Imperm ICE Ryzeal or King of the Feral Imps (the bridge into the Mitsurugi half) — denying it collapses the hybrid to half a deck. Droll after the first add. Nibiru on the summon-heavy line.",
+    "second": "Same Mitsurugi caveat — NON-destruction (tribute/banish) gets under the protected Ritual bodies. Detonator is a destroy effect — clear it FIRST or play around it (don't feed it). Mass non-targeting after baiting.",
+    "weaknesses": "Combos through a NARROW bridge (King of the Feral Imps / the enabler) — handtrap that point and it folds. Droll brutal (two search engines). Extra-Deck-reliant (Droplet / ED hate bites).",
+  },
+  "clown-crew": {
+    "comboLine": "Special Summon Clown Crew monsters from Deck/Extra Deck ignoring conditions (they are EFFECT-LOCKED until the end of the next turn) → use them as TRIBUTE for Clown Crew Biancaviso + a Vanity-style Special-Summon floodgate. Grinds behind the SS-lock.",
+    "theirs": "Ash/Imperm the engine card that GENERATES the tribute fuel — NOT the locked fuel monsters (their effects are off). Handtrap BEFORE the floodgate resolves; once 'cannot Special Summon' is live, YOUR Special-Summon handtraps are dead too.",
+    "second": "The lock is a Special-Summon floodgate — DON'T fight it with Special Summons. EVENLY MATCHED is the premier out (non-SS, non-targeting, banishes their board face-down to 1). DRNM / Droplet turn off the body. ⚠ Kaiju / Lava Golem REQUIRE a Special Summon — DEAD if the lock is 'neither player' (verify Biancaviso's wording). Clear the floodgate first, then commit SS.",
+    "weaknesses": "Low turn-1 disruption beyond the floodgate (the summoned fuel is effect-locked) — break the lock and the board is fairly inert. Evenly Matched is a near-clean answer. Early Ash/Imperm on the engine stops the plan before the lock exists.",
+  },
+  "vanquish-soul": {
+    "comboLine": "VS monsters (all EARTH / FIRE / DARK) reveal monsters in hand for attribute effects; Razen searches; Stake your Soul! / VS Start! tutor. Heavy Borger / Caesar Valius SS themselves by returning a VS of a different Type. The K9 half bolts on a reactive Rank-5 Xyz toolbox (Ripper / Izuna / Lupus) that punishes the opponent's monster-effect activations.",
+    "theirs": "⚠ The K9 half KEYS OFF your monster-effect activations from hand/GY — firing a MONSTER handtrap (Ash / Veiler) can arm K9-17 Ripper + ambush-summon Izuna/Lupus. PREFER Infinite Impermanence (a Trap). Ash Razen / Stake / Start (the search shell) deliberately.",
+    "second": "VS bodies are destruction-vulnerable UNLESS Caesar revealed EARTH (then unaffected that turn) — if so, attack over it / wait a turn. Evenly Matched is great (non-targeting). Answer the K9 reactive Xyz FIRST (it's the on-your-turn negate), then the VS boss.",
+    "weaknesses": "Grind/control with a modest turn-1 board — combo decks that go UNDER it deny K9 its triggers; it must HOLD reveal fodder; Spell/Trap interaction (Imperm / Evenly / Droplet) avoids feeding K9; Dimension Shifter hurts K9's GY summons. Strong-rogue post-banlist, not Tier-1.",
+  },
+  "maliss": {
+    "comboLine": "Maliss <P> White Rabbit (Normal/SS → SET a Maliss Trap from Deck) → activate that <C> trap THE TURN it's set by banishing a face-up Maliss (which self-revives — free bodies): TB-11 SS from Deck, GWC-06 search + banish, MTP-07 revive → climb to the Queens (Hearts Crypter). The @Ignister package turns leftover bodies into Accesscode / extra Links.",
+    "theirs": "Droll is the single best card — drop after their FIRST add/search to collapse the loop. Ash the first <C> trap that SS/searches from Deck (TB-11 / GWC-06). Imperm White Rabbit ON SUMMON (deny the trap set) before a Link exists. They bait with a lesser Maliss — hold for the real set-from-Deck trap.",
+    "second": "Hearts Crypter's banish CAN'T be negated while it points to a monster — disrupt on activation/cost or remove it before you commit. Clear the set <C> traps FIRST (remove their on-board Maliss to brick them). Lightning Storm / Evenly are strong; banish-pile hate is WEAK (they recur from banish).",
+    "weaknesses": "Post-banlist consistency is shakier; DROLL completely walls it (it adds repeatedly); the turn-1 board is low-impact without @Ignister; folds to spot removal of its on-board Maliss (bricks the <C> traps).",
+  },
+  "yummy": {
+    "comboLine": "Yummy core (Marshmao SS's itself if you control no / only-LIGHT-Beast; Cooky/Cupsy swarm + dig) → pivot to Fiendsmith: Tract (search a LIGHT Fiend + discard; GY-banish to Fusion) → Requiem → tribute to SS Engraver from Deck, equip → Necroquip Princess → Sequence shuffles Lacrima + 2 Engraver for Desirae (negate). Azamina adds Ilia Silvia.",
+    "theirs": "Ash Fiendsmith's Tract (the search + GY-Fusion enabler) — highest value. Imperm Engraver (the equip hub). Yummy Snatchy's Field-Spell placement CANNOT be Ash'd. Belle / Mulcharmy Purulia punish the GY-Fusion engine.",
+    "second": "No-negate sweepers shine — Dark Ruler No More / Forbidden Droplet turn off the Fusion negates. Bystials banish their LIGHT Fiendsmith GY. Lead NON-targeting (dodges S:P's banish + Desirae protection), then clear S:P, and watch Lacrima's quick summon on your turn.",
+    "weaknesses": "GY-DEPENDENT — Dimension Shifter / macro is brutal; handtrap-vulnerable at the Fiendsmith pivot (Ash on Tract / Imperm on Engraver stops the disruption suite); Droll mid-combo; Nibiru on the multi-summon turn.",
+  },
+  "fairy-tail-magistus": {
+    "comboLine": "Fairy Tail (Lv4 Spellcasters + the unbanned Snow; Wiccat 'double Foolish' dumps Snow) feeds Magistus: equip Artemis → add Crowley → SS Crowley → Xyz Rilliona → SS Zoroa of Flame → Synchro into Zoroa of Daimon (Extra-Deck-effect floodgate), recurring Crowley/Rilliona to re-equip Magistus.",
+    "endboard": ["Zoroa, the Magistus of Daimon", "Teller of the Magistus", "Zoroa, the Magistus Verethragna", "Fairy Tail - Snow"],
+    "theirs": "Ash the Fairy Tail / Wiccat dump or the Artemis → Crowley add (the consistency hinges). Imperm Crowley or Rilliona (breaks the Xyz → Synchro Zoroa chain → no Daimon floodgate). HOLD your handtrap for the Magistus pivot, not the Fairy Tail opener. Droll the search loop.",
+    "second": "Zoroa of Daimon LOCKS your Extra Deck — prioritise MAIN-DECK / non-ED outs (Lightning Storm, Evenly, Raigeki-effects). Remove Daimon FIRST (it gates your whole strategy), bait the second Zoroa's negate+pop with a non-essential card, and clear the Field Spell before committing your ED.",
+    "weaknesses": "Combo-fragile — one Imperm/Ash at the Crowley/Rilliona pivot leaves only Fairy Tail bodies. Soft going first if it draws too many Fairy Tail bricks. Lightning Storm / Evenly / Cosmic cleanly answer the Zoroa board. Modest raw damage.",
+  },
+  "sky-striker": {
+    "comboLine": "It's a SETUP turn, not a combo: dump 3+ Spells to GY (Engage etc.), keep your OWN monster zones EMPTY (Spells get bonuses when you control no monsters), end on Shizuku + 4–5 set Spells (Widow Anchor / Shark Cannon / Eagle Booster) + Multirole. Raye flips to Kagari (recur Engage) / Shizuku (search) reactively.",
+    "theirs": "Droll & Lock Bird is the premier answer (chokes the Engage → Kagari add-loop); Ash the first Engage. Imperm is WEAK (their power is Spell-based, few monster targets). Cursed Seal of the Forbidden Spell permanently locks Engage.",
+    "first": "Forcing a monster onto THEIR field genuinely matters — most Sky Striker Quick-Plays need them to control NO monsters, so a Kaiju / Lava Golem / token shuts off Widow Anchor + Afterburners on your turn. Set up normally; bait Widow Anchor with a non-essential monster.",
+    "second": "Low board to 'break' — fight over resources + backrow. Clear MULTIROLE first (it shields + reloads their Spells), then the set Mecha Spells (Widow Anchor → Afterburners). Anti-Spell Fragrance / Imperial Order are the hardest counters.",
+    "endboard": ["Sky Striker Ace - Shizuku", "Sky Striker Mecha Modules - Multirole", "Sky Striker Mecha - Widow Anchor", "Sky Striker Mecha - Shark Cannon"],
+    "weaknesses": "Grind deck with a LOW ceiling — loses to multi-negate boards it can't out one Spell at a time, and to Anti-Spell Fragrance / Imperial Order (its whole deck is Spells). Heavy backrow removal + going-second OTKs that ignore its low board hurt.",
+  },
+  "elfnote": {
+    "comboLine": "Elfnote 'Singer' fairies (Lucina / Tinia / Regina / Fortuna) + the Power Patron engine (Elfnote Power Patron, Medius the Pure, Terminus portal) Synchro-climb through the Resonator / Red-Dragon-Archfiend package into RDA / Crimson King / Crystal Wing + Junoldo, recurring with Welcome Home / Rhapsodia traps.",
+    "theirs": "Imperm/Veiler/Ash Elfnote Power Patron or Medius the Pure (the Synchro/Fusion enablers) BEFORE the negate wall comes online. Droll after the first search. Ghost Belle on the GY recursion. (NOTE: this is the current Blazing Dominion build WITH 3× Regina.)",
+    "first": "Commit interruption as SET / face-down disruption — they end on multiple Synchro negates (omni-negates like Baronne / Crystal Wing). Force Power Patron out early, then handtrap it.",
+    "second": "Clear the omni-negate (Baronne / Crystal Wing) first; use non-targeting / non-destruction, or just attack over the negate body once it's spent. Lava Golem / Nibiru side in; Evenly / DRNM / Droplet (the list itself fears these).",
+    "endboard": ["Red Dragon Archfiend", "Crystal Wing Synchro Dragon", "Elfnote Seraphim Strelitzia", "Elfnotes: Rhapsodia of Madness"],
+    "weaknesses": "Over-extends + searches a LOT — Maxx C / Droll / Fuwalos / Purulia wreck it (the list mains 3 Fuwalos + 2 Droll ITSELF). Bystials hit its DARK/LIGHT Synchro GY. Nibiru on the climb.",
+    "counters": [("Maxx \"C\"", "good", "It over-extends + searches hard"),
+                 ("Droll & Lock Bird", "good", "Chokes the search loop"),
+                 ("Nibiru, the Primal Being", "good", "Heavy Special Summoning on the climb"),
+                 ("Bystial Druiswurm", "good", "Banish its DARK/LIGHT Synchro GY"),
+                 ("Forbidden Droplet", "good", "Non-targeting board breaker")],
+  },
+  "white-forest": {
+    "comboLine": "White Forest spells (Silvy / Elzette / Rciela) trigger off Synchro Summons + Sinful Spoils to grind cards, Synchro-climbing (Diabellstar / Azamina) into negates + non-targeting banish; the Azamina splash adds Ilia Silvia (a recyclable omni-negate).",
+    "theirs": "Imperm/Ash the early starter (Elzette / Silvy) before it converts into multiple bodies; Droll the search loop; Ash the Ilia Silvia / Hallowed Azamina recycle. Effect VEILER is cleaner than Imperm (they fuel off Imperm).",
+    "first": "Bait Ilia Silvia's omni-negate (it costs a tribute) on a non-essential effect, then resolve your payoff; expect a non-targeting banish (Chaos Angel / S:P) so don't rely on one fragile piece.",
+    "second": "Clear the omni-negate first. NON-targeting / NON-destruction removal (Kaiju, Lava Golem, send/banish, Evenly) — avoid pure destruction (their Synchros gain protection). Watch Silvera's Book of Eclipse flipping your board face-down.",
+    "endboard": ["Azamina Ilia Silvia", "Chaos Angel", "S:P Little Knight", "Sinful Spoils of the White Forest"],
+    "weaknesses": "Turns your DEAD handtraps into fuel, so ONE rarely ends them — but Droll chokes the search loop, non-targeting/non-destruction is needed, and Bystials hit their GY.",
+  },
+  "power-patron": {
+    "comboLine": "Medius the Pure adds/SS Artmage Power Patron → Fusion-summon up the Power Patron ladder (Vidolium / Nervedo) → Nerva the Power Patron of Creation (destruction-immune while a card is active in the Field Spell Zone) + the Nervedo Pendulum negate; Artmage Fusion/traps add negation. (YCS Columbus 2026 Top 8.)",
+    "weaknesses": "Reactive — its negate triggers off ITS plays, so on YOUR turn you mostly fear held handtraps. Ash / Droll on Medius collapses it. Clearing the Field Spell strips Nerva's immunity.",
+  },
+  "artmage": {
+    "comboLine": "Same shell as Power Patron — Medius the Pure + Artmage Power Patron Fusion line into Artmage Fusion monsters/traps for negation, closing on Nerva + the Nervedo negate. (The YCS Columbus Top 8 deck was 'Power Patron Artmage'.)",
+    "weaknesses": "Reactive Fusion ladder — Ash/Droll on Medius collapses it; clear the Field Spell to strip Nerva's destruction immunity; the Artmage trap that bounces all your S/T (with 3+ monster Types) means don't over-rely on backrow.",
+  },
+  "radiant-typhoon": {
+    "comboLine": "Radiant Typhoon + Sky Striker HYBRID (YCS Columbus Top 4) — quick-play Spells (Super Poly, Droplet, MST) trigger Radiant Typhoon monsters; the Sky Striker engine (Engage) draws + grinds. Ends on a low board with set Spells + a monster-negate boss; Mandate turns MST into an omni-negate.",
+    "theirs": "Imperm/Ash Radiant Typhoon Krosea (the double-searcher) AND the Sky Striker Engage — deny the searchers and the grind chokes. Droll the search loop.",
+    "first": "DON'T over-commit into Super Polymerization — diversify monster types/attributes to dodge it. Play around Varuroon's monster-negate + Mandate (MST omni-negate). Forcing a monster onto their field hurts the Sky Striker half (Quick-Plays want them with no monsters).",
+    "second": "Clear set Spells / Multirole; Anti-Spell Fragrance + Denko Sekka shut their Spell plan down hard. Bait Varuroon's negate, then push.",
+    "endboard": ["Varuroon", "Radiant Typhoon Mandate", "Sky Striker Ace - Shizuku", "Sky Striker Mecha - Widow Anchor"],
+    "weaknesses": "Control/grind — loses to multi-negate boards and to Anti-Spell Fragrance (Spell-heavy). It folds if its searchers (Krosea / Engage) are denied.",
+  },
+}
+
+
+def merged_intel(slug):
+    out = dict(INTEL.get(slug, {}))
+    out.update(DEEP.get(slug, {}))
+    return out
+
+
 def parse(path):
     main, extra, side = [], [], []
     cur = None
@@ -279,9 +403,10 @@ def deck_obj(name, slug, ydk_text, main, extra, side, intel):
                        "counts": counts, "main": main, "extra": extra, "side": side,
                        "notes": "", "createdAt": TS, "updatedAt": TS}],
         "primaryDecklistId": dl_id,
-        "methodology": {"summary": "", "endboard": endboard_summary,
+        "methodology": {"summary": intel.get("comboLine", ""), "endboard": endboard_summary,
                         "howItWins": intel.get("how", ""),
-                        "strengths": "", "weaknesses": "", "keyRatios": "", "techCards": []},
+                        "strengths": "", "weaknesses": intel.get("weaknesses", ""),
+                        "keyRatios": "", "techCards": []},
         "keyCards": [], "source": "meta-import",
         "notes": "Imported from a ygoprodeck tournament list (May 2026). Refine as the meta shifts.",
         "createdAt": TS, "updatedAt": TS,
@@ -301,6 +426,8 @@ def matchup_obj(slug, intel):
                          for (n, s, note) in intel.get("counters", [])],
         "relatedComboIds": [], "freeformNotes": "",
         "chokepointTheirs": intel.get("theirs", ""), "chokepointOurs": "",
+        "comboLine": intel.get("comboLine", ""),
+        "weaknesses": intel.get("weaknesses", ""),
         "priorityFirst": [], "prioritySecond": [],
         "targetEndboard": list(intel.get("endboard", [])),
         "sideboard": {"goingFirst": {"in": [], "out": []}, "goingSecond": {"in": [], "out": []}},
@@ -312,7 +439,7 @@ def main():
     decks, matchups = [], []
     for f in files:
         slug = os.path.splitext(os.path.basename(f))[0]
-        intel = INTEL.get(slug, {})
+        intel = merged_intel(slug)
         name = intel.get("name") or slug.replace("-", " ").title()
         m, e, s = parse(f)
         ydk = open(f, encoding="utf-8").read()
