@@ -210,44 +210,45 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
         <button type="button" className="deck-mini-btn is-danger" onClick={remove}>× Remove</button>
       </div>
 
-      <PanelSection title="How they win + their line" defaultOpen={true}>
-        <div className="matchup-research">
-          <EditField label="How they win" value={meth.howItWins} onSave={editDeck("howItWins")} />
-          <EditField label="Their combo line" value={meth.summary} onSave={editDeck("summary")} />
-          <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
-          <EditField label="How it loses / weaknesses" value={meth.weaknesses} onSave={editDeck("weaknesses")} />
-        </div>
-        {opponentDeck && <div className="drill-hint">"How they win", "combo line" + "weaknesses" sync with <strong>{name}</strong>'s methodology in the Decks tab.</div>}
-      </PanelSection>
+      <div className="matchup-dash">
+        <PanelSection title="How they win + their line" defaultOpen={true}>
+          <div className="dash-2up">
+            <EditField label="How they win" value={meth.howItWins} onSave={editDeck("howItWins")} />
+            <EditField label="Their combo line" value={meth.summary} onSave={editDeck("summary")} />
+            <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
+            <EditField label="How it loses / weaknesses" value={meth.weaknesses} onSave={editDeck("weaknesses")} />
+          </div>
+          {opponentDeck && <div className="drill-hint">"How they win", "combo line" + "weaknesses" sync with <strong>{name}</strong>'s methodology in the Decks tab.</div>}
+        </PanelSection>
 
-      <div className="matchup-full-grid">
-        <div className="matchup-col">
-          <PanelSection title="Their end boards" defaultOpen={true}>
-            <EndBoardsEditor m={m} upd={upd} onHover={onHover} onPick={onPick} />
-            <div className="drill-hint">Feeds <strong>Testing → Going second</strong> — practise breaking these.</div>
-          </PanelSection>
-          <PanelSection title="Cards that are really good here" defaultOpen={true}>
-            <ReallyGoodEditor cards={m.counterCards || []} onChange={(c) => upd((x) => { x.counterCards = c; })} onHover={onHover} onPick={onPick} />
-          </PanelSection>
-        </div>
-
-        <div className="matchup-col">
-          <PanelSection title="Game plan" defaultOpen={true}>
+        <PanelSection title="Game plan" defaultOpen={true}>
+          <div className="dash-2up">
             <EditField label="Going first vs them" value={m.gameplanFirst} onSave={(v) => upd((x) => { x.gameplanFirst = v; })} />
             <EditField label="Going second — break their board" value={m.gameplanSecond} onSave={(v) => upd((x) => { x.gameplanSecond = v; })} />
             <StepEditor label="Priority plays — going first" steps={m.priorityFirst || []} onChange={(s) => upd((x) => { x.priorityFirst = s; })} />
             <StepEditor label="Priority plays — going second" steps={m.prioritySecond || []} onChange={(s) => upd((x) => { x.prioritySecond = s; })} />
-          </PanelSection>
-          <PanelSection title="Your notes on this matchup" defaultOpen={true}>
-            <RichNotes value={m.freeformNotes || ""} placeholder="Scouting notes, lines you've found, what to watch for. Type @ to mention a card."
-              onSave={(v) => upd((x) => { x.freeformNotes = v; })} />
-          </PanelSection>
-        </div>
-      </div>
+          </div>
+        </PanelSection>
 
-      <PanelSection title="Side-deck plan (auto-pulled from your deck)" defaultOpen={true}>
-        <SideboardPlanner sb={m.sideboard} primaryDeck={primaryDeck} onChange={(sb) => upd((x) => { x.sideboard = sb; })} onHover={onHover} />
-      </PanelSection>
+        <PanelSection title="Their end boards" defaultOpen={true}>
+          <EndBoardsEditor m={m} upd={upd} onHover={onHover} onPick={onPick} />
+          <div className="drill-hint">Feeds <strong>Testing → Going second</strong> — practise breaking these.</div>
+        </PanelSection>
+
+        <PanelSection title="Cards that are really good here" defaultOpen={true}>
+          <ReallyGoodEditor cards={m.counterCards || []} onChange={(c) => upd((x) => { x.counterCards = c; })} onHover={onHover} onPick={onPick} />
+        </PanelSection>
+
+        <PanelSection title="Side-deck plan (auto-pulled from your deck)" defaultOpen={true}>
+          <SideboardPlanner sb={m.sideboard} primaryDeck={primaryDeck} onChange={(sb) => upd((x) => { x.sideboard = sb; })}
+            goodCards={(m.counterCards || []).filter((c) => c && c.side !== "bad").map((c) => c.name)} />
+        </PanelSection>
+
+        <PanelSection title="Your notes on this matchup" defaultOpen={true}>
+          <RichNotes value={m.freeformNotes || ""} placeholder="Scouting notes, lines you've found, what to watch for. Type @ to mention a card."
+            onSave={(v) => upd((x) => { x.freeformNotes = v; })} />
+        </PanelSection>
+      </div>
     </div>
   );
 }
@@ -362,7 +363,7 @@ function StepEditor({ label, steps, onChange }) {
 // ── Side-deck planner — auto-pulls your side deck (→ bring IN) + main deck
 //    (→ take OUT). Going first / second is a toggle (one leg at a time), and
 //    each pool is a clean uniform list. Memoised + stable fetch deps for speed. ──
-function SideboardPlanner({ sb, primaryDeck, onChange, onHover }) {
+function SideboardPlanner({ sb, primaryDeck, onChange, goodCards }) {
   const [leg, setLeg] = useState("goingFirst");
   const [cardMap, setCardMap] = useState({});
   const dl = primaryDeck ? getDeckPrimaryDecklist(primaryDeck) : null;
@@ -416,24 +417,31 @@ function SideboardPlanner({ sb, primaryDeck, onChange, onHover }) {
   const totalOut = l.out.reduce((s, x) => s + x.count, 0);
   const summarize = (arr) => arr.length ? arr.map((x) => `${x.count}× ${x.name}`).join(", ") : "—";
 
+  const good = new Set((goodCards || []).map((n) => String(n).toLowerCase()));
+
+  // Copy-count selector: one dot per copy you run; click a dot to set the count.
+  const Dots = ({ dir, name, max, n }) => (
+    <span className="sbp-dots" onClick={(e) => e.stopPropagation()}>
+      {Array.from({ length: max }).map((_, i) => (
+        <button key={i} type="button" className={"sbp-dot" + (i < n ? " is-on" : "")}
+          title={`${i + 1} cop${i ? "ies" : "y"}`}
+          onClick={() => setCount(dir, name, n === i + 1 ? i : i + 1, max)} />
+      ))}
+    </span>
+  );
+
   const rows = (dir, pool) => (
     <div className="sbp-rows">
       {pool.map(({ name, max }) => {
         const n = countFor(dir, name);
         const c = lookupCardByName(name);
         const urls = c?.id ? getImageUrls(c.id) : [];
+        const suggested = dir === "in" && good.has(name.toLowerCase());
         return (
           <div key={name} className={"sbp-row is-" + dir + (n > 0 ? " is-on" : "")}>
-            <div className="sbp-row-main" onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
-              onClick={() => setCount(dir, name, n >= max ? 0 : n + 1, max)} title="Click to cycle copies">
-              {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : <span className="sbp-row-noimg" />}
-              <span className="sbp-row-name">{name}</span>
-            </div>
-            <div className="sbp-step">
-              <button type="button" className="sbp-step-btn" disabled={n <= 0} onClick={() => setCount(dir, name, n - 1, max)}>−</button>
-              <span className={"sbp-qty" + (n > 0 ? " is-on" : "")}>{n}<span className="sbp-qty-max">/{max}</span></span>
-              <button type="button" className="sbp-step-btn" disabled={n >= max} onClick={() => setCount(dir, name, n + 1, max)}>+</button>
-            </div>
+            {urls.length ? <img className="sbp-row-img" src={urls[0]} alt="" loading="lazy" /> : <span className="sbp-row-noimg" />}
+            <span className="sbp-row-name">{name}{suggested && <span className="sbp-sugg" title="You flagged this as good vs this matchup">★</span>}</span>
+            <Dots dir={dir} name={name} max={max} n={n} />
           </div>
         );
       })}
@@ -452,13 +460,13 @@ function SideboardPlanner({ sb, primaryDeck, onChange, onHover }) {
       </div>
 
       <div className="sbp-summary">
-        <div><span className="sbp-sum-label is-in">+ In</span> {summarize(l.in)}</div>
         <div><span className="sbp-sum-label is-out">− Out</span> {summarize(l.out)}</div>
+        <div><span className="sbp-sum-label is-in">+ In</span> {summarize(l.in)}</div>
       </div>
 
       <div className="sbp-cols">
-        <div className="sbp-col"><div className="sbp-col-title is-in">Bring IN — your side deck</div>{rows("in", pools.side)}</div>
         <div className="sbp-col"><div className="sbp-col-title is-out">Take OUT — your main deck</div>{rows("out", pools.main)}</div>
+        <div className="sbp-col"><div className="sbp-col-title is-in">Bring IN — your side deck <span className="sbp-hint">★ = good here</span></div>{rows("in", pools.side)}</div>
       </div>
     </div>
   );
