@@ -20,7 +20,7 @@ const DEFAULT_DECK_NOTES =
   "Imported from a ygoprodeck tournament list (May 2026). Refine as the meta shifts.";
 
 // Fields on a matchup the USER authors — preserved across a refresh.
-const USER_FIELDS = ["freeformNotes", "sideboard", "priorityFirst", "prioritySecond", "relatedComboIds", "chokepointOurs", "tier"];
+const USER_FIELDS = ["freeformNotes", "sideboard", "priorityFirst", "prioritySecond", "relatedComboIds", "chokepointOurs", "tier", "targetEndboard", "counterCards"];
 const nonEmpty = (v) => v != null && (Array.isArray(v) ? v.length : (typeof v === "object" ? Object.keys(v).length : String(v).length));
 
 export async function fetchMetaPack() {

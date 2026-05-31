@@ -252,7 +252,7 @@
 }
 
 /* ── Format tab ── */
-.format-head { margin-bottom: 18px; }
+.format-head { margin-bottom: 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .format-title { font-size: 18px; font-weight: 600; }
 .format-sub { font-size: 12px; color: var(--text-dim); }
 .matchup-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; align-items: start; }
@@ -758,3 +758,72 @@
 
 /* Deck panel — equal-size Convert / Delete */
 .deck-panel-actions .deck-mini-btn { min-width: 124px; justify-content: center; }
+
+/* ════════════════════════════════════════════════════════════════════
+   FORMAT TAB — editable matchup planning + tournament journal
+   ════════════════════════════════════════════════════════════════════ */
+.drill-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.drill-inline { display: flex; flex-direction: column; gap: 4px; }
+
+/* Card chips (endboard / counters / sideboard) */
+.fmt-chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fmt-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--bg); border: 1px solid var(--border); border-left-width: 3px;
+  border-radius: 999px; padding: 2px 4px 2px 8px; font-size: 11.5px; color: var(--text); cursor: pointer;
+}
+.fmt-chip:hover { border-color: var(--accent); }
+.fmt-chip.is-good { border-left-color: var(--role-engine); }
+.fmt-chip.is-bad { border-left-color: var(--role-stopper); }
+.fmt-chip img { width: 18px; height: 18px; border-radius: 2px; object-fit: cover; }
+.fmt-chip-name { white-space: nowrap; }
+.fmt-chip-x {
+  background: transparent; border: none; color: var(--text-faint); cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 0 4px; border-radius: 50%;
+}
+.fmt-chip-x:hover { color: var(--role-stopper); }
+.fmt-add-btn {
+  background: transparent; border: 1px dashed var(--border-strong); border-radius: 999px;
+  color: var(--text-faint); cursor: pointer; font-family: inherit; font-size: 11px; padding: 3px 11px;
+}
+.fmt-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.fmt-add-input {
+  background: var(--bg); border: 1px solid var(--accent); border-radius: var(--radius-sm);
+  color: var(--text); font-family: inherit; font-size: 12px; padding: 4px 8px;
+}
+.fmt-add-input.is-wide { flex: 1; min-width: 160px; }
+
+/* Priority step lists */
+.fmt-steps { margin: 0 0 6px; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.fmt-step { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text); }
+.fmt-step-text { flex: 1; }
+
+/* Side-deck planner */
+.sb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .sb-grid { grid-template-columns: 1fr; } }
+.sb-leg { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; }
+.sb-leg-title { font-size: 11px; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; }
+.sb-dir { margin-bottom: 8px; }
+.sb-dir-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 4px; }
+.sb-dir-label.is-in { color: var(--role-engine); }
+.sb-dir-label.is-out { color: var(--role-stopper); }
+
+/* Tournament journal */
+.journal { display: flex; flex-direction: column; gap: 12px; }
+.journal-bar { display: flex; gap: 8px; }
+.journal-record { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; }
+.record-chip { font-size: 11.5px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; color: var(--text-dim); }
+.record-chip strong { color: var(--text); }
+.journal-event { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.journal-event-head { display: flex; align-items: center; gap: 10px; width: 100%; background: transparent; border: none; cursor: pointer; padding: 11px 13px; color: var(--text); font-family: inherit; }
+.journal-event-head:hover { background: var(--bg-hover); }
+.journal-event-name { flex: 1; font-size: 13px; font-weight: 600; text-align: left; }
+.journal-event-rec { font-size: 12px; color: var(--role-engine); font-weight: 700; font-family: "SF Mono", Menlo, monospace; }
+.journal-rounds { padding: 6px 13px 14px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--border); }
+.journal-round { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.journal-round-n { font-size: 11px; color: var(--text-faint); font-weight: 700; width: 22px; }
+.journal-wl { display: inline-flex; gap: 2px; }
+.journal-wl-btn { background: var(--bg-elevated); border: 1px solid var(--border-strong); color: var(--text-dim); cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; width: 26px; height: 28px; border-radius: var(--radius-sm); }
+.journal-wl-btn.is-w.active { background: rgba(95,196,154,0.18); border-color: var(--role-engine); color: var(--role-engine); }
+.journal-wl-btn.is-l.active { background: rgba(196,95,95,0.18); border-color: var(--role-stopper); color: var(--role-stopper); }
+.journal-wl-btn.is-d.active { background: var(--bg-hover); border-color: var(--text-faint); color: var(--text); }
