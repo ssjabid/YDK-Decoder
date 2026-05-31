@@ -5,6 +5,7 @@ import {
   comboEndboard, comboAllCards, isCoreStep, stepCards, groupCombos, comboSearchHaystack,
   renameCombo, setComboDeck, setComboNotes, setComboOpenerSize, deleteCombo, importCombosJson,
 } from "../lib/combos.js";
+import { simulateCombo, describeStep, fieldToBoard } from "../lib/comboSim.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { lookupCardByName, searchApi } from "../lib/cardSearch.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
@@ -170,7 +171,7 @@ function ComboTile({ c, active, deckName, onClick }) {
 function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
   const [, forceRev] = useReducer((x) => x + 1, 0);
   const [view, setView] = useState("full");
-  const [renaming, setRenaming] = useState(false);
+  const [mode, setMode] = useState("line");
 
   const hand = comboOpeningHand(c);
   const board = comboEndboard(c);
@@ -205,7 +206,6 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
     <div className="combo-detail">
       <div className="combo-detail-bar">
         <h2 className="combo-detail-title" title="Click to rename" onClick={rename}>{comboTitle(c)}</h2>
-        <Dropdown className="combo-view-dd" value={view} options={VIEW_MODES} onChange={setView} ariaLabel="View mode" />
         {c.replayUrl && <a className="combo-replay-link" href={c.replayUrl} target="_blank" rel="noreferrer" title="Open the DuelingBook replay">↗ replay</a>}
         <button type="button" className="back-btn is-danger" onClick={remove}>× Delete</button>
       </div>
@@ -224,38 +224,54 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
         <span className="combo-meta-info">{(c.steps || []).length} steps{c.extractedAt ? ` · extracted ${fmtDate(c.extractedAt)}` : ""}</span>
       </div>
 
-      {!!hand.length && (
-        <section className="combo-block">
-          <div className="combo-block-label">Opening hand</div>
-          <div className="combo-hand-row">{hand.map((n, i) => <Thumb key={i} name={n} onHover={onHover} onPick={onPick} />)}</div>
-        </section>
+      <div className="combo-mode-switch">
+        {[["line", "Line"], ["sim", "▶ Simulate"], ["drill", "🎓 Drill"]].map(([m, lbl]) => (
+          <button key={m} type="button" className={"combo-mode-btn" + (mode === m ? " active" : "")} onClick={() => setMode(m)}>{lbl}</button>
+        ))}
+      </div>
+
+      {mode === "line" && (
+        <>
+          {!!hand.length && (
+            <section className="combo-block">
+              <div className="combo-block-label">Opening hand</div>
+              <div className="combo-hand-row">{hand.map((n, i) => <Thumb key={i} name={n} onHover={onHover} onPick={onPick} />)}</div>
+            </section>
+          )}
+
+          <section className="combo-block">
+            <div className="combo-block-label">
+              The line <span className="combo-block-hint">{steps.length} {view === "core" ? "key plays" : "steps"}</span>
+              <Dropdown className="combo-view-dd combo-block-dd" value={view} options={VIEW_MODES} onChange={setView} ariaLabel="View mode" />
+            </div>
+            {!steps.length ? <div className="read-field is-empty">No steps recorded.</div> : (
+              <ol className="combo-steps">
+                {steps.map((s, i) => {
+                  const cards = stepCards(s);
+                  return (
+                    <li key={i} className="combo-step">
+                      <span className="combo-step-time">{s.timestamp || ""}</span>
+                      <span className={"combo-step-action act-" + (s.action || "other").toLowerCase().replace(/\s+/g, "-")}>{s.action || "—"}</span>
+                      <span className="combo-step-detail">{s.detail || cards.join(", ")}</span>
+                      {cards.length ? <span className="combo-step-cards">{cards.map((n, j) => <Thumb key={j} name={n} onHover={onHover} onPick={onPick} />)}</span> : null}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </section>
+
+          <section className="combo-block">
+            <div className="combo-block-label">End board</div>
+            <EndBoardView cards={board} onHover={onHover} onPick={onPick} />
+            <ComboPile title="Graveyard" cards={c.endboardGraveyard} cls="is-gy" onHover={onHover} onPick={onPick} />
+            <ComboPile title="Banished" cards={c.endboardBanished} cls="is-banish" onHover={onHover} onPick={onPick} />
+          </section>
+        </>
       )}
 
-      <section className="combo-block">
-        <div className="combo-block-label">The line <span className="combo-block-hint">{steps.length} {view === "core" ? "key plays" : "steps"}</span></div>
-        {!steps.length ? <div className="read-field is-empty">No steps recorded.</div> : (
-          <ol className="combo-steps">
-            {steps.map((s, i) => {
-              const cards = stepCards(s);
-              return (
-                <li key={i} className="combo-step">
-                  <span className="combo-step-time">{s.timestamp || ""}</span>
-                  <span className={"combo-step-action act-" + (s.action || "other").toLowerCase().replace(/\s+/g, "-")}>{s.action || "—"}</span>
-                  <span className="combo-step-detail">{s.detail || cards.join(", ")}</span>
-                  {cards.length ? <span className="combo-step-cards">{cards.map((n, j) => <Thumb key={j} name={n} onHover={onHover} onPick={onPick} />)}</span> : null}
-                </li>
-              );
-            })}
-          </ol>
-        )}
-      </section>
-
-      <section className="combo-block">
-        <div className="combo-block-label">End board</div>
-        <EndBoardView cards={board} onHover={onHover} onPick={onPick} />
-        <ComboPile title="Graveyard" cards={c.endboardGraveyard} cls="is-gy" onHover={onHover} onPick={onPick} />
-        <ComboPile title="Banished" cards={c.endboardBanished} cls="is-banish" onHover={onHover} onPick={onPick} />
-      </section>
+      {mode === "sim" && <SimulatorView combo={c} onHover={onHover} onPick={onPick} />}
+      {mode === "drill" && <DrillView combo={c} onHover={onHover} onPick={onPick} />}
 
       <section className="combo-block">
         <div className="combo-block-label">Notes on this combo</div>
@@ -278,5 +294,77 @@ function ComboPile({ title, cards, cls, onHover, onPick }) {
       </button>
       {open && <div className="endboard-pile-grid">{cards.map((n, i) => <Thumb key={i} name={typeof n === "string" ? n : (n.card || n.name)} onHover={onHover} onPick={onPick} />)}</div>}
     </div>
+  );
+}
+
+// ── Step simulator — scrub the board as the combo builds ─────────────
+function SimulatorView({ combo, onHover, onPick }) {
+  const sim = simulateCombo(combo);
+  const [i, setI] = useState(sim.length ? sim.length - 1 : 0);
+  useEffect(() => { setI((combo.steps || []).length ? simulateCombo(combo).length - 1 : 0); }, [combo.replayId, combo.replayUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!sim.length) return <section className="combo-block"><div className="read-field is-empty">No steps to simulate.</div></section>;
+  const idx = Math.max(0, Math.min(i, sim.length - 1));
+  const step = sim[idx];
+  const st = step.stateAfter || { hand: [], field: [], gy: [], banished: [] };
+  return (
+    <section className="combo-block">
+      <div className="combo-sim-controls">
+        <button type="button" className="combo-sim-btn" disabled={idx <= 0} onClick={() => setI(idx - 1)}>◀ Prev</button>
+        <input className="combo-sim-range" type="range" min={0} max={sim.length - 1} value={idx} onChange={(e) => setI(Number(e.target.value))} />
+        <button type="button" className="combo-sim-btn" disabled={idx >= sim.length - 1} onClick={() => setI(idx + 1)}>Next ▶</button>
+        <span className="combo-sim-count">Step {idx + 1} / {sim.length}</span>
+      </div>
+      <div className="combo-sim-narration">
+        <span className={"combo-step-action act-" + (step.action || "other").toLowerCase().replace(/\s+/g, "-")}>{step.action || "—"}</span>
+        <span className="combo-sim-narration-text">{describeStep(step)}</span>
+      </div>
+      <EndBoardView cards={fieldToBoard(st.field)} onHover={onHover} onPick={onPick} />
+      <div className="combo-sim-piles">
+        <SimPile label="Hand" cards={st.hand} onHover={onHover} onPick={onPick} />
+        <SimPile label="Graveyard" cards={st.gy} onHover={onHover} onPick={onPick} />
+        <SimPile label="Banished" cards={st.banished} onHover={onHover} onPick={onPick} />
+      </div>
+    </section>
+  );
+}
+
+function SimPile({ label, cards, onHover, onPick }) {
+  return (
+    <div className="combo-sim-pile">
+      <div className="combo-sim-pile-label">{label} <span className="count">{cards.length}</span></div>
+      <div className="combo-hand-row">{cards.length ? cards.map((n, i) => <Thumb key={i} name={n} onHover={onHover} onPick={onPick} />) : <span className="combo-sim-pile-empty">—</span>}</div>
+    </div>
+  );
+}
+
+// ── Drill — reveal the line one play at a time (test your recall) ────
+function DrillView({ combo, onHover, onPick }) {
+  const plays = simulateCombo(combo).filter(isCoreStep);
+  const hand = comboOpeningHand(combo);
+  const [revealed, setRevealed] = useState(0);
+  useEffect(() => { setRevealed(0); }, [combo.replayId, combo.replayUrl]);
+  return (
+    <section className="combo-block">
+      <div className="combo-drill">
+        <div className="combo-drill-opener">
+          <div className="combo-block-label">You open with</div>
+          {hand.length
+            ? <div className="combo-hand-row">{hand.map((n, i) => <Thumb key={i} name={n} onHover={onHover} onPick={onPick} />)}</div>
+            : <div className="read-field is-empty">No opener recorded — play from the first step.</div>}
+        </div>
+        <ol className="combo-drill-list">
+          {plays.slice(0, revealed).map((s, i) => (
+            <li key={i} className="combo-drill-step"><span className="combo-drill-n">{i + 1}</span><span>{describeStep(s)}</span></li>
+          ))}
+        </ol>
+        {revealed < plays.length ? (
+          <button type="button" className="btn-primary combo-drill-reveal" onClick={() => setRevealed(revealed + 1)}>
+            {revealed === 0 ? "Reveal first play →" : `Reveal play ${revealed + 1} →`}
+          </button>
+        ) : (
+          <div className="combo-drill-done">✓ That's the full line ({plays.length} plays). <button type="button" className="link-btn" onClick={() => setRevealed(0)}>Restart drill</button></div>
+        )}
+      </div>
+    </section>
   );
 }
