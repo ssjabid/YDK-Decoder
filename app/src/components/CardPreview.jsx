@@ -36,7 +36,6 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
           ))}
         </div>
         <div className="card-preview-text">{fullText}</div>
-        {pinned && <div className="card-preview-pinhint">pinned · scroll to read · click to dismiss</div>}
       </div>
     </div>
   );

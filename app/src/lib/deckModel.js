@@ -11,6 +11,7 @@ import {
   loadSavedCombos, saveSavedCombos, loadFormats, saveFormats,
 } from "./storage.js";
 import { classify } from "./classify.js";
+import { lookupKB } from "./cardKB.js";
 
 export const KEY_CARD_BUCKETS = ["Boss", "Starter", "Extender", "Handtrap", "Floodgate", "Tech"];
 export const STOP_PRIORITIES = ["none", "medium", "high"];
@@ -155,6 +156,9 @@ export function classifyCardBroadType(card) {
 
 export function classifyKeyCardCategory(card) {
   if (!card) return "Tech";
+  // Curated KB first (accurate handtraps / floodgates / board breakers / bosses).
+  const kb = card.name ? lookupKB(card.name) : null;
+  if (kb && kb.cat) return kb.cat;
   if (/xyz|link|synchro|fusion/i.test(card.type || "")) return "Boss";
   const roles = (classify(card).roles) || [];
   if (roles.includes("Handtrap")) return "Handtrap";

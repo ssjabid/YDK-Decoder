@@ -219,25 +219,23 @@
 }
 
 /* ── Card preview (hover + click-to-pin) ── */
+/* Strict fixed size — the image stays put, the text column scrolls. */
 .card-preview {
-  z-index: 50; width: 420px; max-height: 82vh; overflow-y: auto;
-  display: flex; gap: 14px; align-items: flex-start;
+  z-index: 50; width: 430px; height: 430px; overflow: hidden;
+  display: flex; gap: 14px; align-items: stretch;
   background: var(--bg-elevated); border: 1px solid var(--border-strong);
   border-radius: var(--radius-md); padding: 14px;
   box-shadow: var(--shadow-lg); pointer-events: none;
   animation: preview-in 120ms ease-out;
 }
-.card-preview.is-pinned { overscroll-behavior: contain; }
-.card-preview-img { position: sticky; top: 0; }
 @keyframes preview-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .card-preview.is-pinned { pointer-events: auto; cursor: pointer; box-shadow: 0 0 0 1px var(--accent), var(--shadow-lg); }
-.card-preview-img { width: 168px; border-radius: 6px; flex-shrink: 0; align-self: flex-start; box-shadow: var(--shadow-sm); }
-.card-preview-body { min-width: 0; display: flex; flex-direction: column; }
+.card-preview-img { width: 178px; height: 260px; object-fit: contain; border-radius: 6px; flex-shrink: 0; align-self: flex-start; box-shadow: var(--shadow-sm); }
+.card-preview-body { min-width: 0; flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
 .card-preview-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .card-preview-meta { font-size: 10.5px; color: var(--text-faint); margin-bottom: 9px; }
 .card-preview-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
-.card-preview-text { font-size: 12.5px; color: var(--text-dim); line-height: 1.6; }
-.card-preview-pinhint { margin-top: 10px; font-size: 9.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+.card-preview-text { font-size: 12.5px; color: var(--text-dim); line-height: 1.6; white-space: pre-wrap; }
 .role-chip {
   font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--role); border: 1px solid var(--role);
@@ -722,3 +720,32 @@
 }
 .deck-combo-name { flex: 1; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .deck-combo-steps { font-size: 10px; color: var(--text-faint); }
+
+/* ── Consistency pass: key-card mini cards, role-tinted filter, equal buttons ── */
+.key-card-row-head { gap: 8px; padding: 4px; }
+.key-card-mini {
+  width: 30px; height: 44px; flex-shrink: 0; border-radius: 3px; overflow: hidden;
+  border: 1.5px solid var(--border-strong); background: var(--bg-card); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+.key-card-mini:hover { transform: scale(1.07); box-shadow: var(--shadow-sm); }
+.key-card-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.key-card-mini-ph { font-size: 13px; color: var(--text-faint); font-weight: 700; }
+.key-card-pri { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-radius: 999px; padding: 1px 6px; margin-left: 2px; }
+.key-card-pri.is-high { background: rgba(196,95,95,0.18); color: var(--role-stopper); }
+.key-card-pri.is-medium { background: rgba(229,169,60,0.18); color: var(--warning); }
+
+/* Sidebar filter — role-tinted active (green = mine, pink = matchup) + equal halves */
+.decks-role-btn { flex: 1; }
+.decks-role-btn.active[data-role="primary"] { background: rgba(95,196,154,0.18); color: var(--role-engine); }
+.decks-role-btn.active[data-role="matchup"] { background: rgba(196,95,122,0.18); color: var(--role-handtrap); }
+
+/* Toolbar — equal-size Import / Load buttons */
+.decks-toolbar .btn-primary,
+.decks-toolbar .btn-secondary {
+  min-width: 210px; justify-content: center; padding: 0 18px; height: 42px; box-sizing: border-box;
+}
+
+/* Deck panel — equal-size Convert / Delete */
+.deck-panel-actions .deck-mini-btn { min-width: 124px; justify-content: center; }

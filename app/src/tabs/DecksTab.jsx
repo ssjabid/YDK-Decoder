@@ -10,8 +10,10 @@ import {
   extractKeyCards, countMissingCardData, buildKeyRatiosHtml,
   KEY_CARD_BUCKETS, STOP_PRIORITIES,
 } from "../lib/deckModel.js";
-import { fetchCards } from "../lib/ydk.js";
+import { fetchCards, getImageUrls } from "../lib/ydk.js";
+import { lookupCardByName } from "../lib/cardSearch.js";
 import CardsView from "../components/CardsView.jsx";
+import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
 import RichNotes from "../components/RichNotes.jsx";
 import Icon from "../components/Icon.jsx";
@@ -96,8 +98,8 @@ export default function DecksTab({ dataVersion = 0, reload }) {
         <div className="decks-layout">
           <aside className="decks-sidebar">
             <div className="decks-role-filter">
-              <button type="button" className={"decks-role-btn" + (roleFilter === "primary" ? " active" : "")} onClick={() => setRoleFilter("primary")}>My decks</button>
-              <button type="button" className={"decks-role-btn" + (roleFilter === "matchup" ? " active" : "")} onClick={() => setRoleFilter("matchup")}>Matchup</button>
+              <button type="button" data-role="primary" className={"decks-role-btn" + (roleFilter === "primary" ? " active" : "")} onClick={() => setRoleFilter("primary")}>My decks</button>
+              <button type="button" data-role="matchup" className={"decks-role-btn" + (roleFilter === "matchup" ? " active" : "")} onClick={() => setRoleFilter("matchup")}>Matchup decks</button>
             </div>
             {!filtered.length ? (
               <div className="decks-list-empty">
@@ -291,12 +293,26 @@ function TechCards({ deck, save }) {
   );
 }
 
+// Category → accent colour for the mini card border + bucket header.
+const CAT_COLOR = {
+  Boss: "var(--role-handtrap)", Starter: "var(--role-starter)", Extender: "var(--role-extender)",
+  Handtrap: "var(--role-handtrap)", Floodgate: "var(--role-floodgate)", Tech: "var(--role-engine)",
+};
+
 function KeyCardsSection({ deck, save, cardMap, force }) {
   const total = (deck.keyCards || []).length;
   const missing = countMissingCardData(deck, cardMap);
   const doExtract = () => { deck.keyCards = extractKeyCards(deck, cardMap); save(); };
+  const [preview, setPreview] = useState(null); // { card, rect, pinned }
+
+  // Resolve a keyCard to a card object for the preview (fetched map → cache).
+  const cardFor = (kc) => cardMap[Number(kc.cardId)] || lookupCardByName(kc.name) || null;
+  const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
+  const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
+  const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
+
   return (
-    <div>
+    <div onMouseLeave={clearHover}>
       <div className="key-cards-toolbar">
         <span className="key-cards-status">
           {total ? `${total} card${total === 1 ? "" : "s"} bucketed` + (missing ? ` · ${missing} need data (open Cards)` : "")
@@ -306,13 +322,17 @@ function KeyCardsSection({ deck, save, cardMap, force }) {
         <button type="button" className="deck-inline-btn" onClick={doExtract}>{total ? "↻ Re-extract" : "Extract key cards"}</button>
       </div>
       <div className="key-cards-grid">
-        {KEY_CARD_BUCKETS.map((cat) => <KeyCardBucket key={cat} deck={deck} category={cat} save={save} force={force} />)}
+        {KEY_CARD_BUCKETS.map((cat) => (
+          <KeyCardBucket key={cat} deck={deck} category={cat} save={save} force={force}
+            cardFor={cardFor} onHover={onHover} onPick={onPick} />
+        ))}
       </div>
+      {preview && <CardPreview card={preview.card} rect={preview.rect} pinned={preview.pinned} onClose={() => setPreview(null)} />}
     </div>
   );
 }
 
-function KeyCardBucket({ deck, category, save, force }) {
+function KeyCardBucket({ deck, category, save, force, cardFor, onHover, onPick }) {
   const [adding, setAdding] = useState(false);
   const cards = (deck.keyCards || []).filter((kc) => kc && kc.category === category)
     .sort((a, b) => {
@@ -324,7 +344,10 @@ function KeyCardBucket({ deck, category, save, force }) {
     if (!n) return;
     const existing = (deck.keyCards || []).find((kc) => kc && kc.name.toLowerCase() === n.toLowerCase());
     if (existing) { existing.category = category; }
-    else deck.keyCards.push({ name: n, category, stopPriority: "none", stopWith: "", notes: "", auto: false, priority: (deck.keyCards.length) });
+    else {
+      const found = lookupCardByName(n);
+      deck.keyCards.push({ name: found?.name || n, cardId: found?.id ? String(found.id) : "", category, stopPriority: "none", stopWith: "", notes: "", auto: false, priority: (deck.keyCards.length) });
+    }
     save(); setAdding(false);
   };
   return (
@@ -332,7 +355,10 @@ function KeyCardBucket({ deck, category, save, force }) {
       <div className="key-cards-bucket-header"><span>{category}</span><span className="count">{cards.length}</span></div>
       <div className="key-cards-list">
         {!cards.length && <div className="key-cards-empty">—</div>}
-        {cards.map((kc) => <KeyCardRow key={kc.name} deck={deck} kc={kc} save={save} force={force} />)}
+        {cards.map((kc) => (
+          <KeyCardRow key={kc.name} deck={deck} kc={kc} save={save} force={force}
+            cardFor={cardFor} onHover={onHover} onPick={onPick} />
+        ))}
         {adding ? (
           <input className="key-cards-add-input" autoFocus placeholder="Card name, Enter to add"
             onKeyDown={(e) => { if (e.key === "Enter") addCard(e.target.value); else if (e.key === "Escape") setAdding(false); else e.stopPropagation(); }}
@@ -345,17 +371,25 @@ function KeyCardBucket({ deck, category, save, force }) {
   );
 }
 
-const PRIORITY_DOT = { high: "var(--role-stopper)", medium: "var(--warning)", none: "transparent" };
+const PRIORITY_RING = { high: "var(--role-stopper)", medium: "var(--warning)", none: "" };
 
-function KeyCardRow({ deck, kc, save, force }) {
+function KeyCardRow({ deck, kc, save, force, cardFor, onHover, onPick }) {
   const [open, setOpen] = useState(false);
   const remove = () => { deck.keyCards = deck.keyCards.filter((x) => x !== kc); save(); force(); };
+  const card = cardFor(kc);
+  const urls = kc.cardId ? getImageUrls(Number(kc.cardId)) : (card?.id ? getImageUrls(card.id) : []);
+  const border = PRIORITY_RING[kc.stopPriority] || CAT_COLOR[kc.category] || "var(--border-strong)";
   return (
     <div className="key-card-row">
       <div className="key-card-row-head">
+        <div className="key-card-mini" title={kc.name} style={{ borderColor: border }}
+          onMouseEnter={(e) => onHover(card, e.currentTarget.getBoundingClientRect())}
+          onClick={(e) => onPick(card, e.currentTarget.getBoundingClientRect())}>
+          {urls.length ? <img src={urls[0]} alt={kc.name} loading="lazy" /> : <span className="key-card-mini-ph">{kc.name[0]}</span>}
+        </div>
         <button type="button" className="key-card-toggle" onClick={() => setOpen((o) => !o)}>
-          <span className="key-card-dot" style={{ background: PRIORITY_DOT[kc.stopPriority] || "transparent", borderColor: kc.stopPriority === "none" ? "var(--border-strong)" : "transparent" }} />
           <span className="key-card-name">{kc.name}</span>
+          {kc.stopPriority && kc.stopPriority !== "none" && <span className={"key-card-pri is-" + kc.stopPriority}>{kc.stopPriority === "high" ? "stop!" : "watch"}</span>}
           {kc.auto === false && <span className="key-card-manual">manual</span>}
         </button>
         <button type="button" className="key-card-remove" title="Remove from key cards" onClick={remove}>×</button>

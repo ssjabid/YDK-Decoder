@@ -5,6 +5,8 @@
 // falls back to the keyword rules, which is accurate for the meta decks.
 // ───────────────────────────────────────────────────────────────────
 
+import { CARD_KB } from "./cardKB.js";
+
 export const CANONICAL_ROLES = [
   "Starter", "Extender", "Engine", "Board breaker", "Floodgate", "Handtrap",
 ];
@@ -68,6 +70,9 @@ export function pickPrimaryRole(roles) {
 
 export function classify(card) {
   if (!card) return { roles: ["Engine"], stripped: ["(no data)"] };
+  // Curated knowledge base wins over the keyword heuristics for known cards.
+  const kb = card.name ? CARD_KB[card.name.toLowerCase()] : null;
+  if (kb && kb.roles) return { roles: normalizeRoles(kb.roles), stripped: [stripDesc(card.desc || "")] };
   const roles = new Set();
   const text = (card.desc || "") + " " + (card.name || "");
   for (const rule of KEYWORD_RULES) if (rule.match.test(text)) roles.add(rule.role);
