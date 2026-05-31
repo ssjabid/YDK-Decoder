@@ -1165,7 +1165,7 @@
 .eb-cell[data-zone="S-3"] { grid-area: s3; } .eb-cell[data-zone="S-4"] { grid-area: s4; }
 .eb-cell[data-zone="S-5"] { grid-area: s5; }
 .eb-pill {
-  display: inline-flex; align-items: center; gap: 6px; max-width: 100%; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; cursor: pointer;
   background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 3px 7px 3px 3px;
   transition: border-color var(--motion-fast);
 }
@@ -1173,7 +1173,7 @@
 .eb-pill-thumb { width: 22px; height: 32px; flex-shrink: 0; border-radius: 2px; overflow: hidden; background: var(--bg); display: flex; align-items: center; justify-content: center; }
 .eb-pill-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .eb-pill-ph { font-size: 12px; color: var(--text-faint); }
-.eb-pill-name { font-size: 11px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eb-pill-name { font-size: 11px; line-height: 1.25; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .eb-pill-note { font-size: 9.5px; color: var(--text-faint); }
 .eb-empty { color: var(--text-faint); font-style: italic; font-size: 12px; padding: 6px 2px; }
 .eb-orphans { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
@@ -1194,11 +1194,18 @@
 .endboard-view-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
 
 /* ── "Cards that are really good" — read-only + plain chip ── */
-.fmt-chip.is-plain { border-color: transparent; background: transparent; padding-left: 0; }
+.fmt-chip.is-plain { border-color: transparent; background: transparent; padding-left: 0; min-width: 0; }
 .fmt-chip.is-plain:hover { border-color: transparent; }
-.rg-row.is-view { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 7px 10px; }
-.rg-reason-view { color: var(--text-dim); font-size: 12px; flex: 1; }
+/* Fixed name column so every reason starts at the SAME x — editor + view. */
+.rg-row, .rg-row.is-view {
+  display: grid; grid-template-columns: 230px 1fr; align-items: center; gap: 10px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 7px 10px;
+}
+.rg-row .fmt-chip { min-width: 0; max-width: 100%; }
+.rg-row .fmt-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rg-reason, .rg-reason-view { color: var(--text-dim); font-size: 12px; min-width: 0; }
 .rg-reason-view.is-empty { color: var(--text-faint); }
+@media (max-width: 560px) { .rg-row, .rg-row.is-view { grid-template-columns: 1fr; } }
 
 /* read-only priority steps */
 .fmt-steps.is-view { list-style: decimal; padding-left: 20px; margin: 0; }
@@ -1231,3 +1238,49 @@
   background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px;
 }
 .fmt-add-btn.is-block { display: block; width: 100%; margin-top: 8px; text-align: center; }
+
+/* ════════════════════════════════════════════════════════════════════
+   Tournament journal — guided event form + round cards
+   ════════════════════════════════════════════════════════════════════ */
+.journal-newform {
+  background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+  padding: 16px; display: flex; flex-direction: column; gap: 14px;
+  animation: section-in 200ms cubic-bezier(0.2,0.7,0.3,1);
+}
+.jnf-head { font-size: 13px; font-weight: 700; }
+.jnf-field { display: flex; flex-direction: column; gap: 6px; }
+.jnf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 700; }
+.jnf-types { display: flex; flex-wrap: wrap; gap: 8px; }
+.jnf-type {
+  background: var(--bg-elevated); border: 1px solid var(--border-strong); color: var(--text-dim);
+  border-radius: var(--radius-md); padding: 8px 16px; font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: border-color var(--motion-fast), background var(--motion-fast), color var(--motion-fast);
+}
+.jnf-type:hover { border-color: var(--accent); color: var(--text); }
+.jnf-type.active { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+.jnf-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+.jnf-grow { flex: 1; min-width: 180px; }
+.jnf-date {
+  background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 10px; color-scheme: dark;
+}
+.jnf-deck-dd .dd-trigger { min-width: 220px; width: 100%; }
+.jnf-actions { display: flex; gap: 8px; }
+.journal-type-badge {
+  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-soft);
+  border-radius: 4px; padding: 2px 7px;
+}
+.journal-event-deck { font-size: 11px; color: var(--text-dim); }
+/* round cards (override the old inline-flex row) */
+.journal-round {
+  display: flex; flex-direction: column; gap: 9px;
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px;
+}
+.journal-round-top { display: flex; align-items: center; justify-content: space-between; }
+.journal-round-n { font-size: 11px; color: var(--text); font-weight: 700; width: auto; text-transform: uppercase; letter-spacing: 0.05em; }
+.journal-round-fields { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.journal-rf { display: flex; flex-direction: column; gap: 5px; }
+.journal-rf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
+.journal-wl-btn { width: auto; min-width: 54px; padding: 0 14px; height: 32px; }
+.journal-rounds-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }

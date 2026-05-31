@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { getImageUrls } from "../lib/ydk.js";
 import { classify, ROLE_COLORS } from "../lib/classify.js";
 import { getCardSummary } from "../lib/cardFx.js";
@@ -7,6 +8,16 @@ import { getCardSummary } from "../lib/cardFx.js";
 // `rect` is the hovered/clicked tile's bounding rect. When `pinned`, it stays
 // put and becomes clickable (click to dismiss).
 export default function CardPreview({ card, rect, pinned, onClose }) {
+  // When pinned, a mousedown anywhere outside the preview dismisses it (so
+  // clicking out of "hover/pin mode" exits it). Deferred a tick so the click
+  // that pinned it doesn't immediately close it.
+  useEffect(() => {
+    if (!pinned || !onClose) return;
+    const onDown = (e) => { if (!(e.target.closest && e.target.closest(".card-preview"))) onClose(); };
+    const id = setTimeout(() => document.addEventListener("mousedown", onDown, true), 0);
+    return () => { clearTimeout(id); document.removeEventListener("mousedown", onDown, true); };
+  }, [pinned, onClose]);
+
   if (!card) return null;
   const urls = getImageUrls(card.id);
   const cls = classify(card);

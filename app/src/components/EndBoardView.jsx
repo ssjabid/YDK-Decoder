@@ -55,7 +55,12 @@ export function placeBoard(cards) {
     .filter((c) => c && c.name)
     .map((c) => ({ ...c, card: lookupCardByName(c.name) }));
 
-  const pools = { monster: [...MAIN_ZONES], spell: [...ST_ZONES], extra: ["EMZ-L", "EMZ-R"], field: ["Field"] };
+  // Master-Rule reality: a player normally uses only ONE Extra Monster Zone
+  // (the 2 EMZs are shared; you only get both via an Extra Link, which is
+  // rare). So auto-placement fills a single EMZ; extra-deck monsters beyond
+  // the first overflow into Main Monster Zones (where Links would point).
+  // EMZ-R stays manually selectable for the Extra-Link edge case.
+  const pools = { monster: [...MAIN_ZONES], spell: [...ST_ZONES], extra: ["EMZ-L"], field: ["Field"] };
   const take = (z) => { for (const k in pools) { const i = pools[k].indexOf(z); if (i >= 0) pools[k].splice(i, 1); } };
   const slots = {};
   const orphans = [];

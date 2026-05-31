@@ -14,7 +14,16 @@ import Icon from "../components/Icon.jsx";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
 const TIER_OPTIONS = [["tier1", "Tier 1"], ["tier2", "Tier 2"], ["rogue", "Rogue"]];
+const TOURNAMENT_TYPES = [
+  ["Locals", "Weekly store tournament"],
+  ["OTS", "Official Tournament Store event"],
+  ["Regionals", "Regional qualifier"],
+  ["OPEN", "Open / side event"],
+  ["Nationals", "National championship"],
+  ["YCS", "Yu-Gi-Oh! Championship Series"],
+];
 const rid = () => Math.random().toString(36).slice(2, 8);
+const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export default function FormatTab({ dataVersion = 0 }) {
   const [rev, bump] = useReducer((x) => x + 1, 0);
@@ -151,7 +160,7 @@ export default function FormatTab({ dataVersion = 0 }) {
           )}
 
           <PanelSection title="Tournament journal — log events + matchup record" defaultOpen={false}>
-            <TournamentJournal format={format} deckNames={deckNames} update={update} />
+            <TournamentJournal format={format} deckNames={deckNames} primaryDecks={primaryDecks} update={update} />
           </PanelSection>
         </>
       )}
@@ -361,16 +370,67 @@ function SideboardPlanner({ sb, primaryDeck, onChange, goodCards }) {
   );
 }
 
-// ── Tournament journal ──
-function TournamentJournal({ format, deckNames, update }) {
+// ── Tournament journal — guided "log an event" form + incremental rounds ──
+function TournamentJournal({ format, deckNames, primaryDecks, update }) {
   const tournaments = format.tournaments || [];
   const [openT, setOpenT] = useState(null);
-  const addTournament = async () => { const name = await promptModal({ title: "New event", message: "Name the event (e.g. \"Locals 2026-06-01\").", placeholder: "Locals 2026-06-01", confirmText: "Create" }); if (name == null) return; update((f) => { f.tournaments = f.tournaments || []; f.tournaments.push({ tournamentId: "t_" + rid(), name: name.trim() || "Event", date: "", rounds: [] }); }); };
+  const [creating, setCreating] = useState(false);
+  const [type, setType] = useState("Locals");
+  const [date, setDate] = useState(todayStr());
+  const [deckId, setDeckId] = useState(format.primaryDeckId || (primaryDecks[0] && primaryDecks[0].deckId) || "");
+
+  const create = () => {
+    const name = `${type} · ${date || todayStr()}`;
+    update((f) => {
+      f.tournaments = f.tournaments || [];
+      const t = { tournamentId: "t_" + rid(), name, type, date: date || todayStr(), deckId, rounds: [] };
+      f.tournaments.push(t);
+    });
+    setCreating(false); setType("Locals"); setDate(todayStr());
+  };
+
+  // Win/loss/draw record per opponent across every event (only scored rounds).
   const record = {};
-  for (const t of tournaments) for (const r of (t.rounds || [])) { const k = r.opponentDeckId || "_other"; record[k] = record[k] || { w: 0, l: 0, d: 0 }; if (r.result === "W") record[k].w++; else if (r.result === "L") record[k].l++; else record[k].d++; }
+  for (const t of tournaments) for (const r of (t.rounds || [])) {
+    if (!r.result) continue;
+    const k = r.opponentDeckId || "_other";
+    record[k] = record[k] || { w: 0, l: 0, d: 0 };
+    if (r.result === "W") record[k].w++; else if (r.result === "L") record[k].l++; else record[k].d++;
+  }
+
   return (
     <div className="journal">
-      <div className="journal-bar"><button type="button" className="deck-inline-btn" onClick={addTournament}>+ New event</button></div>
+      {!creating ? (
+        <div className="journal-bar"><button type="button" className="btn-secondary" onClick={() => setCreating(true)}>+ Log a new event</button></div>
+      ) : (
+        <div className="journal-newform">
+          <div className="jnf-head">Log a new event</div>
+          <div className="jnf-field">
+            <span className="jnf-label">Type of event</span>
+            <div className="jnf-types">
+              {TOURNAMENT_TYPES.map(([v, hint]) => (
+                <button key={v} type="button" title={hint} className={"jnf-type" + (type === v ? " active" : "")} onClick={() => setType(v)}>{v}</button>
+              ))}
+            </div>
+          </div>
+          <div className="jnf-row">
+            <label className="jnf-field">
+              <span className="jnf-label">Date</span>
+              <input type="date" className="jnf-date" value={date} onKeyDown={(e) => e.stopPropagation()} onChange={(e) => setDate(e.target.value)} />
+            </label>
+            <div className="jnf-field jnf-grow">
+              <span className="jnf-label">Deck you're playing</span>
+              <Dropdown className="jnf-deck-dd" value={deckId} placeholder="— your deck —"
+                options={primaryDecks.map((d) => [d.deckId, d.name])} onChange={setDeckId} />
+            </div>
+          </div>
+          <div className="jnf-actions">
+            <button type="button" className="btn-primary" onClick={create}>Create event</button>
+            <button type="button" className="back-btn" onClick={() => { setCreating(false); setType("Locals"); setDate(todayStr()); }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       {!!Object.keys(record).length && (
         <div className="journal-record">
           <div className="drill-label">Matchup record (all events)</div>
@@ -381,17 +441,25 @@ function TournamentJournal({ format, deckNames, update }) {
           </div>
         </div>
       )}
-      {!tournaments.length && <div className="deck-empty-hint">No events logged yet. Click + New event, then add each round's opponent + result.</div>}
+
+      {!tournaments.length && !creating && <div className="deck-empty-hint">No events logged yet. Click <strong>+ Log a new event</strong>, then add each round.</div>}
+
       {tournaments.map((t) => {
         const open = openT === t.tournamentId;
         const w = (t.rounds || []).filter((r) => r.result === "W").length;
         const l = (t.rounds || []).filter((r) => r.result === "L").length;
+        const d = (t.rounds || []).filter((r) => r.result === "D").length;
+        const del = async () => { if (await confirmModal({ title: "Delete this event?", message: `"${t.name}" and its ${(t.rounds || []).length} round(s).`, confirmText: "Delete event", danger: true })) update((f) => { f.tournaments = (f.tournaments || []).filter((x) => x.tournamentId !== t.tournamentId); }); };
         return (
           <div key={t.tournamentId} className="journal-event">
             <button type="button" className="journal-event-head" onClick={() => setOpenT(open ? null : t.tournamentId)}>
-              <span className="journal-event-name">{t.name}</span><span className="journal-event-rec">{w}-{l}</span><span className="matchup-chevron">{open ? "▾" : "▸"}</span>
+              {t.type && <span className="journal-type-badge">{t.type}</span>}
+              <span className="journal-event-name">{t.date || t.name}</span>
+              {t.deckId && deckNames[t.deckId] && <span className="journal-event-deck">{deckNames[t.deckId]}</span>}
+              <span className="journal-event-rec">{w}-{l}{d ? "-" + d : ""}</span>
+              <span className="matchup-chevron">{open ? "▾" : "▸"}</span>
             </button>
-            {open && <RoundEditor t={t} format={format} deckNames={deckNames} update={update} />}
+            {open && <RoundEditor t={t} format={format} deckNames={deckNames} update={update} onDelete={del} />}
           </div>
         );
       })}
@@ -399,27 +467,47 @@ function TournamentJournal({ format, deckNames, update }) {
   );
 }
 
-function RoundEditor({ t, format, deckNames, update }) {
+function RoundEditor({ t, format, deckNames, update, onDelete }) {
   const updT = (fn) => update((f) => { const tt = (f.tournaments || []).find((x) => x.tournamentId === t.tournamentId); if (tt) fn(tt); });
   const opponents = (format.matchups || []).map((m) => m.opponentDeckId);
-  const addRound = () => updT((tt) => { tt.rounds = tt.rounds || []; tt.rounds.push({ roundId: "r_" + rid(), opponentDeckId: opponents[0] || "", result: "W", score: "", notes: "" }); });
+  const addRound = () => updT((tt) => { tt.rounds = tt.rounds || []; tt.rounds.push({ roundId: "r_" + rid(), opponentDeckId: "", result: "", notes: "" }); });
+  const rounds = t.rounds || [];
   return (
     <div className="journal-rounds">
-      {(t.rounds || []).map((r, i) => (
+      {rounds.map((r, i) => (
         <div key={r.roundId} className="journal-round">
-          <span className="journal-round-n">R{i + 1}</span>
-          <Dropdown className="journal-opp-dd" value={r.opponentDeckId || ""} placeholder="— opponent —"
-            options={opponents.map((id) => [id, deckNames[id] || id])}
-            onChange={(v) => updT((tt) => { tt.rounds[i].opponentDeckId = v; })} />
-          <div className="journal-wl">
-            {["W", "L", "D"].map((res) => <button key={res} type="button" className={"journal-wl-btn is-" + res.toLowerCase() + (r.result === res ? " active" : "")} onClick={() => updT((tt) => { tt.rounds[i].result = res; })}>{res}</button>)}
+          <div className="journal-round-top">
+            <span className="journal-round-n">Round {i + 1}</span>
+            <button type="button" className="fmt-chip-x" title="Remove round" onClick={() => updT((tt) => { tt.rounds = tt.rounds.filter((_, j) => j !== i); })}>×</button>
           </div>
-          <input className="fmt-add-input" defaultValue={r.score} placeholder="2-1" style={{ width: 56 }} onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => updT((tt) => { tt.rounds[i].score = e.target.value; })} />
-          <input className="fmt-add-input is-wide" defaultValue={r.notes} placeholder="notes" onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => updT((tt) => { tt.rounds[i].notes = e.target.value; })} />
-          <button type="button" className="fmt-chip-x" onClick={() => updT((tt) => { tt.rounds = tt.rounds.filter((_, j) => j !== i); })}>×</button>
+          <div className="journal-round-fields">
+            <div className="journal-rf">
+              <span className="journal-rf-label">What did you play against?</span>
+              <Dropdown className="journal-opp-dd" value={r.opponentDeckId || ""} placeholder="— opponent deck —"
+                options={opponents.map((id) => [id, deckNames[id] || id])}
+                onChange={(v) => updT((tt) => { tt.rounds[i].opponentDeckId = v; })} />
+            </div>
+            <div className="journal-rf">
+              <span className="journal-rf-label">Did you win?</span>
+              <div className="journal-wl">
+                {[["W", "Win"], ["L", "Loss"], ["D", "Draw"]].map(([res, lbl]) => (
+                  <button key={res} type="button" className={"journal-wl-btn is-" + res.toLowerCase() + (r.result === res ? " active" : "")}
+                    onClick={() => updT((tt) => { tt.rounds[i].result = res; })}>{lbl}</button>
+                ))}
+              </div>
+            </div>
+            <label className="journal-rf jnf-grow">
+              <span className="journal-rf-label">Any notes?</span>
+              <input className="fmt-add-input is-wide" defaultValue={r.notes} placeholder="how it went, what you'd change next time…"
+                onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => updT((tt) => { tt.rounds[i].notes = e.target.value; })} />
+            </label>
+          </div>
         </div>
       ))}
-      <button type="button" className="fmt-add-btn" onClick={addRound}>+ Add round</button>
+      <div className="journal-rounds-actions">
+        <button type="button" className="fmt-add-btn" onClick={addRound}>+ Add round {rounds.length + 1}</button>
+        {onDelete && <button type="button" className="back-btn is-danger" onClick={onDelete}>× Delete event</button>}
+      </div>
     </div>
   );
 }
