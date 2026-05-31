@@ -1433,3 +1433,17 @@
 .bb-leg-btn:disabled { opacity: 0.4; cursor: default; }
 .bb-sideplan.is-hint { color: var(--text-faint); }
 .bb-sideplan.is-hint strong { color: var(--text-dim); }
+
+/* ════════════════════════════════════════════════════════════════════
+   Settings — data overview + backup/restore + danger zone
+   ════════════════════════════════════════════════════════════════════ */
+.settings-row + .settings-row { border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 14px; }
+.settings-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 12px; }
+@media (max-width: 640px) { .settings-stats { grid-template-columns: repeat(3, 1fr); } }
+.stat-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 8px; }
+.stat-num { font-size: 18px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); text-align: center; }
+.settings-section.is-danger { border-color: rgba(196,95,95,0.4); }
+.settings-section.is-danger .settings-section-title { color: var(--role-stopper); }
+.btn-secondary.is-danger { color: var(--role-stopper); border-color: rgba(196,95,95,0.45); }
+.btn-secondary.is-danger:hover { background: rgba(196,95,95,0.12); border-color: var(--role-stopper); }
