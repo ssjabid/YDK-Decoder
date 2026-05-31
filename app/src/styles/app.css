@@ -1403,3 +1403,33 @@
 .combo-drill-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 11px; font-weight: 800; flex-shrink: 0; }
 .combo-drill-reveal { align-self: flex-start; }
 .combo-drill-done { font-size: 13px; color: var(--role-engine); font-weight: 600; }
+
+/* ════════════════════════════════════════════════════════════════════
+   Testing tab — deep pass (role tags, hand readout, walk-the-line,
+   board picker, Game 1 / Game 2 sided-hand toggle)
+   ════════════════════════════════════════════════════════════════════ */
+.hand-card-tag.is-role { background: rgba(0,0,0,0.62); border: 1px solid currentColor; color: var(--text); }
+
+.hand-readout { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.hand-verdict { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 4px 12px; }
+.hand-verdict.is-ok { background: rgba(95,196,154,0.16); color: var(--role-engine); }
+.hand-verdict.is-warn { background: rgba(229,169,60,0.16); color: var(--warning); }
+.hand-verdict.is-no { background: var(--bg); color: var(--text-faint); border: 1px solid var(--border); }
+.hand-tally { display: inline-flex; gap: 12px; font-size: 11px; color: var(--text-dim); }
+
+.combo-line-walk { margin-left: auto; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text-dim); font-family: inherit; font-size: 10.5px; font-weight: 600; padding: 3px 9px; cursor: pointer; }
+.combo-line-walk:hover { border-color: var(--accent); color: var(--text); }
+.combo-line-steps { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 5px; }
+.combo-line-steps li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); }
+.combo-line-steps li.muted { color: var(--text-faint); }
+
+.bb-bar { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.bb-shuffle { margin-left: auto; }
+.bb-board-dd .dd-trigger { min-width: 170px; }
+.bb-leg-switch { display: inline-flex; gap: 4px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 3px; }
+.bb-leg-btn { background: none; border: none; color: var(--text-dim); font-family: inherit; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; }
+.bb-leg-btn:hover:not(:disabled) { color: var(--text); }
+.bb-leg-btn.active { background: var(--accent-dim); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent-soft); }
+.bb-leg-btn:disabled { opacity: 0.4; cursor: default; }
+.bb-sideplan.is-hint { color: var(--text-faint); }
+.bb-sideplan.is-hint strong { color: var(--text-dim); }

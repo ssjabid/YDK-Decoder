@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { loadDecks, loadFormats, getActiveDeckId, getActiveFormatId } from "../lib/storage.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
+import { getDeckPrimaryDecklist } from "../lib/deckModel.js";
+import { classify, ROLE_COLORS, pickPrimaryRole } from "../lib/classify.js";
 import {
   shuffleArr, bumpStreak, loadPracticeStreaks, resetPracticeStreak,
   matchCombosToHand, isBreaker, isHandtrap, inferDisruption, BB_DISRUPTIONS,
   loadBbStreaks, bumpBb,
 } from "../lib/practice.js";
+import { simulateCombo, describeStep } from "../lib/comboSim.js";
+import { isCoreStep } from "../lib/combos.js";
+import { getPlaybook } from "../components/Matchup.jsx";
 import CardPreview from "../components/CardPreview.jsx";
 import EndBoardView from "../components/EndBoardView.jsx";
 import Dropdown from "../components/Dropdown.jsx";
-import { endboardNames } from "../components/Matchup.jsx";
 import Icon from "../components/Icon.jsx";
 
 // ════════════════════════════════════════════════════════════════════
-// TESTING TAB — Going first (goldfish) + Going second (board breaker).
-// Ported from the original decoder's Practice + Board-Breaker tabs.
+// TESTING TAB — Going first (goldfish: openers + which lines are live, with
+// a walk-through) and Going second (board breaker: pick the opponent's end
+// board, draw a Game-1 or sided Game-2 hand, judge if you can break it).
 // ════════════════════════════════════════════════════════════════════
 export default function TestingTab({ dataVersion = 0 }) {
   const [mode, setMode] = useState("first");
@@ -50,41 +55,57 @@ export default function TestingTab({ dataVersion = 0 }) {
   );
 }
 
-// ── Shared: a face-up card with image + name + optional role tint ────
-function HandCard({ id, name, card, onHover, tagClass, tagLabel }) {
+const roleColor = (card) => {
+  const r = card ? pickPrimaryRole(classify(card).roles || []) : null;
+  return r ? ROLE_COLORS[r] || null : null;
+};
+const roleLabel = (card) => (card ? pickPrimaryRole(classify(card).roles || []) : null);
+
+// ── Shared: a face-up card with image + name + role/util tag ─────────
+function HandCard({ id, name, card, onHover, onPick, tagClass, tagLabel, role }) {
   const urls = getImageUrls(id);
   const [i, setI] = useState(0);
   const src = urls[i];
+  const stripe = role ? ROLE_COLORS[role] : null;
   return (
     <div
       className={"hand-card" + (tagClass ? " " + tagClass : "")}
-      onMouseEnter={(e) => card && onHover && onHover({ card, rect: e.currentTarget.getBoundingClientRect() })}
+      style={stripe ? { borderTopColor: stripe } : undefined}
       title={name}
+      onMouseEnter={(e) => card && onHover && onHover(card, e.currentTarget.getBoundingClientRect())}
+      onClick={(e) => card && onPick && onPick(card, e.currentTarget.getBoundingClientRect())}
     >
       {src ? (
-        <img src={src} alt={name} loading="lazy"
-          onError={() => setI((n) => (n + 1 < urls.length ? n + 1 : n))} />
+        <img src={src} alt={name} loading="lazy" onError={() => setI((n) => (n + 1 < urls.length ? n + 1 : n))} />
       ) : (
         <div className="hand-card-noimg">{name}</div>
       )}
       <div className="hand-card-name">{name}</div>
-      {tagLabel && <span className={"hand-card-tag " + (tagClass || "")}>{tagLabel}</span>}
+      {tagLabel ? <span className={"hand-card-tag " + (tagClass || "")}>{tagLabel}</span>
+        : role ? <span className="hand-card-tag is-role" style={{ color: stripe, borderColor: stripe }}>{role}</span> : null}
     </div>
   );
 }
 
+function usePreview() {
+  const [preview, setPreview] = useState(null);
+  const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
+  const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
+  const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
+  return { preview, setPreview, onHover, onPick, clearHover };
+}
+
 // ════════════════════════════════════════════════════════════════════
-// GOING FIRST — Goldfish: shuffle a 5-card opener, see playable combos.
+// GOING FIRST — Goldfish.
 // ════════════════════════════════════════════════════════════════════
 function Goldfish({ deck }) {
   const [cardMap, setCardMap] = useState({});
-  const [hand, setHand] = useState(null); // { ids:[], names:[] }
-  const [preview, setPreview] = useState(null);
+  const [hand, setHand] = useState(null);
   const [streak, setStreak] = useState(() => loadPracticeStreaks()[deck.deckId] || null);
+  const { preview, setPreview, onHover, onPick, clearHover } = usePreview();
 
   const main = useMemo(() => (deck.main || []).map(String), [deck]);
 
-  // Resolve the whole main deck once so shuffles are instant + named.
   useEffect(() => {
     let alive = true;
     setHand(null);
@@ -104,10 +125,21 @@ function Goldfish({ deck }) {
     setHand({ ids, names });
   };
 
-  const lines = hand ? matchCombosToHand(hand.names, deck.deckId).combos : [];
+  const match = hand ? matchCombosToHand(hand.names, deck.deckId) : null;
+  const lines = match ? match.combos : [];
+  const handCards = hand ? hand.ids.map((id) => cardMap[Number(id)]) : [];
+
+  // Hand readout — role tallies + a combo-driven verdict.
+  const tally = { Starter: 0, Extender: 0, Handtrap: 0 };
+  handCards.forEach((c) => { const rs = c ? (classify(c).roles || []) : []; ["Starter", "Extender", "Handtrap"].forEach((r) => { if (rs.includes(r)) tally[r]++; }); });
+  const best = lines[0] && lines[0].status;
+  const verdict = !hand ? null
+    : best === "possible" ? { cls: "ok", text: "✓ A saved line opens from this hand" }
+    : best === "partial" ? { cls: "warn", text: "⚠ One card away from a saved line" }
+    : { cls: "no", text: "No saved line opens — work it out by hand" };
 
   return (
-    <div className="goldfish" onMouseLeave={() => setPreview(null)}>
+    <div className="goldfish" onMouseLeave={clearHover}>
       <div className="practice-head">
         <div className="practice-head-left">
           <div className="practice-deckname">{deck.name}</div>
@@ -116,8 +148,7 @@ function Goldfish({ deck }) {
               <>
                 <strong>{streak.hits}</strong> openable / {streak.hands} hands ·{" "}
                 <strong>{Math.round((100 * streak.hits) / streak.hands)}%</strong> consistency
-                <button type="button" className="link-btn"
-                  onClick={() => { resetPracticeStreak(deck.deckId); setStreak(null); }}>reset</button>
+                <button type="button" className="link-btn" onClick={() => { resetPracticeStreak(deck.deckId); setStreak(null); }}>reset</button>
               </>
             ) : "Shuffle a few hands to see this deck's opening consistency."}
           </div>
@@ -133,11 +164,22 @@ function Goldfish({ deck }) {
           {!hand ? (
             <div className="practice-empty">Click <strong>Shuffle &amp; draw 5</strong> to see what you'd open with.</div>
           ) : (
-            <div className="hand-row">
-              {hand.ids.map((id, idx) => (
-                <HandCard key={idx} id={id} name={hand.names[idx]} card={cardMap[Number(id)]} onHover={setPreview} />
-              ))}
-            </div>
+            <>
+              <div className="hand-row">
+                {hand.ids.map((id, idx) => (
+                  <HandCard key={idx} id={id} name={hand.names[idx]} card={cardMap[Number(id)]}
+                    onHover={onHover} onPick={onPick} role={roleLabel(cardMap[Number(id)])} />
+                ))}
+              </div>
+              <div className="hand-readout">
+                <span className={"hand-verdict is-" + verdict.cls}>{verdict.text}</span>
+                <span className="hand-tally">
+                  <span>{tally.Starter} starter{tally.Starter === 1 ? "" : "s"}</span>
+                  <span>{tally.Extender} extender{tally.Extender === 1 ? "" : "s"}</span>
+                  <span>{tally.Handtrap} handtrap{tally.Handtrap === 1 ? "" : "s"}</span>
+                </span>
+              </div>
+            </>
           )}
         </section>
 
@@ -148,53 +190,59 @@ function Goldfish({ deck }) {
           ) : !lines.length ? (
             <div className="practice-empty">
               No combos saved for <strong>{deck.name}</strong> yet.<br />
-              Extract some with the Chrome extension and they'll be matched here.
+              Extract some with the Chrome extension (or import JSON in the <strong>Combos</strong> tab) and they'll match here.
             </div>
           ) : (
             <div className={"lines-list" + (lines.length > 4 ? " is-full" : "")}>
-              {lines.map((r) => <ComboLine key={r.idx} r={r} handNames={hand.names} />)}
+              {lines.map((r) => <ComboLine key={r.idx} r={r} handNames={hand.names} onHover={onHover} onPick={onPick} />)}
             </div>
           )}
         </section>
       </div>
 
-      {preview && <CardPreview card={preview.card} rect={preview.rect} />}
+      {preview && preview.card && <CardPreview card={preview.card} rect={preview.rect} pinned={preview.pinned} onClose={() => setPreview(null)} />}
     </div>
   );
 }
 
-function ComboLine({ r, handNames }) {
+function ComboLine({ r, handNames, onHover, onPick }) {
+  const [open, setOpen] = useState(false);
   const c = r.combo;
   const icon = r.status === "possible" ? "✓" : r.status === "partial" ? "⚠" : "✗";
   const statusText = r.status === "possible" ? "Playable"
     : r.status === "partial" ? `Need 1 more: ${r.missing[0]}`
     : `Need ${r.missing.length}: ${r.missing.slice(0, 2).join(", ")}${r.missing.length > 2 ? "…" : ""}`;
   const have = new Set((handNames || []).filter(Boolean));
-  const title = c.title || c.name || (c.openingHand || []).join(" + ") || "Combo";
+  const title = c.userTitle || c.title || c.comboName || c.name || (c.openingHand || []).join(" + ") || "Combo";
+  const plays = open ? simulateCombo(c).filter(isCoreStep) : [];
   return (
     <div className={"combo-line is-" + r.status}>
       <div className="combo-line-head">
         <span className="combo-line-status">{icon}</span>
         <span className="combo-line-name">{title}</span>
+        {(c.steps || []).length ? <button type="button" className="combo-line-walk" onClick={() => setOpen((o) => !o)}>{open ? "Hide line" : "Walk the line ▸"}</button> : null}
       </div>
       <div className="combo-line-needs">
-        <span className="muted">Starter{r.need.length === 1 ? "" : "s"}:</span>{" "}
+        <span className="muted">Need{r.need.length === 1 ? "" : "s"}:</span>{" "}
         {r.need.map((n, i) => (
           <span key={i} className={have.has(n) ? "have" : "miss"}>{n}{i < r.need.length - 1 ? " · " : ""}</span>
         ))}
         <span className="muted" style={{ marginLeft: 8 }}>· {statusText}</span>
       </div>
+      {open && (
+        <ol className="combo-line-steps">
+          {plays.length ? plays.map((s, i) => <li key={i}><span className="combo-drill-n">{i + 1}</span><span>{describeStep(s)}</span></li>)
+            : <li className="muted">No detailed steps recorded for this combo.</li>}
+        </ol>
+      )}
     </div>
   );
 }
 
 // ════════════════════════════════════════════════════════════════════
-// GOING SECOND — Board Breaker: opponent's board (seeded from the
-// matchup plan) vs your 6-card hand; highlight breakers/handtraps; gauge
-// + self-assess Break / Partial / No (per-matchup tally).
+// GOING SECOND — Board Breaker.
 // ════════════════════════════════════════════════════════════════════
 function BoardBreaker({ myDeck, dataVersion }) {
-  // Opponent decks come from the active format's matchups (resolved to decks).
   const { opponents, matchupOf } = useMemo(() => {
     const decks = loadDecks();
     const fmts = loadFormats();
@@ -203,43 +251,40 @@ function BoardBreaker({ myDeck, dataVersion }) {
     const opps = matchups.map((m) => decks.find((d) => d.deckId === m.opponentDeckId)).filter(Boolean);
     const byId = {};
     matchups.forEach((m) => { byId[m.opponentDeckId] = m; });
-    // Fall back to any matchup-role decks if no format is set.
     const list = opps.length ? opps : decks.filter((d) => d.role === "matchup");
     return { opponents: list, matchupOf: byId };
   }, [dataVersion]);
 
   const [oppId, setOppId] = useState(opponents[0] ? opponents[0].deckId : null);
-  useEffect(() => {
-    if (!opponents.find((d) => d.deckId === oppId)) setOppId(opponents[0] ? opponents[0].deckId : null);
-  }, [opponents, oppId]);
+  useEffect(() => { if (!opponents.find((d) => d.deckId === oppId)) setOppId(opponents[0] ? opponents[0].deckId : null); }, [opponents, oppId]);
 
   const opp = opponents.find((d) => d.deckId === oppId) || null;
   const matchup = oppId ? matchupOf[oppId] : null;
+  const pb = getPlaybook(matchup, opp);
+  const boards = pb.endboards || [];
 
+  const [boardIdx, setBoardIdx] = useState(0);
+  const [leg, setLeg] = useState("g1"); // g1 = main, g2 = sided
   const [myCardMap, setMyCardMap] = useState({});
-  const [oppCardMap, setOppCardMap] = useState({}); // name(lower) -> card
+  const [oppCardMap, setOppCardMap] = useState({});
   const [hand, setHand] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [tally, setTally] = useState(null);
+  const { preview, setPreview, onHover, onPick, clearHover } = usePreview();
 
-  const myMain = useMemo(() => (myDeck.main || []).map(String), [myDeck]);
+  const dl = useMemo(() => getDeckPrimaryDecklist(myDeck), [myDeck]);
+  const myMain = useMemo(() => (dl.main || []).map(String), [dl]);
+  const mySide = useMemo(() => (dl.side || []).map(String), [dl]);
+  const myAll = useMemo(() => [...myMain, ...mySide], [myMain, mySide]);
   const tallyKey = myDeck.deckId + ":" + (oppId || "");
 
-  // My deck cards (for hand classification).
-  useEffect(() => {
-    let alive = true;
-    fetchCards(myMain).then(({ map }) => { if (alive) setMyCardMap(map); });
-    return () => { alive = false; };
-  }, [myMain]);
+  useEffect(() => { let alive = true; fetchCards(myAll).then(({ map }) => { if (alive) setMyCardMap(map); }); return () => { alive = false; }; }, [myAll]);
 
-  // Opponent deck cards → name→card map, so we can tag board pieces.
   useEffect(() => {
     let alive = true;
-    setHand(null);
+    setHand(null); setBoardIdx(0);
     setTally(loadBbStreaks()[tallyKey] || null);
     if (!opp) { setOppCardMap({}); return; }
-    const ids = [...(opp.main || []), ...(opp.extra || []), ...(opp.side || [])];
-    fetchCards(ids).then(({ map }) => {
+    fetchCards([...(opp.main || []), ...(opp.extra || []), ...(opp.side || [])]).then(({ map }) => {
       if (!alive) return;
       const byName = {};
       Object.values(map).forEach((c) => { if (c && c.name) byName[c.name.toLowerCase()] = c; });
@@ -248,26 +293,37 @@ function BoardBreaker({ myDeck, dataVersion }) {
     return () => { alive = false; };
   }, [opp, tallyKey]);
 
-  // End board now lives on the opponent deck's playbook (Decks tab); fall back
-  // to legacy format-matchup data.
-  const boardNames = endboardNames(matchup, opp);
-  const board = boardNames.filter(Boolean).map((name) => {
+  const nameOf = (id) => (myCardMap[Number(id)] && myCardMap[Number(id)].name) || `#${id}`;
+  const sideIdByName = useMemo(() => {
+    const m = {};
+    mySide.forEach((id) => { const n = myCardMap[Number(id)] && myCardMap[Number(id)].name; if (n && !m[n.toLowerCase()]) m[n.toLowerCase()] = id; });
+    return m;
+  }, [mySide, myCardMap]);
+
+  const sidePlan = (matchup && matchup.sideboard && matchup.sideboard.goingSecond) || { in: [], out: [] };
+  const normSide = (arr) => (arr || []).map((x) => (typeof x === "string" ? { name: x, count: 1 } : { name: x.name, count: x.count || 1 }));
+  const planOut = normSide(sidePlan.out), planIn = normSide(sidePlan.in);
+  const hasSidePlan = planOut.length || planIn.length;
+  const fmtSide = (arr) => (arr.length ? arr.map((x) => `${x.count}× ${x.name}`).join(", ") : "—");
+
+  // Build the sided (Game-2) deck: main − OUT + IN, by copy count.
+  const sidedDeck = useMemo(() => {
+    let ids = myMain.slice();
+    for (const o of planOut) { let n = o.count; for (let i = ids.length - 1; i >= 0 && n > 0; i--) { if (nameOf(ids[i]) === o.name) { ids.splice(i, 1); n--; } } }
+    for (const inn of planIn) { const id = sideIdByName[inn.name.toLowerCase()]; if (id) for (let k = 0; k < inn.count; k++) ids.push(id); }
+    return ids;
+  }, [myMain, sidePlan, sideIdByName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const drawPool = leg === "g2" && hasSidePlan ? sidedDeck : myMain;
+
+  const board = (boards[boardIdx] ? (boards[boardIdx].cards || []) : []).map((x) => (typeof x === "string" ? x : x.name)).filter(Boolean).map((name) => {
     const card = oppCardMap[String(name).toLowerCase()] || null;
     return { name, card, disruption: card ? inferDisruption(card) : "negate" };
   });
-  const sidePlan = matchup && matchup.sideboard && matchup.sideboard.goingSecond;
-  // Side entries may be plain names (legacy) or { name, count } objects.
-  const fmtSide = (arr) => (arr || []).map((x) => (typeof x === "string" ? x : `${x.count || 1}× ${x.name}`)).join(", ");
+  const boardNames = board.map((p) => p.name);
 
-  const nameOf = (id) => (myCardMap[Number(id)] && myCardMap[Number(id)].name) || `#${id}`;
-
-  const shuffle = () => {
-    if (!myMain.length) return;
-    const ids = shuffleArr(myMain).slice(0, Math.min(6, myMain.length));
-    setHand({ ids, names: ids.map(nameOf) });
-  };
-
-  const assess = (verdict) => { setTally(bumpBb(tallyKey, verdict)); };
+  const shuffle = () => { if (!drawPool.length) return; const ids = shuffleArr(drawPool).slice(0, Math.min(6, drawPool.length)); setHand({ ids, names: ids.map(nameOf) }); };
+  const assess = (verdict) => setTally(bumpBb(tallyKey, verdict));
 
   if (!opponents.length) {
     return (
@@ -284,30 +340,47 @@ function BoardBreaker({ myDeck, dataVersion }) {
   const disruptions = board.filter((p) => p.disruption !== "body").length;
 
   return (
-    <div className="board-breaker" onMouseLeave={() => setPreview(null)}>
+    <div className="board-breaker" onMouseLeave={clearHover}>
       <div className="bb-bar">
         <label className="bb-field">
           <span className="bb-field-label">Opponent</span>
           <Dropdown className="bb-opp-dd" value={oppId || ""} ariaLabel="Opponent deck"
-            options={opponents.map((d) => [d.deckId, d.name])}
-            onChange={(v) => setOppId(v)} />
+            options={opponents.map((d) => [d.deckId, d.name])} onChange={(v) => setOppId(v)} />
         </label>
-        <button type="button" className="btn-primary" onClick={shuffle} disabled={!myMain.length}>
-          <Icon name="die" size={16} /> Shuffle going 2nd (6)
+        {boards.length > 1 && (
+          <label className="bb-field">
+            <span className="bb-field-label">Their board</span>
+            <Dropdown className="bb-board-dd" value={String(boardIdx)} ariaLabel="End board"
+              options={boards.map((b, i) => [String(i), b.name || `Board ${i + 1}`])} onChange={(v) => setBoardIdx(Number(v))} />
+          </label>
+        )}
+        <div className="bb-field">
+          <span className="bb-field-label">Your hand</span>
+          <div className="bb-leg-switch">
+            <button type="button" className={"bb-leg-btn" + (leg === "g1" ? " active" : "")} onClick={() => { setLeg("g1"); setHand(null); }}>Game 1</button>
+            <button type="button" className={"bb-leg-btn" + (leg === "g2" ? " active" : "")} disabled={!hasSidePlan}
+              title={hasSidePlan ? "Draw from your sided deck" : "No going-2nd side plan set for this matchup"}
+              onClick={() => { setLeg("g2"); setHand(null); }}>Game 2 (sided)</button>
+          </div>
+        </div>
+        <button type="button" className="btn-primary bb-shuffle" onClick={shuffle} disabled={!drawPool.length}>
+          <Icon name="die" size={16} /> Shuffle 6
         </button>
       </div>
 
-      {sidePlan && ((sidePlan.in || []).length || (sidePlan.out || []).length) ? (
+      {leg === "g2" && hasSidePlan ? (
         <div className="bb-sideplan">
-          <span className="bb-sideplan-label">Side plan (going 2nd):</span>
-          {(sidePlan.in || []).length ? <span className="bb-in">+ {fmtSide(sidePlan.in)}</span> : null}
-          {(sidePlan.out || []).length ? <span className="bb-out">− {fmtSide(sidePlan.out)}</span> : null}
+          <span className="bb-sideplan-label">Sided for game 2:</span>
+          {planIn.length ? <span className="bb-in">+ {fmtSide(planIn)}</span> : null}
+          {planOut.length ? <span className="bb-out">− {fmtSide(planOut)}</span> : null}
         </div>
+      ) : hasSidePlan ? (
+        <div className="bb-sideplan is-hint"><span className="bb-sideplan-label">Tip:</span> switch to <strong>Game 2 (sided)</strong> to draw from your post-side deck.</div>
       ) : null}
 
       <div className="bb-puzzle">
         <section className="bb-col">
-          <div className="bb-col-title">{opp ? opp.name : "Opponent"}'s typical board</div>
+          <div className="bb-col-title">{opp ? opp.name : "Opponent"}'s board{boards.length > 1 && boards[boardIdx]?.name ? ` — ${boards[boardIdx].name}` : ""}</div>
           {!board.length ? (
             <div className="practice-empty">
               No end board recorded for this matchup yet. Add one in <strong>Decks → {opp ? opp.name : "this matchup"} →
@@ -315,25 +388,28 @@ function BoardBreaker({ myDeck, dataVersion }) {
             </div>
           ) : (
             <>
-              <EndBoardView cards={boardNames} onHover={(card, rect) => card && setPreview({ card, rect })} />
-              <div className="bb-disruptions">
-                {board.filter((p) => p.disruption !== "body").map((p, i) => {
-                  const dis = BB_DISRUPTIONS.find((d) => d.value === p.disruption) || BB_DISRUPTIONS[0];
-                  return (
-                    <span key={i} className={"bb-dis-chip " + dis.cls}
-                      onMouseEnter={(e) => p.card && setPreview({ card: p.card, rect: e.currentTarget.getBoundingClientRect() })}>
-                      <span className="bb-dis-name">{p.name}</span>
-                      <span className="bb-dis-tag">{dis.label}</span>
-                    </span>
-                  );
-                })}
-              </div>
+              <EndBoardView cards={boardNames} onHover={onHover} onPick={onPick} />
+              {disruptions ? (
+                <div className="bb-disruptions">
+                  {board.filter((p) => p.disruption !== "body").map((p, i) => {
+                    const dis = BB_DISRUPTIONS.find((d) => d.value === p.disruption) || BB_DISRUPTIONS[0];
+                    return (
+                      <span key={i} className={"bb-dis-chip " + dis.cls}
+                        onMouseEnter={(e) => p.card && onHover(p.card, e.currentTarget.getBoundingClientRect())}
+                        onClick={(e) => p.card && onPick(p.card, e.currentTarget.getBoundingClientRect())}>
+                        <span className="bb-dis-name">{p.name}</span>
+                        <span className="bb-dis-tag">{dis.label}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : null}
             </>
           )}
         </section>
 
         <section className="bb-col">
-          <div className="bb-col-title">Your hand (going 2nd)</div>
+          <div className="bb-col-title">Your hand — {leg === "g2" && hasSidePlan ? "game 2 (sided)" : "game 1"}</div>
           {!hand ? (
             <div className="practice-empty">Shuffle a going-second hand to start the puzzle.</div>
           ) : (
@@ -342,9 +418,8 @@ function BoardBreaker({ myDeck, dataVersion }) {
                 const card = myCardMap[Number(id)];
                 const br = isBreaker(card), ht = isHandtrap(card);
                 return (
-                  <HandCard key={idx} id={id} name={hand.names[idx]} card={card} onHover={setPreview}
-                    tagClass={br ? "is-breaker" : ht ? "is-handtrap" : ""}
-                    tagLabel={br ? "breaker" : ht ? "handtrap" : ""} />
+                  <HandCard key={idx} id={id} name={hand.names[idx]} card={card} onHover={onHover} onPick={onPick}
+                    tagClass={br ? "is-breaker" : ht ? "is-handtrap" : ""} tagLabel={br ? "breaker" : ht ? "handtrap" : ""} />
                 );
               })}
             </div>
@@ -376,7 +451,7 @@ function BoardBreaker({ myDeck, dataVersion }) {
         </div>
       ) : null}
 
-      {preview && <CardPreview card={preview.card} rect={preview.rect} />}
+      {preview && preview.card && <CardPreview card={preview.card} rect={preview.rect} pinned={preview.pinned} onClose={() => setPreview(null)} />}
     </div>
   );
 }
