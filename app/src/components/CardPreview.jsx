@@ -1,5 +1,6 @@
 import { getImageUrls } from "../lib/ydk.js";
 import { classify, ROLE_COLORS } from "../lib/classify.js";
+import { getCardSummary } from "../lib/cardFx.js";
 
 // Floating card preview (large image + role chips + effect text). Shared by
 // CardsView and the Testing tab so hover/pin behaves identically everywhere.
@@ -18,6 +19,7 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
     [onRight ? "right" : "left"]: onRight ? (window.innerWidth - rect.left + 14) : (rect.right + 14),
   };
   const fullText = (card.desc || "").trim() || cls.stripped[0] || "(no effect text)";
+  const summary = getCardSummary(card.name);
   return (
     <div className={"card-preview" + (pinned ? " is-pinned" : "")} style={style}
       onClick={pinned && onClose ? onClose : undefined}>
@@ -35,6 +37,12 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
             <span key={r} className="role-chip" style={{ "--role": ROLE_COLORS[r] }}>{r}</span>
           ))}
         </div>
+        {summary && (
+          <div className="card-preview-short">
+            <span className="card-preview-short-label">In short</span>
+            {summary}
+          </div>
+        )}
         <div className="card-preview-text">{fullText}</div>
       </div>
     </div>
