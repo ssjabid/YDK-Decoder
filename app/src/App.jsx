@@ -5,6 +5,7 @@ import DecksTab from "./tabs/DecksTab.jsx";
 import SettingsTab from "./tabs/SettingsTab.jsx";
 import FormatTab from "./tabs/FormatTab.jsx";
 import TestingTab from "./tabs/TestingTab.jsx";
+import ModalHost from "./components/ModalHost.jsx";
 import Icon from "./components/Icon.jsx";
 
 const TABS = [
@@ -67,6 +68,7 @@ export default function App() {
         {tab === "testing" && <TestingTab dataVersion={dataVersion} />}
         {tab === "settings" && <SettingsTab reload={reload} />}
       </main>
+      <ModalHost />
     </div>
   );
 }

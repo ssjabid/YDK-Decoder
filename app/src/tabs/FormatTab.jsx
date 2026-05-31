@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { loadFormats, saveFormats, getActiveFormatId, setActiveFormatId, loadDecks } from "../lib/storage.js";
 import { importDeckFromYdk } from "../lib/deckImport.js";
-import { persistDeck, getDeckPrimaryDecklist, classifyCardBroadType } from "../lib/deckModel.js";
+import { persistDeck, ensureDeckShape, getDeckPrimaryDecklist, classifyCardBroadType } from "../lib/deckModel.js";
 import { lookupCardByName } from "../lib/cardSearch.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
+import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
 import RichNotes from "../components/RichNotes.jsx";
@@ -38,13 +39,26 @@ export default function FormatTab({ dataVersion = 0 }) {
     bump();
   };
 
+  // Edit the OPPONENT DECK directly (single source of truth) so "how they win",
+  // combo line + weaknesses stay consistent between the Format breakdown and the
+  // Decks tab methodology.
+  const deckUpdate = (deckId, mutator) => {
+    const ds = loadDecks();
+    const d = ds.find((x) => x.deckId === deckId);
+    if (!d) return;
+    ensureDeckShape(d);
+    mutator(d);
+    persistDeck(d);
+    bump();
+  };
+
   const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
   const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
   const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
 
   // ── Format CRUD ──
-  const newFormat = (clone) => {
-    const name = prompt("New format name (e.g. \"Meta — July 2026\"):", "");
+  const newFormat = async (clone) => {
+    const name = await promptModal({ title: "New format", message: "Name this format (e.g. \"Meta — July 2026\").", placeholder: "Meta — July 2026", confirmText: "Create" });
     if (name == null) return;
     const fmts = loadFormats();
     const id = "fmt_" + rid();
@@ -52,9 +66,10 @@ export default function FormatTab({ dataVersion = 0 }) {
     if (clone && format) base.matchups = (format.matchups || []).map((m) => ({ ...m, matchupId: "m_" + rid(), freeformNotes: "", priorityFirst: [], prioritySecond: [], sideboard: { goingFirst: { in: [], out: [] }, goingSecond: { in: [], out: [] } } }));
     fmts.push(base); saveFormats(fmts); setActiveFormatId(id); setSelectedMatchupId(null); bump();
   };
-  const renameFormat = () => { const n = prompt("Rename format:", format.name); if (n == null) return; update((f) => { f.name = n.trim() || f.name; }); };
-  const deleteFormat = () => {
-    if (!confirm(`Delete format "${format.name}"? (Matchup decks stay in your library.)`)) return;
+  const renameFormat = async () => { const n = await promptModal({ title: "Rename format", value: format.name, confirmText: "Save" }); if (n == null) return; update((f) => { f.name = n.trim() || f.name; }); };
+  const deleteFormat = async () => {
+    const ok = await confirmModal({ title: `Delete format "${format.name}"?`, message: "Matchup decks stay in your library — only this format's plan + matchup notes are removed.", confirmText: "Delete format", danger: true });
+    if (!ok) return;
     const remaining = loadFormats().filter((f) => f.formatId !== format.formatId);
     saveFormats(remaining); setActiveFormatId(remaining[0] ? remaining[0].formatId : null); setSelectedMatchupId(null); bump();
   };
@@ -67,7 +82,7 @@ export default function FormatTab({ dataVersion = 0 }) {
       const { deck } = importDeckFromYdk(text, file.name);
       deck.role = "matchup"; persistDeck(deck);
       update((f) => { f.matchups = f.matchups || []; if (!f.matchups.some((m) => m.opponentDeckId === deck.deckId)) f.matchups.push(emptyMatchup(deck.deckId)); });
-    } catch (err) { alert("Couldn't add that matchup .ydk: " + err.message); }
+    } catch (err) { alertModal({ title: "Couldn't add that .ydk", message: err.message }); }
     finally { if (fileRef.current) fileRef.current.value = ""; }
   };
 
@@ -115,7 +130,8 @@ export default function FormatTab({ dataVersion = 0 }) {
         <MatchupBreakdown
           key={selected.matchupId}
           m={selected} format={format} primaryDeck={primaryDeck} deckNames={deckNames}
-          update={update} onHover={onHover} onPick={onPick}
+          opponentDeck={decks.find((d) => d.deckId === selected.opponentDeckId) || null}
+          update={update} deckUpdate={deckUpdate} onHover={onHover} onPick={onPick}
           onBack={() => setSelectedMatchupId(null)}
           onRemove={() => { setSelectedMatchupId(null); update((f) => { f.matchups = (f.matchups || []).filter((x) => x.matchupId !== selected.matchupId); }); }}
         />
@@ -171,9 +187,17 @@ function useMatchupUpdate(update, matchupId) {
 }
 
 // ── Full-screen matchup breakdown ──
-function MatchupBreakdown({ m, format, primaryDeck, deckNames, update, onHover, onPick, onBack, onRemove }) {
+function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, update, deckUpdate, onHover, onPick, onBack, onRemove }) {
   const upd = useMatchupUpdate(update, m.matchupId);
-  const name = deckNames[m.opponentDeckId] || "Unknown deck";
+  const name = (opponentDeck && opponentDeck.name) || deckNames[m.opponentDeckId] || "Unknown deck";
+  const meth = (opponentDeck && opponentDeck.methodology) || {};
+  // Deck-owned research fields write to the opponent deck's methodology → one
+  // source of truth shared with the Decks tab.
+  const editDeck = (key) => (v) => { if (opponentDeck) deckUpdate(opponentDeck.deckId, (d) => { d.methodology[key] = v; }); };
+  const remove = async () => {
+    const ok = await confirmModal({ title: "Remove this matchup?", message: "The deck stays in your library — only this matchup's plan is removed.", confirmText: "Remove", danger: true });
+    if (ok) onRemove();
+  };
   return (
     <div className="matchup-full">
       <div className="matchup-full-bar">
@@ -183,34 +207,35 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, update, onHover, 
         <select className="bb-select" value={m.tier || "tier1"} onChange={(e) => upd((x) => { x.tier = e.target.value; })}>
           {TIER_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <button type="button" className="deck-mini-btn is-danger" onClick={() => { if (confirm("Remove this matchup? (The deck stays in your library.)")) onRemove(); }}>× Remove</button>
+        <button type="button" className="deck-mini-btn is-danger" onClick={remove}>× Remove</button>
       </div>
 
       <div className="matchup-full-grid">
         <div className="matchup-col">
           <PanelSection title="How they win + their line" defaultOpen={true}>
-            <Field label="How they win" value={m.howTheyWin} />
-            <Field label="Main combo line" value={m.comboLine} />
-            <Field label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} />
-            <Field label="How it loses / weaknesses" value={m.weaknesses} />
+            <EditField label="How they win" value={meth.howItWins} onSave={editDeck("howItWins")} />
+            <EditField label="Their combo line" value={meth.summary} onSave={editDeck("summary")} />
+            <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
+            <EditField label="How it loses / weaknesses" value={meth.weaknesses} onSave={editDeck("weaknesses")} />
+            {opponentDeck && <div className="drill-hint">These three sync with <strong>{name}</strong>'s methodology in the Decks tab.</div>}
           </PanelSection>
 
-          <PanelSection title="Their typical end board" defaultOpen={true}>
-            <ChipEditor items={m.targetEndboard || []} onChange={(items) => upd((x) => { x.targetEndboard = items; })} onHover={onHover} onPick={onPick} placeholder="Add a board piece…" />
-            <div className="drill-hint">Feeds <strong>Testing → Going second</strong> — practise breaking this board.</div>
+          <PanelSection title="Their end boards" defaultOpen={true}>
+            <EndBoardsEditor m={m} upd={upd} onHover={onHover} onPick={onPick} />
+            <div className="drill-hint">Feeds <strong>Testing → Going second</strong> — practise breaking these.</div>
           </PanelSection>
 
           <PanelSection title="Game plan" defaultOpen={true}>
-            <Field label="Going first vs them" value={m.gameplanFirst} />
-            <Field label="Going second — break their board" value={m.gameplanSecond} />
+            <EditField label="Going first vs them" value={m.gameplanFirst} onSave={(v) => upd((x) => { x.gameplanFirst = v; })} />
+            <EditField label="Going second — break their board" value={m.gameplanSecond} onSave={(v) => upd((x) => { x.gameplanSecond = v; })} />
             <StepEditor label="Priority plays — going first" steps={m.priorityFirst || []} onChange={(s) => upd((x) => { x.priorityFirst = s; })} />
             <StepEditor label="Priority plays — going second" steps={m.prioritySecond || []} onChange={(s) => upd((x) => { x.prioritySecond = s; })} />
           </PanelSection>
         </div>
 
         <div className="matchup-col">
-          <PanelSection title="Cards that shine / whiff" defaultOpen={true}>
-            <CounterEditor cards={m.counterCards || []} onChange={(c) => upd((x) => { x.counterCards = c; })} onHover={onHover} onPick={onPick} />
+          <PanelSection title="Cards that are really good here" defaultOpen={true}>
+            <ReallyGoodEditor cards={m.counterCards || []} onChange={(c) => upd((x) => { x.counterCards = c; })} onHover={onHover} onPick={onPick} />
           </PanelSection>
 
           <PanelSection title="Side-deck plan (auto-pulled from your deck)" defaultOpen={true}>
@@ -227,9 +252,43 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, update, onHover, 
   );
 }
 
-function Field({ label, value }) {
-  if (!value) return null;
-  return <div className="drill-field"><div className="drill-label">{label}</div><div className="drill-text">{value}</div></div>;
+// A labelled editable rich-text field (used for the research + plan fields).
+function EditField({ label, value, onSave }) {
+  return (
+    <div className="drill-field">
+      <div className="drill-label">{label}</div>
+      <RichNotes value={value || ""} placeholder="Type to add notes · @ to mention a card" onSave={onSave} />
+    </div>
+  );
+}
+
+// Multiple named end boards per matchup. Keeps targetEndboard (union) in sync
+// so the Testing → Board Breaker still gets fed.
+function EndBoardsEditor({ m, upd, onHover, onPick }) {
+  const boards = (m.endboards && m.endboards.length) ? m.endboards
+    : ((m.targetEndboard || []).length ? [{ id: "eb_seed", name: "Typical board", cards: (m.targetEndboard || []).slice() }] : []);
+  const commit = (next) => upd((x) => {
+    x.endboards = next;
+    const seen = new Set(); const union = [];
+    next.forEach((b) => (b.cards || []).forEach((c) => { if (!seen.has(c)) { seen.add(c); union.push(c); } }));
+    x.targetEndboard = union;
+  });
+  return (
+    <div className="endboards">
+      {boards.map((b, bi) => (
+        <div className="endboard" key={b.id || bi}>
+          <div className="endboard-head">
+            <input className="endboard-name" defaultValue={b.name} onKeyDown={(e) => e.stopPropagation()}
+              onBlur={(e) => commit(boards.map((x, i) => (i === bi ? { ...x, name: e.target.value.trim() || x.name } : x)))} />
+            {boards.length > 1 && <button type="button" className="fmt-chip-x" title="Remove board" onClick={() => commit(boards.filter((_, i) => i !== bi))}>×</button>}
+          </div>
+          <ChipEditor items={b.cards || []} onHover={onHover} onPick={onPick} placeholder="Add a board piece…"
+            onChange={(items) => commit(boards.map((x, i) => (i === bi ? { ...x, cards: items } : x)))} />
+        </div>
+      ))}
+      <button type="button" className="fmt-add-btn" onClick={() => commit([...boards, { id: "eb_" + rid(), name: "Board " + (boards.length + 1), cards: [] }])}>+ Add another end board</button>
+    </div>
+  );
 }
 
 function CardChip({ name, onHover, onPick, onRemove, tone }) {
@@ -265,11 +324,20 @@ function ChipEditor({ items, onChange, onHover, onPick, placeholder }) {
   );
 }
 
-function CounterEditor({ cards, onChange, onHover, onPick }) {
+function ReallyGoodEditor({ cards, onChange, onHover, onPick }) {
+  const good = (cards || []).filter((c) => c && c.side !== "bad");
+  const setReason = (card, reason) => onChange((cards || []).map((c) => (c === card ? { ...c, notes: reason } : c)));
+  const remove = (card) => onChange((cards || []).filter((c) => c !== card));
   return (
-    <div className="fmt-chip-row">
-      {(cards || []).map((c, i) => <CardChip key={i} name={c.name} tone={c.side === "bad" ? "bad" : "good"} onHover={onHover} onPick={onPick} onRemove={() => onChange(cards.filter((_, j) => j !== i))} />)}
-      <CardAddInput placeholder="Good counter…" onAdd={(name) => onChange([...(cards || []), { name, side: "good", notes: "" }])} />
+    <div className="rg-list">
+      {good.map((c, i) => (
+        <div className="rg-row" key={i}>
+          <CardChip name={c.name} tone="good" onHover={onHover} onPick={onPick} onRemove={() => remove(c)} />
+          <input className="rg-reason" defaultValue={c.notes || c.reason || ""} placeholder="why it's good here…"
+            onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => setReason(c, e.target.value)} />
+        </div>
+      ))}
+      <CardAddInput placeholder="Add a card that's good here…" onAdd={(name) => onChange([...(cards || []), { name, side: "good", notes: "" }])} />
     </div>
   );
 }
@@ -291,92 +359,92 @@ function StepEditor({ label, steps, onChange }) {
   );
 }
 
-// ── Side-deck planner — auto-pulls your side deck (→ bring in) + main deck (→ take out) ──
+// ── Side-deck planner — auto-pulls your side deck (→ bring IN) + main deck
+//    (→ take OUT). Going first / second is a toggle (one leg at a time), and
+//    each pool is a clean uniform list. Memoised + stable fetch deps for speed. ──
 function SideboardPlanner({ sb, primaryDeck, onChange, onHover }) {
+  const [leg, setLeg] = useState("goingFirst");
   const [cardMap, setCardMap] = useState({});
   const dl = primaryDeck ? getDeckPrimaryDecklist(primaryDeck) : null;
   const sideIds = useMemo(() => (dl && dl.side) || [], [dl]);
   const mainIds = useMemo(() => (dl && dl.main) || [], [dl]);
+  const sideKey = sideIds.join(","), mainKey = mainIds.join(",");
+  const deckId = primaryDeck && primaryDeck.deckId;
 
+  // Stable deps (deckId + id-strings) so we fetch ONCE, not every render.
   useEffect(() => {
     let alive = true;
-    if (!primaryDeck) return;
+    if (!deckId) { setCardMap({}); return; }
     fetchCards([...mainIds, ...sideIds]).then(({ map }) => { if (alive) setCardMap(map); });
     return () => { alive = false; };
-  }, [primaryDeck, mainIds, sideIds]);
+  }, [deckId, mainKey, sideKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pools = useMemo(() => {
+    const TYPE_ORDER = { Monster: 0, Spell: 1, Trap: 2, Other: 3 };
+    const build = (ids) => {
+      const seen = new Set(); const arr = [];
+      for (const id of ids) {
+        const c = cardMap[Number(id)]; const n = (c && c.name) || ("#" + id);
+        if (!seen.has(n)) { seen.add(n); arr.push({ name: n, t: TYPE_ORDER[classifyCardBroadType(c)] ?? 3 }); }
+      }
+      arr.sort((a, b) => a.t - b.t || a.name.localeCompare(b.name));
+      return arr.map((x) => x.name);
+    };
+    return { side: build(sideIds), main: build(mainIds) };
+  }, [cardMap, sideKey, mainKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!primaryDeck) return <div className="deck-empty-hint">Pick <strong>your deck</strong> at the top of the Format tab to auto-load your side + main deck here.</div>;
 
-  const nameOf = (id) => (cardMap[Number(id)] && cardMap[Number(id)].name) || ("#" + id);
-  const TYPE_ORDER = { Monster: 0, Spell: 1, Trap: 2, Other: 3 };
-  const uniqSorted = (ids) => {
-    const seen = new Set(); const out = [];
-    for (const id of ids) { const n = nameOf(id); if (!seen.has(n)) { seen.add(n); out.push(n); } }
-    return out.sort((a, b) => {
-      const ca = cardMap[Number((ids.find((i) => nameOf(i) === a)))]; const cb = cardMap[Number((ids.find((i) => nameOf(i) === b)))];
-      return (TYPE_ORDER[classifyCardBroadType(ca)] - TYPE_ORDER[classifyCardBroadType(cb)]) || a.localeCompare(b);
-    });
-  };
-  const sidePool = uniqSorted(sideIds);
-  const mainPool = uniqSorted(mainIds);
   const plan = sb || { goingFirst: { in: [], out: [] }, goingSecond: { in: [], out: [] } };
-
-  const setPlan = (leg, dir, items) => {
+  const l = plan[leg] || { in: [], out: [] };
+  const setDir = (dir, items) => {
     const next = { goingFirst: { ...(plan.goingFirst || { in: [], out: [] }) }, goingSecond: { ...(plan.goingSecond || { in: [], out: [] }) } };
-    next[leg][dir] = items;
+    next[leg] = { ...next[leg], [dir]: items };
     onChange(next);
   };
-  const toggle = (leg, dir, name) => {
-    const cur = (plan[leg] && plan[leg][dir]) || [];
-    setPlan(leg, dir, cur.includes(name) ? cur.filter((n) => n !== name) : [...cur, name]);
-  };
+  const toggle = (dir, name) => { const cur = l[dir] || []; setDir(dir, cur.includes(name) ? cur.filter((n) => n !== name) : [...cur, name]); };
 
-  const legUI = (leg, title) => {
-    const l = plan[leg] || { in: [], out: [] };
-    const zone = (dir, label, pool, tone) => (
-      <div className="sbp-zone">
-        <div className="sbp-zone-label">{label} <span className="sbp-count">{(l[dir] || []).length}</span></div>
-        <div className="sbp-pool">
-          {pool.map((n) => {
-            const on = (l[dir] || []).includes(n);
-            const c = lookupCardByName(n);
-            const urls = c?.id ? getImageUrls(c.id) : [];
-            return (
-              <button key={n} type="button" className={"sbp-chip is-" + tone + (on ? " is-on" : "")}
-                title={n}
-                onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
-                onClick={() => toggle(leg, dir, n)}>
-                {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : null}
-                <span className="sbp-chip-name">{n}</span>
-                <span className="sbp-chip-mark">{on ? "✓" : (tone === "in" ? "+" : "−")}</span>
-              </button>
-            );
-          })}
-          {!pool.length && <span className="deck-empty-hint">No {tone === "in" ? "side-deck" : "main-deck"} cards loaded.</span>}
-        </div>
-      </div>
-    );
-    const inN = (l.in || []).length, outN = (l.out || []).length;
-    return (
-      <div className="sbp-leg">
-        <div className="sbp-leg-head">
-          <span className="sbp-leg-title">{title}</span>
-          <span className={"sbp-balance" + (inN === outN && inN > 0 ? " ok" : inN !== outN ? " warn" : "")}>In {inN} / Out {outN} {inN === outN ? (inN ? "✓" : "") : "⚠"}</span>
-        </div>
-        {zone("in", "Bring IN (from your side deck)", sidePool, "in")}
-        {zone("out", "Take OUT (from your main deck)", mainPool, "out")}
-      </div>
-    );
-  };
+  const rows = (dir, pool) => (
+    <div className="sbp-rows">
+      {pool.map((n) => {
+        const on = (l[dir] || []).includes(n);
+        const c = lookupCardByName(n);
+        const urls = c?.id ? getImageUrls(c.id) : [];
+        return (
+          <button key={n} type="button" className={"sbp-row is-" + dir + (on ? " is-on" : "")}
+            onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
+            onClick={() => toggle(dir, n)}>
+            <span className="sbp-row-mark">{on ? "✓" : (dir === "in" ? "+" : "−")}</span>
+            {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : <span className="sbp-row-noimg" />}
+            <span className="sbp-row-name">{n}</span>
+          </button>
+        );
+      })}
+      {!pool.length && <div className="deck-empty-hint">No {dir === "in" ? "side-deck" : "main-deck"} cards.</div>}
+    </div>
+  );
 
-  return <div className="sbp-grid">{legUI("goingFirst", "Going first")}{legUI("goingSecond", "Going second")}</div>;
+  const inN = (l.in || []).length, outN = (l.out || []).length;
+  return (
+    <div className="sbp">
+      <div className="sbp-tabs">
+        <button type="button" className={"sbp-tab" + (leg === "goingFirst" ? " active" : "")} onClick={() => setLeg("goingFirst")}>Going first</button>
+        <button type="button" className={"sbp-tab" + (leg === "goingSecond" ? " active" : "")} onClick={() => setLeg("goingSecond")}>Going second</button>
+        <span className={"sbp-balance" + (inN === outN && inN > 0 ? " ok" : inN !== outN ? " warn" : "")}>In {inN} / Out {outN} {inN === outN ? (inN ? "✓" : "") : "⚠"}</span>
+      </div>
+      <div className="sbp-cols">
+        <div className="sbp-col"><div className="sbp-col-title is-in">Bring IN — your side deck</div>{rows("in", pools.side)}</div>
+        <div className="sbp-col"><div className="sbp-col-title is-out">Take OUT — your main deck</div>{rows("out", pools.main)}</div>
+      </div>
+    </div>
+  );
 }
 
 // ── Tournament journal ──
 function TournamentJournal({ format, deckNames, update }) {
   const tournaments = format.tournaments || [];
   const [openT, setOpenT] = useState(null);
-  const addTournament = () => { const name = prompt("Event name (e.g. Locals 2026-06-01):", ""); if (name == null) return; update((f) => { f.tournaments = f.tournaments || []; f.tournaments.push({ tournamentId: "t_" + rid(), name: name.trim() || "Event", date: "", rounds: [] }); }); };
+  const addTournament = async () => { const name = await promptModal({ title: "New event", message: "Name the event (e.g. \"Locals 2026-06-01\").", placeholder: "Locals 2026-06-01", confirmText: "Create" }); if (name == null) return; update((f) => { f.tournaments = f.tournaments || []; f.tournaments.push({ tournamentId: "t_" + rid(), name: name.trim() || "Event", date: "", rounds: [] }); }); };
   const record = {};
   for (const t of tournaments) for (const r of (t.rounds || [])) { const k = r.opponentDeckId || "_other"; record[k] = record[k] || { w: 0, l: 0, d: 0 }; if (r.result === "W") record[k].w++; else if (r.result === "L") record[k].l++; else record[k].d++; }
   return (

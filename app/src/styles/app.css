@@ -1,5 +1,30 @@
 /* Component styles for the React build. Mirrors the original look. */
 
+/* ── Styled modal (replaces window.confirm/prompt/alert) ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(2px); animation: modal-fade 140ms ease-out; padding: 20px;
+}
+@keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  width: 420px; max-width: 100%;
+  background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 20px; animation: modal-pop 160ms cubic-bezier(0.2,0.7,0.3,1);
+}
+@keyframes modal-pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+.modal.is-danger { border-top: 2px solid var(--role-stopper); }
+.modal-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.modal-message { font-size: 13px; color: var(--text-dim); line-height: 1.55; margin-bottom: 14px; }
+.modal-input {
+  width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 13px; padding: 9px 11px; margin-bottom: 16px;
+}
+.modal-input:focus { border-color: var(--accent); outline: none; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.modal-btn { min-width: 92px; justify-content: center; padding: 8px 16px; height: auto; }
+.btn-primary.is-danger { background: var(--role-stopper); box-shadow: none; }
+.btn-primary.is-danger:hover { background: #d45050; }
+
 .build-badge {
   font-size: 11px; color: var(--text-faint);
   border: 1px solid var(--border); border-radius: 999px;
@@ -914,3 +939,56 @@
 .sbp-chip.is-on { opacity: 1; color: var(--text); }
 .sbp-chip.is-in.is-on { background: rgba(95,196,154,0.18); border-color: var(--role-engine); }
 .sbp-chip.is-out.is-on { background: rgba(196,95,95,0.18); border-color: var(--role-stopper); }
+
+/* ── Multiple end boards ── */
+.endboards { display: flex; flex-direction: column; gap: 12px; }
+.endboard { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; }
+.endboard-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.endboard-name {
+  flex: 1; background: transparent; border: none; border-bottom: 1px dashed var(--border-strong);
+  color: var(--text); font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 2px 0;
+}
+.endboard-name:focus { outline: none; border-bottom-color: var(--accent); }
+
+/* ── "Cards that are really good" — list with reasons ── */
+.rg-list { display: flex; flex-direction: column; gap: 6px; }
+.rg-row { display: flex; align-items: center; gap: 8px; }
+.rg-row .fmt-chip { flex-shrink: 0; max-width: 200px; }
+.rg-reason {
+  flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text); font-family: inherit; font-size: 12px; padding: 6px 9px;
+}
+.rg-reason:focus { outline: none; border-color: var(--accent); }
+
+/* ── Side-deck planner v2 (toggle + uniform list) ── */
+.sbp-tabs { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+.sbp-tab {
+  background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text-dim); cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; padding: 6px 14px;
+  transition: background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast);
+}
+.sbp-tab:hover { color: var(--text); }
+.sbp-tab.active { background: var(--accent-dim); border-color: var(--accent-soft); color: var(--text); }
+.sbp-tabs .sbp-balance { margin-left: auto; }
+.sbp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 1200px) { .sbp-cols { grid-template-columns: 1fr; } }
+.sbp-col-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 6px; }
+.sbp-col-title.is-in { color: var(--role-engine); }
+.sbp-col-title.is-out { color: var(--role-stopper); }
+.sbp-rows { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow-y: auto; }
+.sbp-row {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; cursor: pointer;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-dim); font-family: inherit; font-size: 12px; padding: 4px 8px; height: 32px; box-sizing: border-box;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
+}
+.sbp-row:hover { background: var(--bg-hover); color: var(--text); }
+.sbp-row img { width: 18px; height: 18px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
+.sbp-row-noimg { width: 18px; height: 18px; border-radius: 2px; background: var(--bg-card); flex-shrink: 0; }
+.sbp-row-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sbp-row-mark { width: 12px; text-align: center; font-weight: 700; color: var(--text-faint); flex-shrink: 0; }
+.sbp-row.is-on { color: var(--text); }
+.sbp-row.is-in.is-on { background: rgba(95,196,154,0.16); border-color: var(--role-engine); }
+.sbp-row.is-in.is-on .sbp-row-mark { color: var(--role-engine); }
+.sbp-row.is-out.is-on { background: rgba(196,95,95,0.16); border-color: var(--role-stopper); }
+.sbp-row.is-out.is-on .sbp-row-mark { color: var(--role-stopper); }

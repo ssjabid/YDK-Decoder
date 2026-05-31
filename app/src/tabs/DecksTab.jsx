@@ -12,6 +12,7 @@ import {
 } from "../lib/deckModel.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { lookupCardByName } from "../lib/cardSearch.js";
+import { confirmModal, alertModal } from "../lib/modal.js";
 import CardsView from "../components/CardsView.jsx";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
@@ -58,9 +59,9 @@ export default function DecksTab({ dataVersion = 0, reload }) {
       setSelectedId(deck.deckId);
       bumpLocal();
       reload && reload();
-      if (!isNew) alert("That deck is already imported — selected it.");
+      if (!isNew) alertModal({ title: "Already imported", message: "That deck is already in your library — selected it." });
     } catch (err) {
-      alert("Couldn't import that .ydk: " + err.message);
+      alertModal({ title: "Couldn't import that .ydk", message: err.message });
     } finally {
       if (fileRef.current) fileRef.current.value = "";
     }
@@ -69,7 +70,7 @@ export default function DecksTab({ dataVersion = 0, reload }) {
   const onLoadMeta = async () => {
     setBusy(true);
     try { await loadMetaPack(); bumpLocal(); reload && reload(); }
-    catch (e) { alert("Couldn't load the meta pack: " + e.message); }
+    catch (e) { alertModal({ title: "Couldn't load the meta pack", message: e.message }); }
     finally { setBusy(false); }
   };
 
@@ -176,11 +177,11 @@ function DeckPanel({ deck, onChanged }) {
         <span className="deck-panel-counts">{(dl.counts?.main ?? (deck.main || []).length)}m · {(dl.counts?.extra ?? (deck.extra || []).length)}e · {(dl.counts?.side ?? (deck.side || []).length)}s</span>
         <span className="deck-panel-actions">
           <button type="button" className="deck-mini-btn" title="Re-classify this deck"
-            onClick={() => { if (confirm(`Convert "${deck.name}" to ${isMatchup ? "My deck" : "Matchup"}?`)) { convertDeckRole(deck); onChanged && onChanged(); } }}>
+            onClick={async () => { if (await confirmModal({ title: `Convert "${deck.name}"?`, message: `Move it to your ${isMatchup ? "My decks" : "Matchup decks"} list.`, confirmText: "Convert" })) { convertDeckRole(deck); onChanged && onChanged(); } }}>
             ↻ {isMatchup ? "→ My deck" : "→ Matchup"}
           </button>
           <button type="button" className="deck-mini-btn is-danger" title="Delete this deck"
-            onClick={() => { if (confirm(`Delete "${deck.name}"? Combos linked to it become unassigned.`)) { deleteDeck(deck.deckId); onChanged && onChanged(); } }}>
+            onClick={async () => { if (await confirmModal({ title: `Delete "${deck.name}"?`, message: "Combos linked to it become unassigned; formats lose it as primary.", confirmText: "Delete deck", danger: true })) { deleteDeck(deck.deckId); onChanged && onChanged(); } }}>
             × Delete
           </button>
         </span>
@@ -261,7 +262,7 @@ function MethodologySection({ deck, save, cardMap }) {
         <div className="deck-field-label">
           Key ratios
           <button type="button" className="deck-inline-btn"
-            onClick={() => { const h = buildKeyRatiosHtml(deck, cardMap); if (!h) { alert("The active build has no main-deck cards (or card data hasn't loaded yet)."); return; } m.keyRatios = h; save(); }}>
+            onClick={() => { const h = buildKeyRatiosHtml(deck, cardMap); if (!h) { alertModal({ title: "Auto-fill unavailable", message: "The active build has no main-deck cards (or card data hasn't loaded yet)." }); return; } m.keyRatios = h; save(); }}>
             ↺ Auto-fill from active build
           </button>
         </div>
@@ -422,7 +423,7 @@ function DecklistsSection({ deck, save, onChanged }) {
     const file = (e.target.files || [])[0];
     if (!file) return;
     try { addDecklistFromYdkText(deck, await file.text()); onChanged && onChanged(); force(); }
-    catch (err) { alert("Couldn't add build: " + err.message); }
+    catch (err) { alertModal({ title: "Couldn't add build", message: err.message }); }
     finally { if (fileRef.current) fileRef.current.value = ""; setAdding(false); }
   };
 
@@ -444,7 +445,7 @@ function DecklistsSection({ deck, save, onChanged }) {
               <button type="button" className="decklist-action" title="Download .ydk" onClick={() => downloadDecklist(deck, d)}>↓</button>
               {decklists.length > 1 && (
                 <button type="button" className="decklist-action" title="Delete build"
-                  onClick={() => { if (confirm(`Delete build "${d.name}"?`)) { deleteDecklist(deck, d.decklistId); onChanged && onChanged(); force(); } }}>×</button>
+                  onClick={async () => { if (await confirmModal({ title: `Delete build "${d.name}"?`, confirmText: "Delete build", danger: true })) { deleteDecklist(deck, d.decklistId); onChanged && onChanged(); force(); } }}>×</button>
               )}
             </span>
           </div>
