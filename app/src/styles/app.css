@@ -1048,3 +1048,39 @@
 .sbp-row.is-in .sbp-dot.is-on { background: var(--role-engine); border-color: var(--role-engine); }
 .sbp-row.is-on.is-out { background: rgba(196,95,95,0.10); }
 .sbp-row.is-on.is-in { background: rgba(95,196,154,0.10); }
+/* uniform dot column so every row's control lines up */
+.sbp-dots { min-width: 58px; justify-content: flex-end; }
+.sbp-col { min-width: 0; }
+
+/* read-only research fields (edited in the Decks tab) */
+.read-field {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 11px; font-size: 12.5px; line-height: 1.55; color: var(--text); overflow-wrap: anywhere;
+}
+.read-field.is-empty { color: var(--text-faint); font-style: italic; }
+.read-field p { margin: 0 0 6px; } .read-field p:last-child { margin: 0; }
+.read-field h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin: 8px 0 3px; }
+.read-field .rt-card-mention { background: var(--accent-dim); border: 1px solid var(--accent-soft); border-radius: 4px; padding: 0 5px; }
+.read-expand { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 12px; margin-left: 6px; padding: 0; }
+.read-expand:hover { color: var(--accent); }
+.panel-edit-hint { font-size: 10px; color: var(--text-faint); font-style: italic; }
+.read-modal {
+  position: fixed; z-index: 210; top: 6vh; left: 50%; transform: translateX(-50%);
+  width: min(760px, 92vw); max-height: 86vh; overflow-y: auto;
+  background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 18px 20px;
+}
+.read-modal-head { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+
+/* rich-text expand-to-large overlay */
+.rt-btn-expand { margin-left: auto; }
+.rt-backdrop { position: fixed; inset: 0; z-index: 150; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); animation: modal-fade 140ms ease-out; }
+.rt-editor.is-expanded {
+  position: fixed; z-index: 160; top: 6vh; left: 50%; transform: translateX(-50%);
+  width: min(840px, 92vw); display: flex; flex-direction: column; box-shadow: var(--shadow-lg);
+}
+.rt-editor.is-expanded .rt-content { height: 64vh; overflow-y: auto; }
+
+/* consistent danger button in the matchup bar (matches back-btn) */
+.back-btn.is-danger { color: var(--role-stopper); }
+.back-btn.is-danger:hover { border-color: var(--role-stopper); color: var(--role-stopper); }

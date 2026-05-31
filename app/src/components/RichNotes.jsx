@@ -26,6 +26,7 @@ export default function RichNotes({ value, onSave, placeholder, minHeight = 58 }
   const mentionRef = useRef(null);
   mentionRef.current = mention;
   const [preview, setPreview] = useState(null); // { card, rect, pinned }
+  const [expanded, setExpanded] = useState(false);
 
   // Set initial HTML on mount + on external value change (only when the
   // editor isn't focused, so typing is never clobbered — e.g. autofill).
@@ -137,16 +138,19 @@ export default function RichNotes({ value, onSave, placeholder, minHeight = 58 }
   const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
 
   return (
-    <div className="rt-editor">
-      <div className="rt-toolbar">
-        <button type="button" className="rt-btn" title="Bold" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("bold")}><b>B</b></button>
-        <button type="button" className="rt-btn" title="Italic" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("italic")}><i>I</i></button>
-        <span className="rt-div" />
-        <button type="button" className="rt-btn" title="Bullet list" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertUnorderedList")}>•</button>
-        <button type="button" className="rt-btn" title="Numbered list" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertOrderedList")}>1.</button>
-        <span className="rt-div" />
-        <button type="button" className="rt-btn rt-btn-at" title="Mention a card (@)" onMouseDown={(e) => e.preventDefault()} onClick={insertAt}>@</button>
-      </div>
+    <>
+      {expanded && <div className="rt-backdrop" onClick={() => setExpanded(false)} />}
+      <div className={"rt-editor" + (expanded ? " is-expanded" : "")}>
+        <div className="rt-toolbar">
+          <button type="button" className="rt-btn" title="Bold" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("bold")}><b>B</b></button>
+          <button type="button" className="rt-btn" title="Italic" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("italic")}><i>I</i></button>
+          <span className="rt-div" />
+          <button type="button" className="rt-btn" title="Bullet list" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertUnorderedList")}>•</button>
+          <button type="button" className="rt-btn" title="Numbered list" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertOrderedList")}>1.</button>
+          <span className="rt-div" />
+          <button type="button" className="rt-btn rt-btn-at" title="Mention a card (@)" onMouseDown={(e) => e.preventDefault()} onClick={insertAt}>@</button>
+          <button type="button" className="rt-btn rt-btn-expand" title={expanded ? "Collapse" : "Expand to a large editor"} onMouseDown={(e) => e.preventDefault()} onClick={() => setExpanded((v) => !v)}>{expanded ? "⤡" : "⤢"}</button>
+        </div>
       <div
         ref={ref}
         className="rt-content"
@@ -181,7 +185,8 @@ export default function RichNotes({ value, onSave, placeholder, minHeight = 58 }
         </div>
       )}
 
-      {preview && preview.card && <CardPreview card={preview.card} rect={preview.rect} pinned={preview.pinned} onClose={() => setPreview(null)} />}
-    </div>
+        {preview && preview.card && <CardPreview card={preview.card} rect={preview.rect} pinned={preview.pinned} onClose={() => setPreview(null)} />}
+      </div>
+    </>
   );
 }

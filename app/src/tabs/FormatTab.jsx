@@ -7,7 +7,7 @@ import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
-import RichNotes from "../components/RichNotes.jsx";
+import RichNotes, { normalizeNotesHtml } from "../components/RichNotes.jsx";
 import Icon from "../components/Icon.jsx";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
@@ -207,24 +207,25 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
         <select className="bb-select" value={m.tier || "tier1"} onChange={(e) => upd((x) => { x.tier = e.target.value; })}>
           {TIER_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <button type="button" className="deck-mini-btn is-danger" onClick={remove}>× Remove</button>
+        <button type="button" className="back-btn is-danger" onClick={remove}>× Remove matchup</button>
       </div>
 
       <div className="matchup-dash">
-        <PanelSection title="How they win + their line" defaultOpen={true}>
+        <PanelSection title="How they win + their line" defaultOpen={true}
+          right={<span className="panel-edit-hint">Edit in Decks → {name}</span>}>
           <div className="dash-2up">
-            <EditField label="How they win" value={meth.howItWins} onSave={editDeck("howItWins")} />
-            <EditField label="Their combo line" value={meth.summary} onSave={editDeck("summary")} />
-            <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
-            <EditField label="How it loses / weaknesses" value={meth.weaknesses} onSave={editDeck("weaknesses")} />
+            <ReadField label="How they win" value={meth.howItWins} />
+            <ReadField label="Their combo line" value={meth.summary} />
+            <ReadField label="How it loses / weaknesses" value={meth.weaknesses} />
           </div>
-          {opponentDeck && <div className="drill-hint">"How they win", "combo line" + "weaknesses" sync with <strong>{name}</strong>'s methodology in the Decks tab.</div>}
         </PanelSection>
 
-        <PanelSection title="Game plan" defaultOpen={true}>
+        <PanelSection title="Game plan (your plan vs them)" defaultOpen={true}>
           <div className="dash-2up">
+            <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
             <EditField label="Going first vs them" value={m.gameplanFirst} onSave={(v) => upd((x) => { x.gameplanFirst = v; })} />
             <EditField label="Going second — break their board" value={m.gameplanSecond} onSave={(v) => upd((x) => { x.gameplanSecond = v; })} />
+            <div className="dash-spacer" />
             <StepEditor label="Priority plays — going first" steps={m.priorityFirst || []} onChange={(s) => upd((x) => { x.priorityFirst = s; })} />
             <StepEditor label="Priority plays — going second" steps={m.prioritySecond || []} onChange={(s) => upd((x) => { x.prioritySecond = s; })} />
           </div>
@@ -253,12 +254,35 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
   );
 }
 
-// A labelled editable rich-text field (used for the research + plan fields).
+// A labelled editable rich-text field (used for the plan fields).
 function EditField({ label, value, onSave }) {
   return (
     <div className="drill-field">
       <div className="drill-label">{label}</div>
       <RichNotes value={value || ""} placeholder="Type to add notes · @ to mention a card" onSave={onSave} />
+    </div>
+  );
+}
+
+// Read-only display of a methodology field (edited in the Decks tab). Click to
+// expand and read the whole thing comfortably.
+function ReadField({ label, value }) {
+  const [open, setOpen] = useState(false);
+  const has = value && String(value).trim();
+  return (
+    <div className="drill-field">
+      <div className="drill-label">{label}{has ? <button type="button" className="read-expand" title="Expand" onClick={() => setOpen(true)}>⤢</button> : null}</div>
+      {has
+        ? <div className="read-field" dangerouslySetInnerHTML={{ __html: normalizeNotesHtml(value) }} />
+        : <div className="read-field is-empty">— not set yet (add it in the Decks tab)</div>}
+      {open && (
+        <div className="rt-backdrop" onClick={() => setOpen(false)}>
+          <div className="read-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="read-modal-head"><span>{label}</span><button type="button" className="fmt-chip-x" onClick={() => setOpen(false)}>×</button></div>
+            <div className="read-field" dangerouslySetInnerHTML={{ __html: normalizeNotesHtml(value) }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
