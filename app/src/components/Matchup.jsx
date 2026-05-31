@@ -35,6 +35,7 @@ export function getPlaybook(m, deck) {
     prioritySecond: list(meth.vsPrioritySecond, m.prioritySecond),
     goodCards: rawGood.filter((c) => c && c.side !== "bad").map((c) => ({ name: c.name, notes: c.notes || c.reason || "" })),
     endboards: ebDeck || ebMatch,
+    notes: txt(meth.vsNotes, m.freeformNotes),
   };
 }
 
@@ -274,6 +275,12 @@ export function PlaybookEditor({ deck, save }) {
       <div className="pb-group">
         <div className="pb-group-title">Cards that are really good here</div>
         <GoodCardsEditor cards={meth.goodCards || []} onChange={(c) => set("goodCards", c)} onHover={onHover} onPick={onPick} />
+      </div>
+
+      <div className="pb-group">
+        <div className="pb-group-title">Your notes / scouting vs this deck</div>
+        <RichNotes value={meth.vsNotes || ""} placeholder="Scouting notes, lines you've found, what to watch for. Type @ to mention a card."
+          onSave={(v) => set("vsNotes", v)} minHeight={90} />
       </div>
 
       {preview && preview.card && <CardPreview card={preview.card} rect={preview.rect} pinned={preview.pinned} onClose={() => setPreview(null)} />}

@@ -7,7 +7,6 @@ import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
-import RichNotes from "../components/RichNotes.jsx";
 import Dropdown from "../components/Dropdown.jsx";
 import { getPlaybook, GamePlanView, EndBoardsView, GoodCardsView, ReadField } from "../components/Matchup.jsx";
 import Icon from "../components/Icon.jsx";
@@ -249,9 +248,8 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
             goodCards={pb.goodCards.map((c) => c.name)} />
         </PanelSection>
 
-        <PanelSection title="Your notes on this matchup" defaultOpen={true}>
-          <RichNotes value={m.freeformNotes || ""} placeholder="Scouting notes, lines you've found, what to watch for. Type @ to mention a card."
-            onSave={(v) => upd((x) => { x.freeformNotes = v; })} />
+        <PanelSection title="Your notes on this matchup" defaultOpen={true} right={editHint}>
+          <ReadField label="Scouting notes" value={pb.notes} hint="— add your notes in the Decks tab" />
         </PanelSection>
       </div>
     </div>
