@@ -1284,3 +1284,88 @@
 .journal-rf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
 .journal-wl-btn { width: auto; min-width: 54px; padding: 0 14px; height: 32px; }
 .journal-rounds-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   Combos tab — master list (grouped) + detail (line + final board)
+   ════════════════════════════════════════════════════════════════════ */
+.combos-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.combos-toolbar-spacer { flex: 1; }
+.combo-search-wrap { position: relative; display: inline-flex; align-items: center; min-width: 240px; }
+.combo-search-input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 28px 8px 11px;
+}
+.combo-search-input:focus { border-color: var(--accent); outline: none; }
+.combo-search-clear { position: absolute; right: 6px; background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 16px; line-height: 1; }
+.combo-search-clear:hover { color: var(--accent); }
+
+.combos-layout { display: grid; grid-template-columns: 304px 1fr; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .combos-layout { grid-template-columns: 1fr; } }
+.combos-sidebar { display: flex; flex-direction: column; gap: 14px; max-height: calc(100vh - 200px); overflow-y: auto; padding-right: 4px; }
+.combo-picker-group { display: flex; flex-direction: column; gap: 6px; }
+.combo-picker-group-header { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 700; padding: 2px 2px; }
+.combo-picker-group-header .count { color: var(--text-faint); font-weight: 400; }
+.combo-tile {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 10px;
+  font-family: inherit; color: var(--text); transition: border-color var(--motion-fast), background var(--motion-fast);
+}
+.combo-tile:hover { background: var(--bg-card-hover); border-color: var(--border-strong); }
+.combo-tile.active { border-color: var(--accent); background: var(--accent-dim); }
+.combo-tile-arts { display: inline-flex; flex-shrink: 0; }
+.combo-tile-art { width: 26px; height: 38px; border-radius: 2px; overflow: hidden; background: var(--bg); margin-left: -8px; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; }
+.combo-tile-art:first-child { margin-left: 0; }
+.combo-tile-art img { width: 100%; height: 100%; object-fit: cover; }
+.combo-tile-art-ph { font-size: 11px; color: var(--text-faint); }
+.combo-tile-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.combo-tile-name { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-tile-meta { display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: var(--text-faint); }
+.combo-tile-deck { color: var(--text-dim); }
+.combo-tile-badge { color: var(--accent); }
+
+.combo-detail-panel { min-width: 0; }
+.combo-detail { display: flex; flex-direction: column; gap: 16px; }
+.combo-detail-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.combo-detail-title { font-size: 19px; font-weight: 600; flex: 1; cursor: pointer; min-width: 0; }
+.combo-detail-title:hover { color: var(--accent); }
+.combo-replay-link { font-size: 12px; color: var(--text-dim); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
+.combo-replay-link:hover { border-color: var(--accent); color: var(--accent); }
+.combo-meta-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.combo-meta-field { display: flex; flex-direction: column; gap: 5px; }
+.combo-meta-field > span:first-child { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
+.combo-meta-info { font-size: 11px; color: var(--text-faint); margin-left: auto; }
+.combo-block { display: flex; flex-direction: column; gap: 8px; }
+.combo-block-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; }
+.combo-block-hint { text-transform: none; letter-spacing: 0; color: var(--text-faint); font-weight: 400; margin-left: 6px; }
+.combo-hand-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* shared card thumb (hand / steps / piles) */
+.combo-thumb { display: inline-flex; align-items: center; gap: 6px; max-width: 220px; cursor: pointer; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 3px 8px 3px 3px; }
+.combo-thumb:hover { border-color: var(--accent); }
+.combo-thumb img { width: 22px; height: 32px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
+.combo-thumb-ph { width: 22px; height: 32px; border-radius: 2px; background: var(--bg); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-faint); flex-shrink: 0; }
+.combo-thumb-name { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* the line — step list */
+.combo-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; counter-reset: step; }
+.combo-step { display: grid; grid-template-columns: 42px 110px 1fr auto; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; }
+.combo-step-time { font-size: 10px; color: var(--text-faint); font-family: "SF Mono", Menlo, monospace; }
+.combo-step-action { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 800; text-align: center; border-radius: 4px; padding: 3px 6px; background: var(--bg-elevated); border: 1px solid var(--border-strong); color: var(--text-dim); }
+.combo-step-action.act-normal-summon, .combo-step-action.act-special-summon, .combo-step-action.act-link-summon, .combo-step-action.act-xyz-summon, .combo-step-action.act-synchro-summon, .combo-step-action.act-fusion-summon { background: rgba(216,106,74,0.14); border-color: rgba(216,106,74,0.5); color: var(--role-boss); }
+.combo-step-action.act-activate { background: rgba(95,168,196,0.14); border-color: rgba(95,168,196,0.5); color: var(--role-searcher); }
+.combo-step-action.act-set { background: rgba(229,169,60,0.14); border-color: rgba(229,169,60,0.5); color: var(--warning); }
+.combo-step-action.act-banish, .combo-step-action.act-send-to-gy { color: var(--text-faint); }
+.combo-step-detail { font-size: 12.5px; color: var(--text); min-width: 0; }
+.combo-step-cards { display: inline-flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.combo-step-cards .combo-thumb { max-width: 150px; }
+@media (max-width: 720px) { .combo-step { grid-template-columns: 1fr; } .combo-step-cards { justify-content: flex-start; } }
+
+/* GY / Banished piles (collapsible) */
+.endboard-pile { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.endboard-pile-header { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+.endboard-pile-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; }
+.endboard-pile.is-banish .endboard-pile-title { color: var(--role-tech); }
+.endboard-pile-count { font-size: 10px; color: var(--text-faint); font-family: "SF Mono", Menlo, monospace; background: var(--bg); padding: 1px 6px; border-radius: 3px; }
+.endboard-pile-chevron { margin-left: auto; font-size: 10px; color: var(--text-faint); transition: transform var(--motion-fast); }
+.endboard-pile.collapsed .endboard-pile-chevron { transform: rotate(-90deg); }
+.endboard-pile-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
