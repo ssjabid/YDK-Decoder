@@ -210,44 +210,44 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
         <button type="button" className="deck-mini-btn is-danger" onClick={remove}>× Remove</button>
       </div>
 
+      <PanelSection title="How they win + their line" defaultOpen={true}>
+        <div className="matchup-research">
+          <EditField label="How they win" value={meth.howItWins} onSave={editDeck("howItWins")} />
+          <EditField label="Their combo line" value={meth.summary} onSave={editDeck("summary")} />
+          <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
+          <EditField label="How it loses / weaknesses" value={meth.weaknesses} onSave={editDeck("weaknesses")} />
+        </div>
+        {opponentDeck && <div className="drill-hint">"How they win", "combo line" + "weaknesses" sync with <strong>{name}</strong>'s methodology in the Decks tab.</div>}
+      </PanelSection>
+
       <div className="matchup-full-grid">
         <div className="matchup-col">
-          <PanelSection title="How they win + their line" defaultOpen={true}>
-            <EditField label="How they win" value={meth.howItWins} onSave={editDeck("howItWins")} />
-            <EditField label="Their combo line" value={meth.summary} onSave={editDeck("summary")} />
-            <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
-            <EditField label="How it loses / weaknesses" value={meth.weaknesses} onSave={editDeck("weaknesses")} />
-            {opponentDeck && <div className="drill-hint">These three sync with <strong>{name}</strong>'s methodology in the Decks tab.</div>}
-          </PanelSection>
-
           <PanelSection title="Their end boards" defaultOpen={true}>
             <EndBoardsEditor m={m} upd={upd} onHover={onHover} onPick={onPick} />
             <div className="drill-hint">Feeds <strong>Testing → Going second</strong> — practise breaking these.</div>
           </PanelSection>
+          <PanelSection title="Cards that are really good here" defaultOpen={true}>
+            <ReallyGoodEditor cards={m.counterCards || []} onChange={(c) => upd((x) => { x.counterCards = c; })} onHover={onHover} onPick={onPick} />
+          </PanelSection>
+        </div>
 
+        <div className="matchup-col">
           <PanelSection title="Game plan" defaultOpen={true}>
             <EditField label="Going first vs them" value={m.gameplanFirst} onSave={(v) => upd((x) => { x.gameplanFirst = v; })} />
             <EditField label="Going second — break their board" value={m.gameplanSecond} onSave={(v) => upd((x) => { x.gameplanSecond = v; })} />
             <StepEditor label="Priority plays — going first" steps={m.priorityFirst || []} onChange={(s) => upd((x) => { x.priorityFirst = s; })} />
             <StepEditor label="Priority plays — going second" steps={m.prioritySecond || []} onChange={(s) => upd((x) => { x.prioritySecond = s; })} />
           </PanelSection>
-        </div>
-
-        <div className="matchup-col">
-          <PanelSection title="Cards that are really good here" defaultOpen={true}>
-            <ReallyGoodEditor cards={m.counterCards || []} onChange={(c) => upd((x) => { x.counterCards = c; })} onHover={onHover} onPick={onPick} />
-          </PanelSection>
-
-          <PanelSection title="Side-deck plan (auto-pulled from your deck)" defaultOpen={true}>
-            <SideboardPlanner sb={m.sideboard} primaryDeck={primaryDeck} onChange={(sb) => upd((x) => { x.sideboard = sb; })} onHover={onHover} />
-          </PanelSection>
-
           <PanelSection title="Your notes on this matchup" defaultOpen={true}>
             <RichNotes value={m.freeformNotes || ""} placeholder="Scouting notes, lines you've found, what to watch for. Type @ to mention a card."
               onSave={(v) => upd((x) => { x.freeformNotes = v; })} />
           </PanelSection>
         </div>
       </div>
+
+      <PanelSection title="Side-deck plan (auto-pulled from your deck)" defaultOpen={true}>
+        <SideboardPlanner sb={m.sideboard} primaryDeck={primaryDeck} onChange={(sb) => upd((x) => { x.sideboard = sb; })} onHover={onHover} />
+      </PanelSection>
     </div>
   );
 }
@@ -379,59 +379,83 @@ function SideboardPlanner({ sb, primaryDeck, onChange, onHover }) {
     return () => { alive = false; };
   }, [deckId, mainKey, sideKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Pools as [{name, max}] — max = how many copies you actually run, so you can
+  // side a specific number (e.g. 1 of your 3 Fuwalos).
   const pools = useMemo(() => {
     const TYPE_ORDER = { Monster: 0, Spell: 1, Trap: 2, Other: 3 };
     const build = (ids) => {
-      const seen = new Set(); const arr = [];
+      const counts = new Map(); const type = new Map();
       for (const id of ids) {
         const c = cardMap[Number(id)]; const n = (c && c.name) || ("#" + id);
-        if (!seen.has(n)) { seen.add(n); arr.push({ name: n, t: TYPE_ORDER[classifyCardBroadType(c)] ?? 3 }); }
+        counts.set(n, (counts.get(n) || 0) + 1);
+        if (!type.has(n)) type.set(n, TYPE_ORDER[classifyCardBroadType(c)] ?? 3);
       }
-      arr.sort((a, b) => a.t - b.t || a.name.localeCompare(b.name));
-      return arr.map((x) => x.name);
+      return [...counts.entries()].map(([name, max]) => ({ name, max, t: type.get(name) }))
+        .sort((a, b) => a.t - b.t || a.name.localeCompare(b.name));
     };
     return { side: build(sideIds), main: build(mainIds) };
   }, [cardMap, sideKey, mainKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!primaryDeck) return <div className="deck-empty-hint">Pick <strong>your deck</strong> at the top of the Format tab to auto-load your side + main deck here.</div>;
 
-  const plan = sb || { goingFirst: { in: [], out: [] }, goingSecond: { in: [], out: [] } };
-  const l = plan[leg] || { in: [], out: [] };
-  const setDir = (dir, items) => {
-    const next = { goingFirst: { ...(plan.goingFirst || { in: [], out: [] }) }, goingSecond: { ...(plan.goingSecond || { in: [], out: [] }) } };
-    next[leg] = { ...next[leg], [dir]: items };
-    onChange(next);
+  // Normalise to [{name, count}] (back-compat with old string arrays).
+  const norm = (arr) => (arr || []).map((x) => (typeof x === "string" ? { name: x, count: 1 } : { name: x.name, count: x.count || 1 }));
+  const plan = {
+    goingFirst: { in: norm(sb?.goingFirst?.in), out: norm(sb?.goingFirst?.out) },
+    goingSecond: { in: norm(sb?.goingSecond?.in), out: norm(sb?.goingSecond?.out) },
   };
-  const toggle = (dir, name) => { const cur = l[dir] || []; setDir(dir, cur.includes(name) ? cur.filter((n) => n !== name) : [...cur, name]); };
+  const l = plan[leg];
+  const countFor = (dir, name) => { const e = l[dir].find((x) => x.name === name); return e ? e.count : 0; };
+  const setCount = (dir, name, count, max) => {
+    const arr = l[dir].filter((x) => x.name !== name);
+    const c = Math.max(0, Math.min(count, max));
+    if (c > 0) arr.push({ name, count: c });
+    onChange({ ...plan, [leg]: { ...l, [dir]: arr } });
+  };
+  const totalIn = l.in.reduce((s, x) => s + x.count, 0);
+  const totalOut = l.out.reduce((s, x) => s + x.count, 0);
+  const summarize = (arr) => arr.length ? arr.map((x) => `${x.count}× ${x.name}`).join(", ") : "—";
 
   const rows = (dir, pool) => (
     <div className="sbp-rows">
-      {pool.map((n) => {
-        const on = (l[dir] || []).includes(n);
-        const c = lookupCardByName(n);
+      {pool.map(({ name, max }) => {
+        const n = countFor(dir, name);
+        const c = lookupCardByName(name);
         const urls = c?.id ? getImageUrls(c.id) : [];
         return (
-          <button key={n} type="button" className={"sbp-row is-" + dir + (on ? " is-on" : "")}
-            onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
-            onClick={() => toggle(dir, n)}>
-            <span className="sbp-row-mark">{on ? "✓" : (dir === "in" ? "+" : "−")}</span>
-            {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : <span className="sbp-row-noimg" />}
-            <span className="sbp-row-name">{n}</span>
-          </button>
+          <div key={name} className={"sbp-row is-" + dir + (n > 0 ? " is-on" : "")}>
+            <div className="sbp-row-main" onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
+              onClick={() => setCount(dir, name, n >= max ? 0 : n + 1, max)} title="Click to cycle copies">
+              {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : <span className="sbp-row-noimg" />}
+              <span className="sbp-row-name">{name}</span>
+            </div>
+            <div className="sbp-step">
+              <button type="button" className="sbp-step-btn" disabled={n <= 0} onClick={() => setCount(dir, name, n - 1, max)}>−</button>
+              <span className={"sbp-qty" + (n > 0 ? " is-on" : "")}>{n}<span className="sbp-qty-max">/{max}</span></span>
+              <button type="button" className="sbp-step-btn" disabled={n >= max} onClick={() => setCount(dir, name, n + 1, max)}>+</button>
+            </div>
+          </div>
         );
       })}
       {!pool.length && <div className="deck-empty-hint">No {dir === "in" ? "side-deck" : "main-deck"} cards.</div>}
     </div>
   );
 
-  const inN = (l.in || []).length, outN = (l.out || []).length;
   return (
     <div className="sbp">
       <div className="sbp-tabs">
         <button type="button" className={"sbp-tab" + (leg === "goingFirst" ? " active" : "")} onClick={() => setLeg("goingFirst")}>Going first</button>
         <button type="button" className={"sbp-tab" + (leg === "goingSecond" ? " active" : "")} onClick={() => setLeg("goingSecond")}>Going second</button>
-        <span className={"sbp-balance" + (inN === outN && inN > 0 ? " ok" : inN !== outN ? " warn" : "")}>In {inN} / Out {outN} {inN === outN ? (inN ? "✓" : "") : "⚠"}</span>
+        <span className={"sbp-balance" + (totalIn === totalOut && totalIn > 0 ? " ok" : totalIn !== totalOut ? " warn" : "")}>
+          {totalIn} in / {totalOut} out {totalIn === totalOut ? (totalIn ? "✓ balanced" : "") : "⚠ unbalanced"}
+        </span>
       </div>
+
+      <div className="sbp-summary">
+        <div><span className="sbp-sum-label is-in">+ In</span> {summarize(l.in)}</div>
+        <div><span className="sbp-sum-label is-out">− Out</span> {summarize(l.out)}</div>
+      </div>
+
       <div className="sbp-cols">
         <div className="sbp-col"><div className="sbp-col-title is-in">Bring IN — your side deck</div>{rows("in", pools.side)}</div>
         <div className="sbp-col"><div className="sbp-col-title is-out">Take OUT — your main deck</div>{rows("out", pools.main)}</div>

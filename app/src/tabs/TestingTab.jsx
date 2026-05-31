@@ -250,6 +250,8 @@ function BoardBreaker({ myDeck, dataVersion }) {
     return { name, card, disruption: card ? inferDisruption(card) : "negate" };
   });
   const sidePlan = matchup && matchup.sideboard && matchup.sideboard.goingSecond;
+  // Side entries may be plain names (legacy) or { name, count } objects.
+  const fmtSide = (arr) => (arr || []).map((x) => (typeof x === "string" ? x : `${x.count || 1}× ${x.name}`)).join(", ");
 
   const nameOf = (id) => (myCardMap[Number(id)] && myCardMap[Number(id)].name) || `#${id}`;
 
@@ -292,8 +294,8 @@ function BoardBreaker({ myDeck, dataVersion }) {
       {sidePlan && ((sidePlan.in || []).length || (sidePlan.out || []).length) ? (
         <div className="bb-sideplan">
           <span className="bb-sideplan-label">Side plan (going 2nd):</span>
-          {(sidePlan.in || []).length ? <span className="bb-in">+ {sidePlan.in.join(", ")}</span> : null}
-          {(sidePlan.out || []).length ? <span className="bb-out">− {sidePlan.out.join(", ")}</span> : null}
+          {(sidePlan.in || []).length ? <span className="bb-in">+ {fmtSide(sidePlan.in)}</span> : null}
+          {(sidePlan.out || []).length ? <span className="bb-out">− {fmtSide(sidePlan.out)}</span> : null}
         </div>
       ) : null}
 
