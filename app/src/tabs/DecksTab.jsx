@@ -17,6 +17,8 @@ import CardsView from "../components/CardsView.jsx";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
 import RichNotes from "../components/RichNotes.jsx";
+import Dropdown from "../components/Dropdown.jsx";
+import { PlaybookEditor } from "../components/Matchup.jsx";
 import Icon from "../components/Icon.jsx";
 
 // ════════════════════════════════════════════════════════════════════
@@ -194,6 +196,13 @@ function DeckPanel({ deck, onChanged }) {
       <PanelSection title="Methodology — how this deck plays" defaultOpen={true}>
         <MethodologySection deck={deck} save={save} cardMap={cardMap} />
       </PanelSection>
+
+      {isMatchup && (
+        <PanelSection title="Playbook — how to beat this deck"
+          subtitle="Shown read-only in Format → this matchup" defaultOpen={true}>
+          <PlaybookEditor deck={deck} save={save} />
+        </PanelSection>
+      )}
 
       <PanelSection title="Key cards — what to protect / what to stop" defaultOpen={false}>
         <KeyCardsSection deck={deck} save={save} cardMap={cardMap} force={force} />
@@ -399,9 +408,9 @@ function KeyCardRow({ deck, kc, save, force, cardFor, onHover, onPick }) {
         <div className="key-card-editor">
           <label className="key-card-edit-row">
             <span>Stop priority</span>
-            <select value={kc.stopPriority || "none"} onChange={(e) => { kc.stopPriority = e.target.value; save(); }}>
-              {STOP_PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
+            <Dropdown className="key-card-pri-dd" value={kc.stopPriority || "none"}
+              options={STOP_PRIORITIES.map((p) => [p, p])}
+              onChange={(v) => { kc.stopPriority = v; save(); }} />
           </label>
           <input className="deck-field-input is-single" defaultValue={kc.stopWith} placeholder="Stop it with… (e.g. Ash, Imperm)"
             onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => { kc.stopWith = e.target.value; save(); }} />

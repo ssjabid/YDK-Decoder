@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { loadFormats, saveFormats, getActiveFormatId, setActiveFormatId, loadDecks } from "../lib/storage.js";
 import { importDeckFromYdk } from "../lib/deckImport.js";
-import { persistDeck, ensureDeckShape, getDeckPrimaryDecklist, classifyCardBroadType } from "../lib/deckModel.js";
+import { persistDeck, getDeckPrimaryDecklist, classifyCardBroadType } from "../lib/deckModel.js";
 import { lookupCardByName } from "../lib/cardSearch.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
-import RichNotes, { normalizeNotesHtml } from "../components/RichNotes.jsx";
+import RichNotes from "../components/RichNotes.jsx";
+import Dropdown from "../components/Dropdown.jsx";
+import { getPlaybook, GamePlanView, EndBoardsView, GoodCardsView, ReadField } from "../components/Matchup.jsx";
 import Icon from "../components/Icon.jsx";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
@@ -36,19 +38,6 @@ export default function FormatTab({ dataVersion = 0 }) {
     mutator(f);
     f.updatedAt = new Date().toISOString();
     saveFormats(fmts);
-    bump();
-  };
-
-  // Edit the OPPONENT DECK directly (single source of truth) so "how they win",
-  // combo line + weaknesses stay consistent between the Format breakdown and the
-  // Decks tab methodology.
-  const deckUpdate = (deckId, mutator) => {
-    const ds = loadDecks();
-    const d = ds.find((x) => x.deckId === deckId);
-    if (!d) return;
-    ensureDeckShape(d);
-    mutator(d);
-    persistDeck(d);
     bump();
   };
 
@@ -109,9 +98,9 @@ export default function FormatTab({ dataVersion = 0 }) {
       {/* ── Format header: pick/manage format + your deck ── */}
       <div className="format-bar">
         <div className="format-bar-left">
-          <select className="format-picker" value={format.formatId} onChange={(e) => { setActiveFormatId(e.target.value); setSelectedMatchupId(null); bump(); }}>
-            {formats.map((f) => <option key={f.formatId} value={f.formatId}>{f.name}</option>)}
-          </select>
+          <Dropdown className="format-picker-dd" value={format.formatId}
+            options={formats.map((f) => [f.formatId, f.name])}
+            onChange={(v) => { setActiveFormatId(v); setSelectedMatchupId(null); bump(); }} />
           <button type="button" className="format-act" title="New format" onClick={() => newFormat(false)}>+ New</button>
           {format.matchups?.length ? <button type="button" className="format-act" title="New format cloning these matchups" onClick={() => newFormat(true)}>Clone</button> : null}
           <button type="button" className="format-act" title="Rename" onClick={renameFormat}>✎</button>
@@ -119,10 +108,10 @@ export default function FormatTab({ dataVersion = 0 }) {
         </div>
         <label className="format-primary">
           <span>Your deck</span>
-          <select className="format-picker" value={format.primaryDeckId || ""} onChange={(e) => update((f) => { f.primaryDeckId = e.target.value || null; })}>
-            <option value="">— pick your deck —</option>
-            {primaryDecks.map((d) => <option key={d.deckId} value={d.deckId}>{d.name}</option>)}
-          </select>
+          <Dropdown className="format-picker-dd" value={format.primaryDeckId || ""} align="right"
+            placeholder="— pick your deck —"
+            options={primaryDecks.map((d) => [d.deckId, d.name])}
+            onChange={(v) => update((f) => { f.primaryDeckId = v || null; })} />
         </label>
       </div>
 
@@ -131,7 +120,7 @@ export default function FormatTab({ dataVersion = 0 }) {
           key={selected.matchupId}
           m={selected} format={format} primaryDeck={primaryDeck} deckNames={deckNames}
           opponentDeck={decks.find((d) => d.deckId === selected.opponentDeckId) || null}
-          update={update} deckUpdate={deckUpdate} onHover={onHover} onPick={onPick}
+          update={update} onHover={onHover} onPick={onPick}
           onBack={() => setSelectedMatchupId(null)}
           onRemove={() => { setSelectedMatchupId(null); update((f) => { f.matchups = (f.matchups || []).filter((x) => x.matchupId !== selected.matchupId); }); }}
         />
@@ -186,14 +175,29 @@ function useMatchupUpdate(update, matchupId) {
   return (fn) => update((f) => { const m = (f.matchups || []).find((x) => x.matchupId === matchupId); if (m) fn(m); });
 }
 
-// ── Full-screen matchup breakdown ──
-function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, update, deckUpdate, onHover, onPick, onBack, onRemove }) {
+// ── Full-screen matchup breakdown — a READ-ONLY dashboard. Everything
+//    about the opponent (how they win, the plan vs them, their end boards,
+//    cards that shine) is edited in Decks → that matchup deck, so there's
+//    one source of truth. Only the side-deck plan + your scouting notes
+//    are interactive here (they're scoped to your deck in this format). ──
+function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, update, onHover, onPick, onBack, onRemove }) {
   const upd = useMatchupUpdate(update, m.matchupId);
+  const [, forceRev] = useReducer((x) => x + 1, 0);
   const name = (opponentDeck && opponentDeck.name) || deckNames[m.opponentDeckId] || "Unknown deck";
   const meth = (opponentDeck && opponentDeck.methodology) || {};
-  // Deck-owned research fields write to the opponent deck's methodology → one
-  // source of truth shared with the Decks tab.
-  const editDeck = (key) => (v) => { if (opponentDeck) deckUpdate(opponentDeck.deckId, (d) => { d.methodology[key] = v; }); };
+  const pb = getPlaybook(m, opponentDeck);
+
+  // Warm the card cache for the opponent's deck so the end-board playmat can
+  // place spells/traps in the right zones (lookupCardByName reads the cache).
+  const oppId = opponentDeck && opponentDeck.deckId;
+  useEffect(() => {
+    if (!opponentDeck) return;
+    let alive = true;
+    const ids = [...(opponentDeck.main || []), ...(opponentDeck.extra || []), ...(opponentDeck.side || [])];
+    fetchCards(ids).then(() => { if (alive) forceRev(); });
+    return () => { alive = false; };
+  }, [oppId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const editHint = <span className="panel-edit-hint">✎ Edit in Decks → {name}</span>;
   const remove = async () => {
     const ok = await confirmModal({ title: "Remove this matchup?", message: "The deck stays in your library — only this matchup's plan is removed.", confirmText: "Remove", danger: true });
     if (ok) onRemove();
@@ -204,15 +208,13 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
         <button type="button" className="back-btn" onClick={onBack}>← All matchups</button>
         <span className={"matchup-tier tier-" + (m.tier || "tier1")}>{TIER_LABEL[m.tier] || "Tier 1"}</span>
         <h2 className="matchup-full-title">{name}</h2>
-        <select className="bb-select" value={m.tier || "tier1"} onChange={(e) => upd((x) => { x.tier = e.target.value; })}>
-          {TIER_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-        </select>
+        <Dropdown className="tier-dd" value={m.tier || "tier1"} options={TIER_OPTIONS} align="right"
+          ariaLabel="Tier" onChange={(v) => upd((x) => { x.tier = v; })} />
         <button type="button" className="back-btn is-danger" onClick={remove}>× Remove matchup</button>
       </div>
 
       <div className="matchup-dash">
-        <PanelSection title="How they win + their line" defaultOpen={true}
-          right={<span className="panel-edit-hint">Edit in Decks → {name}</span>}>
+        <PanelSection title="How they win + their line" defaultOpen={true} right={editHint}>
           <div className="dash-2up">
             <ReadField label="How they win" value={meth.howItWins} />
             <ReadField label="Their combo line" value={meth.summary} />
@@ -220,29 +222,22 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
           </div>
         </PanelSection>
 
-        <PanelSection title="Game plan (your plan vs them)" defaultOpen={true}>
-          <div className="dash-2up">
-            <EditField label="Chokepoint — what to Ash / stop" value={m.chokepointTheirs} onSave={(v) => upd((x) => { x.chokepointTheirs = v; })} />
-            <EditField label="Going first vs them" value={m.gameplanFirst} onSave={(v) => upd((x) => { x.gameplanFirst = v; })} />
-            <EditField label="Going second — break their board" value={m.gameplanSecond} onSave={(v) => upd((x) => { x.gameplanSecond = v; })} />
-            <div className="dash-spacer" />
-            <StepEditor label="Priority plays — going first" steps={m.priorityFirst || []} onChange={(s) => upd((x) => { x.priorityFirst = s; })} />
-            <StepEditor label="Priority plays — going second" steps={m.prioritySecond || []} onChange={(s) => upd((x) => { x.prioritySecond = s; })} />
-          </div>
+        <PanelSection title="Game plan — your plan vs them" defaultOpen={true} right={editHint}>
+          <GamePlanView pb={pb} />
         </PanelSection>
 
-        <PanelSection title="Their end boards" defaultOpen={true}>
-          <EndBoardsEditor m={m} upd={upd} onHover={onHover} onPick={onPick} />
+        <PanelSection title="Their end boards" defaultOpen={true} right={editHint}>
+          <EndBoardsView boards={pb.endboards} onHover={onHover} onPick={onPick} />
           <div className="drill-hint">Feeds <strong>Testing → Going second</strong> — practise breaking these.</div>
         </PanelSection>
 
-        <PanelSection title="Cards that are really good here" defaultOpen={true}>
-          <ReallyGoodEditor cards={m.counterCards || []} onChange={(c) => upd((x) => { x.counterCards = c; })} onHover={onHover} onPick={onPick} />
+        <PanelSection title="Cards that are really good here" defaultOpen={true} right={editHint}>
+          <GoodCardsView cards={pb.goodCards} onHover={onHover} onPick={onPick} />
         </PanelSection>
 
-        <PanelSection title="Side-deck plan (auto-pulled from your deck)" defaultOpen={true}>
+        <PanelSection title="Side-deck plan — auto-pulled from your deck" defaultOpen={true}>
           <SideboardPlanner sb={m.sideboard} primaryDeck={primaryDeck} onChange={(sb) => upd((x) => { x.sideboard = sb; })}
-            goodCards={(m.counterCards || []).filter((c) => c && c.side !== "bad").map((c) => c.name)} />
+            goodCards={pb.goodCards.map((c) => c.name)} />
         </PanelSection>
 
         <PanelSection title="Your notes on this matchup" defaultOpen={true}>
@@ -250,136 +245,6 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
             onSave={(v) => upd((x) => { x.freeformNotes = v; })} />
         </PanelSection>
       </div>
-    </div>
-  );
-}
-
-// A labelled editable rich-text field (used for the plan fields).
-function EditField({ label, value, onSave }) {
-  return (
-    <div className="drill-field">
-      <div className="drill-label">{label}</div>
-      <RichNotes value={value || ""} placeholder="Type to add notes · @ to mention a card" onSave={onSave} />
-    </div>
-  );
-}
-
-// Read-only display of a methodology field (edited in the Decks tab). Click to
-// expand and read the whole thing comfortably.
-function ReadField({ label, value }) {
-  const [open, setOpen] = useState(false);
-  const has = value && String(value).trim();
-  return (
-    <div className="drill-field">
-      <div className="drill-label">{label}{has ? <button type="button" className="read-expand" title="Expand" onClick={() => setOpen(true)}>⤢</button> : null}</div>
-      {has
-        ? <div className="read-field" dangerouslySetInnerHTML={{ __html: normalizeNotesHtml(value) }} />
-        : <div className="read-field is-empty">— not set yet (add it in the Decks tab)</div>}
-      {open && (
-        <div className="rt-backdrop" onClick={() => setOpen(false)}>
-          <div className="read-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="read-modal-head"><span>{label}</span><button type="button" className="fmt-chip-x" onClick={() => setOpen(false)}>×</button></div>
-            <div className="read-field" dangerouslySetInnerHTML={{ __html: normalizeNotesHtml(value) }} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Multiple named end boards per matchup. Keeps targetEndboard (union) in sync
-// so the Testing → Board Breaker still gets fed.
-function EndBoardsEditor({ m, upd, onHover, onPick }) {
-  const boards = (m.endboards && m.endboards.length) ? m.endboards
-    : ((m.targetEndboard || []).length ? [{ id: "eb_seed", name: "Typical board", cards: (m.targetEndboard || []).slice() }] : []);
-  const commit = (next) => upd((x) => {
-    x.endboards = next;
-    const seen = new Set(); const union = [];
-    next.forEach((b) => (b.cards || []).forEach((c) => { if (!seen.has(c)) { seen.add(c); union.push(c); } }));
-    x.targetEndboard = union;
-  });
-  return (
-    <div className="endboards">
-      {boards.map((b, bi) => (
-        <div className="endboard" key={b.id || bi}>
-          <div className="endboard-head">
-            <input className="endboard-name" defaultValue={b.name} onKeyDown={(e) => e.stopPropagation()}
-              onBlur={(e) => commit(boards.map((x, i) => (i === bi ? { ...x, name: e.target.value.trim() || x.name } : x)))} />
-            {boards.length > 1 && <button type="button" className="fmt-chip-x" title="Remove board" onClick={() => commit(boards.filter((_, i) => i !== bi))}>×</button>}
-          </div>
-          <ChipEditor items={b.cards || []} onHover={onHover} onPick={onPick} placeholder="Add a board piece…"
-            onChange={(items) => commit(boards.map((x, i) => (i === bi ? { ...x, cards: items } : x)))} />
-        </div>
-      ))}
-      <button type="button" className="fmt-add-btn" onClick={() => commit([...boards, { id: "eb_" + rid(), name: "Board " + (boards.length + 1), cards: [] }])}>+ Add another end board</button>
-    </div>
-  );
-}
-
-function CardChip({ name, onHover, onPick, onRemove, tone }) {
-  const c = lookupCardByName(name);
-  const urls = c?.id ? getImageUrls(c.id) : [];
-  return (
-    <span className={"fmt-chip" + (tone ? " is-" + tone : "")}
-      onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
-      onClick={(e) => onPick && onPick(c, e.currentTarget.getBoundingClientRect())}>
-      {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : null}
-      <span className="fmt-chip-name">{name}</span>
-      {onRemove && <button type="button" className="fmt-chip-x" title="Remove" onClick={(e) => { e.stopPropagation(); onRemove(); }}>×</button>}
-    </span>
-  );
-}
-
-function CardAddInput({ onAdd, placeholder }) {
-  const [adding, setAdding] = useState(false);
-  if (!adding) return <button type="button" className="fmt-add-btn" onClick={() => setAdding(true)}>+ Add</button>;
-  return (
-    <input className="fmt-add-input" autoFocus placeholder={placeholder || "Card name, Enter"}
-      onKeyDown={(e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) onAdd((lookupCardByName(v) || {}).name || v); setAdding(false); } else if (e.key === "Escape") setAdding(false); else e.stopPropagation(); }}
-      onBlur={(e) => { const v = e.target.value.trim(); if (v) onAdd((lookupCardByName(v) || {}).name || v); setAdding(false); }} />
-  );
-}
-
-function ChipEditor({ items, onChange, onHover, onPick, placeholder }) {
-  return (
-    <div className="fmt-chip-row">
-      {(items || []).map((name, i) => <CardChip key={i} name={name} onHover={onHover} onPick={onPick} onRemove={() => onChange(items.filter((_, j) => j !== i))} />)}
-      <CardAddInput placeholder={placeholder} onAdd={(name) => onChange([...(items || []), name])} />
-    </div>
-  );
-}
-
-function ReallyGoodEditor({ cards, onChange, onHover, onPick }) {
-  const good = (cards || []).filter((c) => c && c.side !== "bad");
-  const setReason = (card, reason) => onChange((cards || []).map((c) => (c === card ? { ...c, notes: reason } : c)));
-  const remove = (card) => onChange((cards || []).filter((c) => c !== card));
-  return (
-    <div className="rg-list">
-      {good.map((c, i) => (
-        <div className="rg-row" key={i}>
-          <CardChip name={c.name} tone="good" onHover={onHover} onPick={onPick} onRemove={() => remove(c)} />
-          <input className="rg-reason" defaultValue={c.notes || c.reason || ""} placeholder="why it's good here…"
-            onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => setReason(c, e.target.value)} />
-        </div>
-      ))}
-      <CardAddInput placeholder="Add a card that's good here…" onAdd={(name) => onChange([...(cards || []), { name, side: "good", notes: "" }])} />
-    </div>
-  );
-}
-
-function StepEditor({ label, steps, onChange }) {
-  const [adding, setAdding] = useState(false);
-  return (
-    <div className="drill-field">
-      <div className="drill-label">{label}</div>
-      <ol className="fmt-steps">
-        {(steps || []).map((s, i) => <li key={i} className="fmt-step"><span className="fmt-step-text">{s}</span><button type="button" className="fmt-chip-x" onClick={() => onChange(steps.filter((_, j) => j !== i))}>×</button></li>)}
-      </ol>
-      {adding ? (
-        <input className="fmt-add-input is-wide" autoFocus placeholder="A step, Enter to add"
-          onKeyDown={(e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) onChange([...(steps || []), v]); setAdding(false); } else if (e.key === "Escape") setAdding(false); else e.stopPropagation(); }}
-          onBlur={(e) => { const v = e.target.value.trim(); if (v) onChange([...(steps || []), v]); setAdding(false); }} />
-      ) : <button type="button" className="fmt-add-btn" onClick={() => setAdding(true)}>+ Add step</button>}
     </div>
   );
 }
@@ -543,10 +408,9 @@ function RoundEditor({ t, format, deckNames, update }) {
       {(t.rounds || []).map((r, i) => (
         <div key={r.roundId} className="journal-round">
           <span className="journal-round-n">R{i + 1}</span>
-          <select className="bb-select" value={r.opponentDeckId || ""} onChange={(e) => updT((tt) => { tt.rounds[i].opponentDeckId = e.target.value; })}>
-            <option value="">— opponent —</option>
-            {opponents.map((id) => <option key={id} value={id}>{deckNames[id] || id}</option>)}
-          </select>
+          <Dropdown className="journal-opp-dd" value={r.opponentDeckId || ""} placeholder="— opponent —"
+            options={opponents.map((id) => [id, deckNames[id] || id])}
+            onChange={(v) => updT((tt) => { tt.rounds[i].opponentDeckId = v; })} />
           <div className="journal-wl">
             {["W", "L", "D"].map((res) => <button key={res} type="button" className={"journal-wl-btn is-" + res.toLowerCase() + (r.result === res ? " active" : "")} onClick={() => updT((tt) => { tt.rounds[i].result = res; })}>{res}</button>)}
           </div>

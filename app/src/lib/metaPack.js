@@ -21,6 +21,10 @@ const DEFAULT_DECK_NOTES =
 
 // Fields on a matchup the USER authors — preserved across a refresh.
 const USER_FIELDS = ["freeformNotes", "sideboard", "priorityFirst", "prioritySecond", "relatedComboIds", "chokepointOurs", "tier", "targetEndboard", "counterCards"];
+// Playbook fields now live on the OPPONENT DECK's methodology (single source
+// of truth, edited in the Decks tab). The pack doesn't author them, so they're
+// user/backfill-owned — preserve them whenever a deck is refreshed.
+const PLAYBOOK_FIELDS = ["vsChokepoint", "vsPlanFirst", "vsPlanSecond", "vsPriorityFirst", "vsPrioritySecond", "goodCards", "endboards"];
 const nonEmpty = (v) => v != null && (Array.isArray(v) ? v.length : (typeof v === "object" ? Object.keys(v).length : String(v).length));
 
 export async function fetchMetaPack() {
@@ -49,6 +53,11 @@ export async function loadMetaPack(prefetched) {
     if (prev) {
       if (Array.isArray(prev.keyCards) && prev.keyCards.length) incoming.keyCards = prev.keyCards;
       if (prev.notes && prev.notes !== DEFAULT_DECK_NOTES) incoming.notes = prev.notes;
+      // Keep the user's playbook (game plan / end boards / good cards).
+      if (prev.methodology) {
+        incoming.methodology = incoming.methodology || {};
+        for (const f of PLAYBOOK_FIELDS) if (nonEmpty(prev.methodology[f])) incoming.methodology[f] = prev.methodology[f];
+      }
       refreshed++;
     } else {
       added++;
@@ -83,9 +92,54 @@ export async function loadMetaPack(prefetched) {
     if (!getActiveFormatId()) setActiveFormatId(packFmt.formatId);
   }
 
+  // Move any matchup-scoped playbook onto the opponent decks (new home).
+  backfillPlaybookFromMatchups();
+
   const version = packVersion(json);
   writeLs(VERSION_KEY, version);
   return { added, refreshed, version };
+}
+
+// ── One-time, idempotent backfill ──────────────────────────────────
+// The game plan, end boards + "cards that are good here" used to live on the
+// format matchup. They now live on the OPPONENT DECK's methodology so they can
+// be edited in one place (Decks tab) and read everywhere. This copies any
+// legacy matchup data onto the referenced deck, only filling fields that are
+// still empty — safe to run on every startup.
+function pickGood(counterCards) {
+  return (counterCards || []).filter((c) => c && c.side !== "bad").map((c) => ({ name: c.name, notes: c.notes || c.reason || "" }));
+}
+function normBoardCards(cards) {
+  return (cards || []).map((c) => (typeof c === "string" ? { name: c, zone: "auto" } : { name: c.name, zone: c.zone || "auto" })).filter((c) => c.name);
+}
+export function backfillPlaybookFromMatchups() {
+  const decks = loadDecks();
+  const byId = new Map(decks.map((d) => [d.deckId, d]));
+  let changed = 0;
+  for (const fmt of loadFormats()) {
+    for (const m of (fmt.matchups || [])) {
+      const d = byId.get(m.opponentDeckId);
+      if (!d) continue;
+      if (!d.methodology || typeof d.methodology !== "object") d.methodology = {};
+      const meth = d.methodology;
+      let touched = false;
+      const fill = (key, val) => { if (!nonEmpty(meth[key]) && nonEmpty(val)) { meth[key] = val; touched = true; } };
+      fill("vsChokepoint", m.chokepointTheirs);
+      fill("vsPlanFirst", m.gameplanFirst);
+      fill("vsPlanSecond", m.gameplanSecond);
+      fill("vsPriorityFirst", m.priorityFirst);
+      fill("vsPrioritySecond", m.prioritySecond);
+      fill("goodCards", pickGood(m.counterCards));
+      const ebs = (Array.isArray(m.endboards) && m.endboards.length)
+        ? m.endboards.map((b) => ({ id: b.id || ("eb_" + Math.random().toString(36).slice(2, 8)), name: b.name || "Typical board", cards: normBoardCards(b.cards) }))
+        : ((Array.isArray(m.targetEndboard) && m.targetEndboard.length)
+            ? [{ id: "eb_seed", name: "Typical board", cards: normBoardCards(m.targetEndboard) }] : []);
+      fill("endboards", ebs);
+      if (touched) changed++;
+    }
+  }
+  if (changed) saveDecks([...byId.values()]);
+  return { changed };
 }
 
 // Auto-refresh: if the user has already loaded the meta pack and the bundled

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStoredTheme } from "./lib/storage.js";
-import { ensureMetaFresh } from "./lib/metaPack.js";
+import { ensureMetaFresh, backfillPlaybookFromMatchups } from "./lib/metaPack.js";
 import DecksTab from "./tabs/DecksTab.jsx";
 import SettingsTab from "./tabs/SettingsTab.jsx";
 import FormatTab from "./tabs/FormatTab.jsx";
@@ -33,6 +33,9 @@ export default function App() {
   // always show without manually re-clicking "Load meta decks".
   useEffect(() => {
     let alive = true;
+    // Backfill the per-deck playbook from any legacy format-matchup data first
+    // (idempotent), then auto-refresh the meta pack if a newer one is bundled.
+    try { backfillPlaybookFromMatchups(); } catch (_) { /* noop */ }
     ensureMetaFresh().then((r) => { if (alive && r && r.updated) reload(); });
     return () => { alive = false; };
   }, []);

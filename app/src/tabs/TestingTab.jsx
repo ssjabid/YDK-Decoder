@@ -7,6 +7,9 @@ import {
   loadBbStreaks, bumpBb,
 } from "../lib/practice.js";
 import CardPreview from "../components/CardPreview.jsx";
+import EndBoardView from "../components/EndBoardView.jsx";
+import Dropdown from "../components/Dropdown.jsx";
+import { endboardNames } from "../components/Matchup.jsx";
 import Icon from "../components/Icon.jsx";
 
 // ════════════════════════════════════════════════════════════════════
@@ -245,7 +248,10 @@ function BoardBreaker({ myDeck, dataVersion }) {
     return () => { alive = false; };
   }, [opp, tallyKey]);
 
-  const board = (matchup && matchup.targetEndboard || []).filter(Boolean).map((name) => {
+  // End board now lives on the opponent deck's playbook (Decks tab); fall back
+  // to legacy format-matchup data.
+  const boardNames = endboardNames(matchup, opp);
+  const board = boardNames.filter(Boolean).map((name) => {
     const card = oppCardMap[String(name).toLowerCase()] || null;
     return { name, card, disruption: card ? inferDisruption(card) : "negate" };
   });
@@ -282,9 +288,9 @@ function BoardBreaker({ myDeck, dataVersion }) {
       <div className="bb-bar">
         <label className="bb-field">
           <span className="bb-field-label">Opponent</span>
-          <select className="bb-select" value={oppId || ""} onChange={(e) => setOppId(e.target.value)}>
-            {opponents.map((d) => <option key={d.deckId} value={d.deckId}>{d.name}</option>)}
-          </select>
+          <Dropdown className="bb-opp-dd" value={oppId || ""} ariaLabel="Opponent deck"
+            options={opponents.map((d) => [d.deckId, d.name])}
+            onChange={(v) => setOppId(v)} />
         </label>
         <button type="button" className="btn-primary" onClick={shuffle} disabled={!myMain.length}>
           <Icon name="die" size={16} /> Shuffle going 2nd (6)
@@ -304,22 +310,25 @@ function BoardBreaker({ myDeck, dataVersion }) {
           <div className="bb-col-title">{opp ? opp.name : "Opponent"}'s typical board</div>
           {!board.length ? (
             <div className="practice-empty">
-              No end board recorded for this matchup yet. Add one in <strong>Format → {opp ? opp.name : "this matchup"} →
-              Their typical end board</strong>, and it'll seed here.
+              No end board recorded for this matchup yet. Add one in <strong>Decks → {opp ? opp.name : "this matchup"} →
+              Playbook → Their end boards</strong>, and it'll show here.
             </div>
           ) : (
-            <div className="bb-board">
-              {board.map((p, i) => {
-                const dis = BB_DISRUPTIONS.find((d) => d.value === p.disruption) || BB_DISRUPTIONS[0];
-                return (
-                  <div key={i} className={"bb-piece " + dis.cls}
-                    onMouseEnter={(e) => p.card && setPreview({ card: p.card, rect: e.currentTarget.getBoundingClientRect() })}>
-                    <span className="bb-piece-name">{p.name}</span>
-                    <span className="bb-piece-tag">{dis.label}</span>
-                  </div>
-                );
-              })}
-            </div>
+            <>
+              <EndBoardView cards={boardNames} onHover={(card, rect) => card && setPreview({ card, rect })} />
+              <div className="bb-disruptions">
+                {board.filter((p) => p.disruption !== "body").map((p, i) => {
+                  const dis = BB_DISRUPTIONS.find((d) => d.value === p.disruption) || BB_DISRUPTIONS[0];
+                  return (
+                    <span key={i} className={"bb-dis-chip " + dis.cls}
+                      onMouseEnter={(e) => p.card && setPreview({ card: p.card, rect: e.currentTarget.getBoundingClientRect() })}>
+                      <span className="bb-dis-name">{p.name}</span>
+                      <span className="bb-dis-tag">{dis.label}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </>
           )}
         </section>
 
