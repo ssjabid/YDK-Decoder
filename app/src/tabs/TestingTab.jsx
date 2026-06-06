@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadDecks, loadFormats, getActiveDeckId, getActiveFormatId } from "../lib/storage.js";
+import { loadDecks, loadFormats, getActiveDeckId, setActiveDeckId, getActiveFormatId } from "../lib/storage.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { getDeckPrimaryDecklist } from "../lib/deckModel.js";
 import { classify, ROLE_COLORS, pickPrimaryRole } from "../lib/classify.js";
@@ -23,12 +23,15 @@ import Icon from "../components/Icon.jsx";
 // ════════════════════════════════════════════════════════════════════
 export default function TestingTab({ dataVersion = 0 }) {
   const [mode, setMode] = useState("first");
+  const decks = useMemo(() => loadDecks(), [dataVersion]);
+  const [deckId, setDeckId] = useState(() => getActiveDeckId() || (decks.find((d) => (d.role || "primary") !== "matchup") || decks[0] || {}).deckId || null);
+  useEffect(() => { if (deckId && !decks.find((d) => d.deckId === deckId)) setDeckId((decks[0] || {}).deckId || null); }, [decks]); // eslint-disable-line react-hooks/exhaustive-deps
+  const myDeck = decks.find((d) => d.deckId === deckId) || null;
+  const pickDeck = (id) => { setDeckId(id); setActiveDeckId(id); }; // persists as the default
 
-  const myDeck = useMemo(() => {
-    const id = getActiveDeckId();
-    const decks = loadDecks();
-    return (id && decks.find((d) => d.deckId === id)) || decks.find((d) => d.role !== "matchup") || null;
-  }, [dataVersion]);
+  const deckOpts = [...decks]
+    .sort((a, b) => (((a.role || "primary") === "matchup") - ((b.role || "primary") === "matchup")) || (a.name || "").localeCompare(b.name || ""))
+    .map((d) => [d.deckId, d.name + (d.role === "matchup" ? "  · matchup" : "")]);
 
   return (
     <div className="testing-tab">
@@ -39,12 +42,17 @@ export default function TestingTab({ dataVersion = 0 }) {
         <button type="button" className={"testing-mode-btn" + (mode === "second" ? " active" : "")} onClick={() => setMode("second")}>
           <Icon name="swords" size={15} /> Going second — break boards
         </button>
+        <label className="testing-deck-field">
+          <span className="testing-deck-label">Test with</span>
+          <Dropdown className="testing-deck-dd" value={deckId || ""} placeholder="— pick a deck —" align="right"
+            options={deckOpts} onChange={pickDeck} />
+        </label>
       </div>
 
       {!myDeck ? (
         <div className="placeholder">
-          <strong>Pick your deck first.</strong> Go to the <strong>Decks</strong> tab and
-          select your deck (or import one), then come back to practise.
+          <strong>No deck to test.</strong> Go to the <strong>Decks</strong> tab and
+          import a deck, then pick it in <strong>Test with</strong> above.
         </div>
       ) : mode === "first" ? (
         <Goldfish deck={myDeck} />

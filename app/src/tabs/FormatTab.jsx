@@ -262,6 +262,25 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
   );
 }
 
+// Visual siding summary row — small card thumbs of what goes OUT / comes IN.
+function SbpSumRow({ dir, arr }) {
+  return (
+    <div className={"sbp-sum-row is-" + dir}>
+      <span className={"sbp-sum-label is-" + dir}>{dir === "out" ? "− Take out" : "+ Bring in"}</span>
+      {arr.length ? arr.map((x, i) => {
+        const c = lookupCardByName(x.name);
+        const urls = c?.id ? getImageUrls(c.id) : [];
+        return (
+          <span key={i} className="sbp-sum-chip" title={`${x.count}× ${x.name}`}>
+            {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : null}
+            <span className="sbp-sum-n">{x.count}×</span><span className="sbp-sum-name">{x.name}</span>
+          </span>
+        );
+      }) : <span className="sbp-sum-empty">nothing yet</span>}
+    </div>
+  );
+}
+
 // ── Side-deck planner — auto-pulls your side deck (→ bring IN) + main deck
 //    (→ take OUT). Going first / second is a toggle (one leg at a time), and
 //    each pool is a clean uniform list. Memoised + stable fetch deps for speed. ──
@@ -362,8 +381,8 @@ function SideboardPlanner({ sb, primaryDeck, onChange, goodCards }) {
       </div>
 
       <div className="sbp-summary">
-        <div><span className="sbp-sum-label is-out">− Out</span> {summarize(l.out)}</div>
-        <div><span className="sbp-sum-label is-in">+ In</span> {summarize(l.in)}</div>
+        <SbpSumRow dir="out" arr={l.out} />
+        <SbpSumRow dir="in" arr={l.in} />
       </div>
 
       <div className="sbp-cols">
@@ -379,18 +398,20 @@ function TournamentJournal({ format, deckNames, primaryDecks, update }) {
   const tournaments = format.tournaments || [];
   const [openT, setOpenT] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [evName, setEvName] = useState("");
   const [type, setType] = useState("Locals");
   const [date, setDate] = useState(todayStr());
   const [deckId, setDeckId] = useState(format.primaryDeckId || (primaryDecks[0] && primaryDecks[0].deckId) || "");
 
   const create = () => {
-    const name = `${type} · ${date || todayStr()}`;
+    const d = date || todayStr();
+    const nm = evName.trim();
+    const name = [nm, type, d].filter(Boolean).join(" · ");
     update((f) => {
       f.tournaments = f.tournaments || [];
-      const t = { tournamentId: "t_" + rid(), name, type, date: date || todayStr(), deckId, rounds: [] };
-      f.tournaments.push(t);
+      f.tournaments.push({ tournamentId: "t_" + rid(), name, title: nm, type, date: d, deckId, rounds: [] });
     });
-    setCreating(false); setType("Locals"); setDate(todayStr());
+    setCreating(false); setEvName(""); setType("Locals"); setDate(todayStr());
   };
 
   // Win/loss/draw record per opponent across every event (only scored rounds).
@@ -409,6 +430,11 @@ function TournamentJournal({ format, deckNames, primaryDecks, update }) {
       ) : (
         <div className="journal-newform">
           <div className="jnf-head">Log a new event</div>
+          <label className="jnf-field jnf-grow">
+            <span className="jnf-label">Event name <span className="jnf-opt">(e.g. Europa Locals)</span></span>
+            <input className="jnf-name" autoFocus value={evName} placeholder="Name this event…"
+              onKeyDown={(e) => e.stopPropagation()} onChange={(e) => setEvName(e.target.value)} />
+          </label>
           <div className="jnf-field">
             <span className="jnf-label">Type of event</span>
             <div className="jnf-types">
@@ -458,7 +484,8 @@ function TournamentJournal({ format, deckNames, primaryDecks, update }) {
           <div key={t.tournamentId} className="journal-event">
             <button type="button" className="journal-event-head" onClick={() => setOpenT(open ? null : t.tournamentId)}>
               {t.type && <span className="journal-type-badge">{t.type}</span>}
-              <span className="journal-event-name">{t.date || t.name}</span>
+              <span className="journal-event-name">{t.title || t.name}</span>
+              <span className="journal-event-date">{t.date}</span>
               {t.deckId && deckNames[t.deckId] && <span className="journal-event-deck">{deckNames[t.deckId]}</span>}
               <span className="journal-event-rec">{w}-{l}{d ? "-" + d : ""}</span>
               <span className="matchup-chevron">{open ? "▾" : "▸"}</span>
