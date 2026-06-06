@@ -148,6 +148,27 @@ export function importCombosJson(text) {
   return { added, skipped };
 }
 
+// Create a combo by hand (no replay) — opener + end board you specify.
+const rid = () => Math.random().toString(36).slice(2, 8);
+export function addManualCombo({ title, deckId, openerSize, opener, endboard, notes }) {
+  const t = (title || "").trim();
+  const combo = {
+    replayId: "manual_" + rid(),
+    comboName: t || "New combo",
+    userTitle: t,
+    deckId: deckId || "",
+    userOpenerSize: (openerSize != null && openerSize !== "") ? Number(openerSize) : (opener || []).length,
+    openingHand: (opener || []).filter(Boolean),
+    endboard: (endboard || []).filter(Boolean),
+    steps: [],
+    userNotes: notes || "",
+    manual: true,
+    extractedAt: null,
+  };
+  withCombos((all) => all.push(combo));
+  return comboKey(combo, 0);
+}
+
 // Pull a base64 ?combo= payload (the decoder's URL hand-off) into storage.
 // Returns the number added; clears the param afterwards.
 export function ingestComboFromUrl() {

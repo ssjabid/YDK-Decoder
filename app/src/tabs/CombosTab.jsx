@@ -3,7 +3,7 @@ import { loadDecks } from "../lib/storage.js";
 import {
   loadSavedCombos, VIEW_MODES, comboKey, comboTitle, comboOpeningHand, comboOpenerSize,
   comboEndboard, comboAllCards, isCoreStep, stepCards, groupCombos, comboSearchHaystack,
-  renameCombo, setComboDeck, setComboNotes, setComboOpenerSize, deleteCombo, importCombosJson,
+  renameCombo, setComboDeck, setComboNotes, setComboOpenerSize, deleteCombo, importCombosJson, addManualCombo,
 } from "../lib/combos.js";
 import { simulateCombo, describeStep, fieldToBoard } from "../lib/comboSim.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
@@ -12,6 +12,7 @@ import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
 import CardPreview from "../components/CardPreview.jsx";
 import EndBoardView from "../components/EndBoardView.jsx";
 import Dropdown from "../components/Dropdown.jsx";
+import CardPicker from "../components/CardPicker.jsx";
 import RichNotes from "../components/RichNotes.jsx";
 import Icon from "../components/Icon.jsx";
 
@@ -30,6 +31,8 @@ export default function CombosTab({ dataVersion = 0, reload }) {
   const [selKey, setSelKey] = useState(null);
   const [search, setSearch] = useState("");
   const [deckFilter, setDeckFilter] = useState("all");
+  const [galleryView, setGalleryView] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef(null);
 
@@ -91,16 +94,31 @@ export default function CombosTab({ dataVersion = 0, reload }) {
           <input className="combo-search-input" placeholder="Search combos + cards…" value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
           {search && <button type="button" className="combo-search-clear" onClick={() => setSearch("")}>×</button>}
         </div>
+        <span className="combo-viewtoggle">
+          <button type="button" className={"combo-viewtoggle-btn" + (!galleryView ? " active" : "")} onClick={() => setGalleryView(false)} title="List view">List</button>
+          <button type="button" className={"combo-viewtoggle-btn" + (galleryView ? " active" : "")} onClick={() => setGalleryView(true)} title="Gallery view">Gallery</button>
+        </span>
         <span className="combos-toolbar-spacer" />
+        <button type="button" className="btn-primary" onClick={() => { setCreating(true); setSelKey(null); }}>+ New combo</button>
         <button type="button" className="btn-secondary" onClick={onPasteImport}>Paste JSON</button>
         <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}><Icon name="summon" size={15} /> Import .json</button>
       </div>
 
-      {!combos.length ? (
+      {creating ? (
+        <ComboBuilder decks={decks} onCancel={() => setCreating(false)}
+          onCreate={(form) => { const key = addManualCombo(form); setCreating(false); setGalleryView(false); setSelKey(key); refresh(); }}
+          onHover={onHover} onPick={onPick} />
+      ) : !combos.length ? (
         <div className="placeholder">
-          No combos yet. Extract one with the <strong>Chrome extension</strong> on a DuelingBook replay
-          (it writes straight into here), or <button type="button" className="link-btn" onClick={onPasteImport}>paste combo JSON</button>.
+          No combos yet. <button type="button" className="link-btn" onClick={() => setCreating(true)}>Build one by hand</button>,
+          extract one with the <strong>Chrome extension</strong> on a DuelingBook replay,
+          or <button type="button" className="link-btn" onClick={onPasteImport}>paste combo JSON</button>.
         </div>
+      ) : galleryView ? (
+        !allVisible.length
+          ? <div className="decks-list-empty">No combos match{q ? ` "${search}"` : ""}{deckFilter !== "all" ? " for this deck" : ""}.</div>
+          : <ComboGallery groups={groups} deckNames={deckNames} onHover={onHover} onPick={onPick}
+              onOpen={(key) => { setGalleryView(false); setSelKey(key); }} />
       ) : (
         <div className="combos-layout">
           <aside className="combos-sidebar">
@@ -367,5 +385,120 @@ function DrillView({ combo, onHover, onPick }) {
         )}
       </div>
     </section>
+  );
+}
+
+// ── Removable card-chip row with a live picker (builder) ─────────────
+function ChipRow({ items, onChange, onHover, onPick, placeholder }) {
+  return (
+    <div className="fmt-chip-row">
+      {items.map((n, i) => {
+        const c = lookupCardByName(n);
+        const urls = c?.id ? getImageUrls(c.id) : [];
+        return (
+          <span key={i} className="fmt-chip"
+            onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
+            onMouseLeave={() => onHover && onHover(null)}
+            onClick={(e) => onPick && onPick(c, e.currentTarget.getBoundingClientRect())}>
+            {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : null}
+            <span className="fmt-chip-name">{n}</span>
+            <button type="button" className="fmt-chip-x" onClick={(e) => { e.stopPropagation(); onChange(items.filter((_, j) => j !== i)); }}>×</button>
+          </span>
+        );
+      })}
+      <CardPicker placeholder={placeholder} onAdd={(name) => onChange([...items, name])} />
+    </div>
+  );
+}
+
+// ── Build a combo by hand (opener + end board you specify) ──────────
+function ComboBuilder({ decks, onCancel, onCreate, onHover, onPick }) {
+  const [title, setTitle] = useState("");
+  const [deckId, setDeckId] = useState("");
+  const [openerSize, setOpenerSize] = useState("");
+  const [opener, setOpener] = useState([]);
+  const [endboard, setEndboard] = useState([]);
+  const [notes, setNotes] = useState("");
+  const deckOpts = [["", "— not linked —"], ...decks.filter((d) => (d.role || "primary") !== "matchup").map((d) => [d.deckId, d.name])];
+  const canSave = opener.length || endboard.length || title.trim();
+  return (
+    <div className="combo-detail combo-builder">
+      <div className="combo-detail-bar">
+        <h2 className="combo-detail-title">New combo</h2>
+        <button type="button" className="btn-primary" disabled={!canSave}
+          onClick={() => onCreate({ title, deckId, openerSize, opener, endboard, notes })}>Create combo</button>
+        <button type="button" className="back-btn" onClick={onCancel}>Cancel</button>
+      </div>
+      <div className="combo-meta-row">
+        <label className="combo-meta-field">
+          <span>Name</span>
+          <input className="jnf-name" value={title} placeholder="e.g. 1-card Elara" onKeyDown={(e) => e.stopPropagation()} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <label className="combo-meta-field">
+          <span>Deck</span>
+          <Dropdown className="combo-deck-dd" value={deckId} options={deckOpts} placeholder="— not linked —" onChange={setDeckId} />
+        </label>
+        <label className="combo-meta-field">
+          <span>Opener size</span>
+          <Dropdown className="combo-opener-dd" value={openerSize} options={OPENER_OPTS} onChange={setOpenerSize} />
+        </label>
+      </div>
+      <section className="combo-block">
+        <div className="combo-block-label">Opening hand <span className="combo-block-hint">the cards you start with</span></div>
+        <ChipRow items={opener} onChange={setOpener} onHover={onHover} onPick={onPick} placeholder="Search an opener card…" />
+      </section>
+      <section className="combo-block">
+        <div className="combo-block-label">End board <span className="combo-block-hint">what you end on</span></div>
+        <ChipRow items={endboard} onChange={setEndboard} onHover={onHover} onPick={onPick} placeholder="Search a board piece…" />
+        {!!endboard.length && <EndBoardView cards={endboard} onHover={onHover} onPick={onPick} />}
+      </section>
+      <section className="combo-block">
+        <div className="combo-block-label">Notes</div>
+        <RichNotes value={notes} onSave={setNotes} minHeight={70} placeholder="How the line goes, what to watch for. Type @ to mention a card." />
+      </section>
+    </div>
+  );
+}
+
+// ── Gallery view — image-first cards: starting hand → end board ─────
+function ComboGallery({ groups, deckNames, onHover, onPick, onOpen }) {
+  return (
+    <div className="combo-gallery">
+      {groups.map((g) => (
+        <div key={g.bucket} className="combo-gallery-group">
+          <div className="combo-picker-group-header">{g.bucket} <span className="count">{g.items.length}</span></div>
+          <div className="combo-gallery-grid">
+            {g.items.map(({ c, i }) => (
+              <ComboGalleryCard key={comboKey(c, i)} c={c} deckName={deckNames[c.deckId]} onHover={onHover} onPick={onPick} onOpen={() => onOpen(comboKey(c, i))} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ComboGalleryCard({ c, deckName, onHover, onPick, onOpen }) {
+  const hand = comboOpeningHand(c);
+  const board = comboEndboard(c).map((x) => x.name);
+  return (
+    <div className="combo-gcard">
+      <div className="combo-gcard-head">
+        <span className="combo-gcard-name">{comboTitle(c)}</span>
+        <button type="button" className="combo-gcard-open" onClick={onOpen}>Open →</button>
+      </div>
+      <div className="combo-gcard-cols">
+        <div className="combo-gcol">
+          <div className="combo-gcol-label">Starting hand</div>
+          <div className="combo-gcol-cards">{hand.length ? hand.map((n, i) => <Thumb key={i} name={n} onHover={onHover} onPick={onPick} />) : <span className="muted">—</span>}</div>
+        </div>
+        <div className="combo-gcard-arrow">→</div>
+        <div className="combo-gcol">
+          <div className="combo-gcol-label">End board</div>
+          <div className="combo-gcol-cards">{board.length ? board.map((n, i) => <Thumb key={i} name={n} onHover={onHover} onPick={onPick} />) : <span className="muted">—</span>}</div>
+        </div>
+      </div>
+      {deckName && <div className="combo-gcard-deck">{deckName}</div>}
+    </div>
   );
 }
