@@ -20,7 +20,7 @@ const DEFAULT_DECK_NOTES =
   "Imported from a ygoprodeck tournament list (May 2026). Refine as the meta shifts.";
 
 // Fields on a matchup the USER authors — preserved across a refresh.
-const USER_FIELDS = ["freeformNotes", "sideboard", "priorityFirst", "prioritySecond", "relatedComboIds", "chokepointOurs", "tier", "targetEndboard", "counterCards"];
+const USER_FIELDS = ["freeformNotes", "sideboard", "sidePlans", "priorityFirst", "prioritySecond", "relatedComboIds", "chokepointOurs", "tier", "targetEndboard", "counterCards"];
 // Playbook fields now live on the OPPONENT DECK's methodology (single source
 // of truth, edited in the Decks tab). The pack doesn't author them, so they're
 // user/backfill-owned — preserve them whenever a deck is refreshed.

@@ -1483,3 +1483,22 @@
 .sbp-sum-empty { font-size: 11px; color: var(--text-faint); font-style: italic; }
 .sbp-sum-row.is-out .sbp-sum-chip { border-color: rgba(196,95,95,0.4); }
 .sbp-sum-row.is-in .sbp-sum-chip { border-color: rgba(95,196,154,0.4); }
+
+/* multi-pattern side planner (Format) */
+.sbp-planbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; align-items: stretch; }
+.sbp-plan-chip { display: inline-flex; flex-direction: column; gap: 1px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 5px 12px; cursor: pointer; font-family: inherit; text-align: left; }
+.sbp-plan-chip:hover { border-color: var(--accent); }
+.sbp-plan-chip.active { background: var(--accent-dim); border-color: var(--accent); }
+.sbp-plan-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.sbp-plan-meta { font-size: 9.5px; color: var(--text-faint); font-family: "SF Mono", Menlo, monospace; }
+.sbp-plan-add { background: none; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); color: var(--text-dim); font-family: inherit; font-size: 12px; padding: 0 14px; cursor: pointer; }
+.sbp-plan-add:hover { border-color: var(--accent); color: var(--accent); }
+.sbp-plan-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sbp-plan-rename { background: none; border: none; color: var(--text); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; }
+.sbp-plan-rename:hover { color: var(--accent); }
+.sbp-going-dd .dd-trigger { min-width: 132px; }
+.sbp-plan-head .sbp-balance { margin-left: auto; }
+
+/* Testing — side-plan picker + missing-card flag */
+.bb-side-dd .dd-trigger { min-width: 190px; }
+.bb-side-missing { color: var(--warning); font-size: 11px; }

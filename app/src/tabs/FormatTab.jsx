@@ -9,6 +9,7 @@ import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
 import Dropdown from "../components/Dropdown.jsx";
 import { getPlaybook, GamePlanView, EndBoardsView, GoodCardsView, ReadField } from "../components/Matchup.jsx";
+import { getSidePlans, newPlan, planTotals } from "../lib/sidePlans.js";
 import Icon from "../components/Icon.jsx";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
@@ -250,7 +251,7 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
         </PanelSection>
 
         <PanelSection title="Side-deck plan — auto-pulled from your deck" defaultOpen={true}>
-          <SideboardPlanner sb={m.sideboard} primaryDeck={primaryDeck} onChange={(sb) => upd((x) => { x.sideboard = sb; })}
+          <SideboardPlanner plans={getSidePlans(m)} primaryDeck={primaryDeck} onChange={(plans) => upd((x) => { x.sidePlans = plans; })}
             goodCards={pb.goodCards.map((c) => c.name)} />
         </PanelSection>
 
@@ -284,8 +285,8 @@ function SbpSumRow({ dir, arr }) {
 // ── Side-deck planner — auto-pulls your side deck (→ bring IN) + main deck
 //    (→ take OUT). Going first / second is a toggle (one leg at a time), and
 //    each pool is a clean uniform list. Memoised + stable fetch deps for speed. ──
-function SideboardPlanner({ sb, primaryDeck, onChange, goodCards }) {
-  const [leg, setLeg] = useState("goingFirst");
+function SideboardPlanner({ plans, primaryDeck, onChange, goodCards }) {
+  const [selId, setSelId] = useState(null);
   const [cardMap, setCardMap] = useState({});
   const dl = primaryDeck ? getDeckPrimaryDecklist(primaryDeck) : null;
   const sideIds = useMemo(() => (dl && dl.side) || [], [dl]);
@@ -320,27 +321,24 @@ function SideboardPlanner({ sb, primaryDeck, onChange, goodCards }) {
 
   if (!primaryDeck) return <div className="deck-empty-hint">Pick <strong>your deck</strong> at the top of the Format tab to auto-load your side + main deck here.</div>;
 
-  // Normalise to [{name, count}] (back-compat with old string arrays).
-  const norm = (arr) => (arr || []).map((x) => (typeof x === "string" ? { name: x, count: 1 } : { name: x.name, count: x.count || 1 }));
-  const plan = {
-    goingFirst: { in: norm(sb?.goingFirst?.in), out: norm(sb?.goingFirst?.out) },
-    goingSecond: { in: norm(sb?.goingSecond?.in), out: norm(sb?.goingSecond?.out) },
-  };
-  const l = plan[leg];
-  const countFor = (dir, name) => { const e = l[dir].find((x) => x.name === name); return e ? e.count : 0; };
-  const setCount = (dir, name, count, max) => {
-    const arr = l[dir].filter((x) => x.name !== name);
-    const c = Math.max(0, Math.min(count, max));
-    if (c > 0) arr.push({ name, count: c });
-    onChange({ ...plan, [leg]: { ...l, [dir]: arr } });
-  };
-  const totalIn = l.in.reduce((s, x) => s + x.count, 0);
-  const totalOut = l.out.reduce((s, x) => s + x.count, 0);
-  const summarize = (arr) => arr.length ? arr.map((x) => `${x.count}× ${x.name}`).join(", ") : "—";
-
+  const list = plans || [];
+  const sel = list.find((p) => p.id === selId) || list[0] || null;
   const good = new Set((goodCards || []).map((n) => String(n).toLowerCase()));
 
-  // Copy-count selector: one dot per copy you run; click a dot to set the count.
+  const writePlan = (patch) => { if (!sel) return; onChange(list.map((p) => (p.id === sel.id ? { ...p, ...patch } : p))); };
+  const addPlan = () => { const p = newPlan("second", list.length + 1); onChange([...list, p]); setSelId(p.id); };
+  const delPlan = async () => { if (!sel) return; if (await confirmModal({ title: `Delete "${sel.name}"?`, message: "This siding pattern will be removed.", confirmText: "Delete", danger: true })) { const next = list.filter((p) => p.id !== sel.id); onChange(next); setSelId(next[0] ? next[0].id : null); } };
+  const renamePlan = async () => { if (!sel) return; const v = await promptModal({ title: "Rename side plan", value: sel.name, confirmText: "Save" }); if (v == null) return; writePlan({ name: v.trim() || sel.name }); };
+
+  const countFor = (dir, name) => { const e = sel ? (sel[dir] || []).find((x) => x.name === name) : null; return e ? e.count : 0; };
+  const setCount = (dir, name, count, max) => {
+    if (!sel) return;
+    const arr = (sel[dir] || []).filter((x) => x.name !== name);
+    const c = Math.max(0, Math.min(count, max));
+    if (c > 0) arr.push({ name, count: c });
+    writePlan({ [dir]: arr });
+  };
+
   const Dots = ({ dir, name, max, n }) => (
     <span className="sbp-dots" onClick={(e) => e.stopPropagation()}>
       {Array.from({ length: max }).map((_, i) => (
@@ -370,25 +368,45 @@ function SideboardPlanner({ sb, primaryDeck, onChange, goodCards }) {
     </div>
   );
 
+  const t = sel ? planTotals(sel) : null;
+
   return (
     <div className="sbp">
-      <div className="sbp-tabs">
-        <button type="button" className={"sbp-tab" + (leg === "goingFirst" ? " active" : "")} onClick={() => setLeg("goingFirst")}>Going first</button>
-        <button type="button" className={"sbp-tab" + (leg === "goingSecond" ? " active" : "")} onClick={() => setLeg("goingSecond")}>Going second</button>
-        <span className={"sbp-balance" + (totalIn === totalOut && totalIn > 0 ? " ok" : totalIn !== totalOut ? " warn" : "")}>
-          {totalIn} in / {totalOut} out {totalIn === totalOut ? (totalIn ? "✓ balanced" : "") : "⚠ unbalanced"}
-        </span>
+      <div className="sbp-planbar">
+        {list.map((p) => {
+          const pt = planTotals(p);
+          return (
+            <button key={p.id} type="button" className={"sbp-plan-chip" + (sel && p.id === sel.id ? " active" : "")} onClick={() => setSelId(p.id)}>
+              <span className="sbp-plan-name">{p.name}</span>
+              <span className="sbp-plan-meta">{p.going === "first" ? "1st" : "2nd"} · {pt.in}/{pt.out}</span>
+            </button>
+          );
+        })}
+        <button type="button" className="sbp-plan-add" onClick={addPlan}>+ New plan</button>
       </div>
 
-      <div className="sbp-summary">
-        <SbpSumRow dir="out" arr={l.out} />
-        <SbpSumRow dir="in" arr={l.in} />
-      </div>
+      {!sel ? (
+        <div className="deck-empty-hint">No siding patterns yet. Click <strong>+ New plan</strong> to build one — patterns save to this matchup and you can apply them in <strong>Testing</strong>.</div>
+      ) : (
+        <>
+          <div className="sbp-plan-head">
+            <button type="button" className="sbp-plan-rename" onClick={renamePlan} title="Rename">{sel.name} ✎</button>
+            <Dropdown className="sbp-going-dd" value={sel.going || "second"} options={[["first", "Going first"], ["second", "Going second"]]} onChange={(v) => writePlan({ going: v })} />
+            <span className={"sbp-balance" + (t.balanced ? " ok" : (t.in !== t.out ? " warn" : ""))}>{t.in} in / {t.out} out {t.balanced ? "✓" : (t.in !== t.out ? "⚠" : "")}</span>
+            <button type="button" className="fmt-chip-x" title="Delete plan" onClick={delPlan}>×</button>
+          </div>
 
-      <div className="sbp-cols">
-        <div className="sbp-col"><div className="sbp-col-title is-out">Take OUT — your main deck</div>{rows("out", pools.main)}</div>
-        <div className="sbp-col"><div className="sbp-col-title is-in">Bring IN — your side deck <span className="sbp-hint">★ = good here</span></div>{rows("in", pools.side)}</div>
-      </div>
+          <div className="sbp-summary">
+            <SbpSumRow dir="out" arr={sel.out || []} />
+            <SbpSumRow dir="in" arr={sel.in || []} />
+          </div>
+
+          <div className="sbp-cols">
+            <div className="sbp-col"><div className="sbp-col-title is-out">Take OUT — your main deck</div>{rows("out", pools.main)}</div>
+            <div className="sbp-col"><div className="sbp-col-title is-in">Bring IN — your side deck <span className="sbp-hint">★ = good here</span></div>{rows("in", pools.side)}</div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { simulateCombo, describeStep } from "../lib/comboSim.js";
 import { isCoreStep } from "../lib/combos.js";
 import { getPlaybook } from "../components/Matchup.jsx";
+import { getSidePlans, applyPlan, planMissing } from "../lib/sidePlans.js";
 import CardPreview from "../components/CardPreview.jsx";
 import EndBoardView from "../components/EndBoardView.jsx";
 import Dropdown from "../components/Dropdown.jsx";
@@ -273,7 +274,7 @@ function BoardBreaker({ myDeck, dataVersion }) {
   const boards = pb.endboards || [];
 
   const [boardIdx, setBoardIdx] = useState(0);
-  const [leg, setLeg] = useState("g1"); // g1 = main, g2 = sided
+  const [sidePlanId, setSidePlanId] = useState(null); // null = Game 1 (no siding)
   const [myCardMap, setMyCardMap] = useState({});
   const [oppCardMap, setOppCardMap] = useState({});
   const [hand, setHand] = useState(null);
@@ -290,7 +291,7 @@ function BoardBreaker({ myDeck, dataVersion }) {
 
   useEffect(() => {
     let alive = true;
-    setHand(null); setBoardIdx(0);
+    setHand(null); setBoardIdx(0); setSidePlanId(null);
     setTally(loadBbStreaks()[tallyKey] || null);
     if (!opp) { setOppCardMap({}); return; }
     fetchCards([...(opp.main || []), ...(opp.extra || []), ...(opp.side || [])]).then(({ map }) => {
@@ -309,21 +310,16 @@ function BoardBreaker({ myDeck, dataVersion }) {
     return m;
   }, [mySide, myCardMap]);
 
-  const sidePlan = (matchup && matchup.sideboard && matchup.sideboard.goingSecond) || { in: [], out: [] };
-  const normSide = (arr) => (arr || []).map((x) => (typeof x === "string" ? { name: x, count: 1 } : { name: x.name, count: x.count || 1 }));
-  const planOut = normSide(sidePlan.out), planIn = normSide(sidePlan.in);
-  const hasSidePlan = planOut.length || planIn.length;
-  const fmtSide = (arr) => (arr.length ? arr.map((x) => `${x.count}× ${x.name}`).join(", ") : "—");
-
-  // Build the sided (Game-2) deck: main − OUT + IN, by copy count.
-  const sidedDeck = useMemo(() => {
-    let ids = myMain.slice();
-    for (const o of planOut) { let n = o.count; for (let i = ids.length - 1; i >= 0 && n > 0; i--) { if (nameOf(ids[i]) === o.name) { ids.splice(i, 1); n--; } } }
-    for (const inn of planIn) { const id = sideIdByName[inn.name.toLowerCase()]; if (id) for (let k = 0; k < inn.count; k++) ids.push(id); }
-    return ids;
-  }, [myMain, sidePlan, sideIdByName]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const drawPool = leg === "g2" && hasSidePlan ? sidedDeck : myMain;
+  // Side plans live on the matchup (built in Format); pick one to draw a sided
+  // hand. Missing-card flagging if your decklist no longer has a plan's cards.
+  const plans = getSidePlans(matchup);
+  const activePlan = plans.find((p) => p.id === sidePlanId) || null;
+  const mainNames = useMemo(() => myMain.map(nameOf), [myMain, myCardMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sideNames = useMemo(() => mySide.map(nameOf), [mySide, myCardMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sidedDeck = useMemo(() => applyPlan(myMain, activePlan, nameOf, sideIdByName), [myMain, activePlan, sideIdByName, myCardMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  const missing = activePlan ? planMissing(activePlan, mainNames, sideNames) : { out: [], in: [] };
+  const fmtSide = (arr) => (arr || []).map((x) => `${x.count}× ${x.name}`).join(", ");
+  const drawPool = sidedDeck;
 
   const board = (boards[boardIdx] ? (boards[boardIdx].cards || []) : []).map((x) => (typeof x === "string" ? x : x.name)).filter(Boolean).map((name) => {
     const card = oppCardMap[String(name).toLowerCase()] || null;
@@ -363,29 +359,29 @@ function BoardBreaker({ myDeck, dataVersion }) {
               options={boards.map((b, i) => [String(i), b.name || `Board ${i + 1}`])} onChange={(v) => setBoardIdx(Number(v))} />
           </label>
         )}
-        <div className="bb-field">
-          <span className="bb-field-label">Your hand</span>
-          <div className="bb-leg-switch">
-            <button type="button" className={"bb-leg-btn" + (leg === "g1" ? " active" : "")} onClick={() => { setLeg("g1"); setHand(null); }}>Game 1</button>
-            <button type="button" className={"bb-leg-btn" + (leg === "g2" ? " active" : "")} disabled={!hasSidePlan}
-              title={hasSidePlan ? "Draw from your sided deck" : "No going-2nd side plan set for this matchup"}
-              onClick={() => { setLeg("g2"); setHand(null); }}>Game 2 (sided)</button>
-          </div>
-        </div>
+        <label className="bb-field">
+          <span className="bb-field-label">Side plan</span>
+          <Dropdown className="bb-side-dd" value={sidePlanId || ""} ariaLabel="Side plan"
+            options={[["", "Game 1 — no siding"], ...plans.map((p) => [p.id, `${p.name} · ${p.going === "first" ? "1st" : "2nd"}`])]}
+            onChange={(v) => { setSidePlanId(v || null); setHand(null); }} />
+        </label>
         <button type="button" className="btn-primary bb-shuffle" onClick={shuffle} disabled={!drawPool.length}>
           <Icon name="die" size={16} /> Shuffle 6
         </button>
       </div>
 
-      {leg === "g2" && hasSidePlan ? (
+      {activePlan ? (
         <div className="bb-sideplan">
-          <span className="bb-sideplan-label">Sided for game 2:</span>
-          {planIn.length ? <span className="bb-in">+ {fmtSide(planIn)}</span> : null}
-          {planOut.length ? <span className="bb-out">− {fmtSide(planOut)}</span> : null}
+          <span className="bb-sideplan-label">{activePlan.name}:</span>
+          {(activePlan.in || []).length ? <span className="bb-in">+ {fmtSide(activePlan.in)}</span> : null}
+          {(activePlan.out || []).length ? <span className="bb-out">− {fmtSide(activePlan.out)}</span> : null}
+          {(missing.out.length || missing.in.length) ? <span className="bb-side-missing" title="These plan cards aren't in your current decklist">⚠ not in deck: {[...missing.out, ...missing.in].join(", ")}</span> : null}
         </div>
-      ) : hasSidePlan ? (
-        <div className="bb-sideplan is-hint"><span className="bb-sideplan-label">Tip:</span> switch to <strong>Game 2 (sided)</strong> to draw from your post-side deck.</div>
-      ) : null}
+      ) : plans.length ? (
+        <div className="bb-sideplan is-hint"><span className="bb-sideplan-label">Tip:</span> pick a <strong>Side plan</strong> above to draw your post-side hand.</div>
+      ) : (
+        <div className="bb-sideplan is-hint"><span className="bb-sideplan-label">Tip:</span> build side plans in <strong>Format → {opp ? opp.name : "this matchup"} → Side-deck plan</strong>, then apply them here.</div>
+      )}
 
       <div className="bb-puzzle">
         <section className="bb-col">
@@ -418,7 +414,7 @@ function BoardBreaker({ myDeck, dataVersion }) {
         </section>
 
         <section className="bb-col">
-          <div className="bb-col-title">Your hand — {leg === "g2" && hasSidePlan ? "game 2 (sided)" : "game 1"}</div>
+          <div className="bb-col-title">Your hand — {activePlan ? activePlan.name : "game 1 (no side)"}</div>
           {!hand ? (
             <div className="practice-empty">Shuffle a going-second hand to start the puzzle.</div>
           ) : (
