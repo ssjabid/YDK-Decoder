@@ -1505,6 +1505,11 @@
 .combo-gcard .combo-thumb { max-width: 158px; }
 @media (max-width: 600px) { .combo-gallery-grid { grid-template-columns: 1fr; } .combo-gcard-cols { grid-template-columns: 1fr; } .combo-gcard-arrow { transform: rotate(90deg); } }
 
+/* Format — add-from-library picker */
+.format-lib-dd .dd-trigger { min-width: 180px; }
+.format-lib-dd { margin-left: auto; }
+.format-listhead .format-addbtn { margin-left: 0; }
+
 /* multi-pattern side planner (Format) */
 .sbp-planbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; align-items: stretch; }
 .sbp-plan-chip { display: inline-flex; flex-direction: column; gap: 1px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 5px 12px; cursor: pointer; font-family: inherit; text-align: left; }

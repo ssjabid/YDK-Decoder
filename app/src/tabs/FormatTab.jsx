@@ -5,6 +5,7 @@ import { persistDeck, getDeckPrimaryDecklist, classifyCardBroadType } from "../l
 import { lookupCardByName } from "../lib/cardSearch.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
+import { downloadFormat, importFormat } from "../lib/formatIO.js";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
 import Dropdown from "../components/Dropdown.jsx";
@@ -30,6 +31,7 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
   const [selectedMatchupId, setSelectedMatchupId] = useState(null);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef(null);
+  const fmtFileRef = useRef(null);
 
   const { formats, format, decks, deckNames, primaryDecks } = useMemo(() => {
     const fmts = loadFormats();
@@ -85,6 +87,26 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
     finally { if (fileRef.current) fileRef.current.value = ""; }
   };
 
+  // Add an existing library deck as a matchup (reuse decks across formats).
+  const addFromLibrary = (deckId) => {
+    if (!deckId) return;
+    const d = loadDecks().find((x) => x.deckId === deckId);
+    if (d && d.role !== "matchup") { d.role = "matchup"; persistDeck(d); }
+    update((f) => { f.matchups = f.matchups || []; if (!f.matchups.some((m) => m.opponentDeckId === deckId)) f.matchups.push(emptyMatchup(deckId)); });
+  };
+  const exportFmt = () => { const r = downloadFormat(format.formatId); if (r) alertModal({ title: "Format exported", message: `"${r.name}" — ${r.matchups} matchups + ${r.decks} decks saved to a .json file.` }); };
+  const onImportFmtFile = async (e) => {
+    const file = (e.target.files || [])[0];
+    if (!file) return;
+    try {
+      const json = JSON.parse(await file.text());
+      const r = importFormat(json);
+      setActiveFormatId(r.formatId); setSelectedMatchupId(null); bump();
+      alertModal({ title: "Format imported", message: `Added "${r.name}"${r.addedDecks ? ` + ${r.addedDecks} new decks` : ""}.` });
+    } catch (err) { alertModal({ title: "Couldn't import format", message: err.message }); }
+    finally { if (fmtFileRef.current) fmtFileRef.current.value = ""; }
+  };
+
   if (!formats.length || !format) {
     return (
       <div className="placeholder">
@@ -104,6 +126,7 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
   return (
     <div className="format-tab" onMouseLeave={clearHover}>
       <input ref={fileRef} type="file" accept=".ydk" hidden onChange={onAddMatchupFile} />
+      <input ref={fmtFileRef} type="file" accept=".json,application/json" hidden onChange={onImportFmtFile} />
 
       {/* ── Format header: pick/manage format + your deck ── */}
       <div className="format-bar">
@@ -114,6 +137,8 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
           <button type="button" className="format-act" title="New format" onClick={() => newFormat(false)}>+ New</button>
           {format.matchups?.length ? <button type="button" className="format-act" title="New format cloning these matchups" onClick={() => newFormat(true)}>Clone</button> : null}
           <button type="button" className="format-act" title="Rename" onClick={renameFormat}>✎</button>
+          <button type="button" className="format-act" title="Export this format to a file" onClick={exportFmt}>⤓</button>
+          <button type="button" className="format-act" title="Import a format from a file" onClick={() => fmtFileRef.current?.click()}>⤒</button>
           {formats.length > 1 && <button type="button" className="format-act is-danger" title="Delete format" onClick={deleteFormat}>×</button>}
         </div>
         <label className="format-primary">
@@ -139,6 +164,12 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
           <div className="format-listhead">
             <h2 className="format-title">{format.name}</h2>
             <span className="format-sub">{matchups.length} matchup decks{primaryDeck ? ` · testing ${primaryDeck.name}` : " · pick your deck above"}</span>
+            {(() => {
+              const existing = new Set((format.matchups || []).map((mm) => mm.opponentDeckId));
+              const lib = decks.filter((d) => !existing.has(d.deckId) && d.deckId !== format.primaryDeckId)
+                .sort((a, b) => (a.name || "").localeCompare(b.name || "")).map((d) => [d.deckId, d.name + (d.role === "matchup" ? "" : "  · my deck")]);
+              return lib.length ? <Dropdown className="format-lib-dd" value="" placeholder="+ Add from library" options={lib} onChange={addFromLibrary} /> : null;
+            })()}
             <button type="button" className="btn-secondary format-addbtn" onClick={() => fileRef.current?.click()}><Icon name="swords" size={15} /> Add matchup (.ydk)</button>
           </div>
 
