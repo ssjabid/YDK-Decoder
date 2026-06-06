@@ -29,6 +29,13 @@ const PLAY_ACTIONS = new Set([
 export const comboKey = (c, i) => c.replayId || c.replayUrl || c.comboName || ("combo_" + i);
 export const comboTitle = (c) => (c.userTitle && c.userTitle.trim()) || c.comboName || "Untitled combo";
 
+// Decks a combo is linked to. Supports multi-link (deckIds[]) while staying
+// backward-compatible with the legacy single deckId the extension writes.
+export function comboDeckIds(c) {
+  if (Array.isArray(c.deckIds)) return c.deckIds.filter(Boolean);
+  return c.deckId ? [c.deckId] : [];
+}
+
 // Card names a step touches — from cards[] or parsed out of the detail text.
 export function stepCards(step) {
   if (Array.isArray(step.cards) && step.cards.length) return step.cards.filter(Boolean);
@@ -120,6 +127,16 @@ export function renameCombo(idx, title) {
 export function setComboDeck(idx, deckId) {
   withCombos((all) => { if (all[idx]) all[idx].deckId = deckId || ""; });
 }
+// Link a combo to any number of decks (e.g. two DoomZ variants share a line).
+// Keeps the legacy deckId pointing at the first link for back-compat.
+export function setComboDecks(idx, deckIds) {
+  withCombos((all) => {
+    if (!all[idx]) return;
+    const ids = [...new Set((deckIds || []).filter(Boolean))];
+    all[idx].deckIds = ids;
+    all[idx].deckId = ids[0] || "";
+  });
+}
 export function setComboNotes(idx, html) {
   withCombos((all) => { if (all[idx]) all[idx].userNotes = html; });
 }
@@ -128,6 +145,42 @@ export function setComboOpenerSize(idx, size) {
 }
 export function deleteCombo(idx) {
   withCombos((all) => { all.splice(idx, 1); });
+}
+
+// Apply an edit form to a combo in one write — name, deck links, opener size,
+// opening hand, steps, end board, and notes. Only patches the keys present.
+// Steps drive Simulate + Drill, so editing them re-flows both immediately.
+export function updateCombo(idx, patch) {
+  withCombos((all) => {
+    const c = all[idx];
+    if (!c) return;
+    if ("title" in patch) c.userTitle = (patch.title || "").trim();
+    if ("deckIds" in patch) {
+      const ids = [...new Set((patch.deckIds || []).filter(Boolean))];
+      c.deckIds = ids;
+      c.deckId = ids[0] || "";
+    }
+    if ("openerSize" in patch) {
+      const s = patch.openerSize;
+      c.userOpenerSize = (s === "" || s == null) ? null : Number(s);
+    }
+    if ("openingHand" in patch) c.openingHand = (patch.openingHand || []).filter(Boolean);
+    if ("steps" in patch) c.steps = (patch.steps || []).map(normalizeStep);
+    if ("endboard" in patch) c.endboard = (patch.endboard || []).filter(Boolean);
+    if ("notes" in patch) c.userNotes = patch.notes || "";
+  });
+}
+
+// Tidy a step coming out of the editor: trim text, drop empty card slots,
+// renumber. Keeps the shape the simulator + line view expect.
+function normalizeStep(s, i) {
+  return {
+    n: i + 1,
+    action: (s.action || "").trim(),
+    detail: (s.detail || "").trim(),
+    cards: Array.isArray(s.cards) ? s.cards.filter(Boolean) : [],
+    timestamp: s.timestamp || "",
+  };
 }
 
 // Import combos from pasted/loaded JSON (single object or array). Dedupes by
@@ -150,15 +203,18 @@ export function importCombosJson(text) {
 
 // Create a combo by hand (no replay) — opener + end board you specify.
 const rid = () => Math.random().toString(36).slice(2, 8);
-export function addManualCombo({ title, deckId, openerSize, opener, endboard, notes }) {
+export function addManualCombo({ title, deckId, deckIds, openerSize, opener, endboard, notes }) {
   const t = (title || "").trim();
+  const ids = [...new Set((deckIds || (deckId ? [deckId] : [])).filter(Boolean))];
+  const openerCards = (opener || []).filter(Boolean);
   const combo = {
     replayId: "manual_" + rid(),
     comboName: t || "New combo",
     userTitle: t,
-    deckId: deckId || "",
-    userOpenerSize: (openerSize != null && openerSize !== "") ? Number(openerSize) : (opener || []).length,
-    openingHand: (opener || []).filter(Boolean),
+    deckId: ids[0] || "",
+    deckIds: ids,
+    userOpenerSize: (openerSize != null && openerSize !== "") ? Number(openerSize) : openerCards.length,
+    openingHand: openerCards,
     endboard: (endboard || []).filter(Boolean),
     steps: [],
     userNotes: notes || "",
