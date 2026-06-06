@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
 // ════════════════════════════════════════════════════════════════════
-// Reusable dropdown — replaces the browser's grey/white native <select>
-// with a control that matches the app's modal/panel aesthetic. The menu
-// is positioned `fixed` from the trigger's rect so it never gets clipped
-// by a panel's overflow. Keyboard: ↑/↓ to move, Enter to pick, Esc to
-// close. Click-outside / scroll / resize all dismiss it.
+// Reusable dropdown — replaces the native <select> with a control that
+// matches the app's modal/panel aesthetic. Fixed-positioned popover that
+// escapes panel overflow; keyboard ↑/↓ (skips headings), Enter, Esc; closes
+// on outside click / outside scroll / resize.
 //   options: ["a","b"] | [["v","Label"]] | [{ value, label }]
+//   section headings: include { heading: "My decks" } entries — rendered as
+//   non-selectable group labels so one dropdown can split into groups.
 // ════════════════════════════════════════════════════════════════════
 function normOpts(options) {
   return (options || []).map((o) => {
+    if (o && typeof o === "object" && o.heading != null) return { heading: true, label: o.heading };
     if (Array.isArray(o)) return { value: o[0], label: o[1] };
     if (o && typeof o === "object") return { value: o.value, label: o.label ?? String(o.value) };
     return { value: o, label: String(o) };
@@ -27,27 +29,27 @@ export default function Dropdown({
   const btnRef = useRef(null);
   const popRef = useRef(null);
 
-  const selIdx = opts.findIndex((o) => String(o.value) === String(value));
+  const selIdx = opts.findIndex((o) => !o.heading && String(o.value) === String(value));
   const current = selIdx >= 0 ? opts[selIdx] : null;
+  const firstSel = opts.findIndex((o) => !o.heading);
+  const nextSelectable = (from, dir) => {
+    for (let i = from + dir; i >= 0 && i < opts.length; i += dir) if (!opts[i].heading) return i;
+    return from >= 0 && !opts[from]?.heading ? from : firstSel;
+  };
 
   const openMenu = () => {
     if (disabled) return;
     const r = btnRef.current?.getBoundingClientRect();
     if (r) setRect(r);
-    setActive(selIdx >= 0 ? selIdx : 0);
+    setActive(selIdx >= 0 ? selIdx : firstSel);
     setOpen(true);
   };
-  const pick = (v) => { onChange && onChange(v); setOpen(false); btnRef.current?.focus(); };
+  const pick = (o) => { if (!o || o.heading) return; onChange && onChange(o.value); setOpen(false); btnRef.current?.focus(); };
 
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e) => {
-      if (btnRef.current?.contains(e.target) || popRef.current?.contains(e.target)) return;
-      setOpen(false);
-    };
+    const onDoc = (e) => { if (btnRef.current?.contains(e.target) || popRef.current?.contains(e.target)) return; setOpen(false); };
     const dismiss = () => setOpen(false);
-    // Close on OUTSIDE scroll only — scrolling within the menu (mouse wheel or
-    // its own scrollbar) must NOT dismiss it.
     const onScroll = (e) => { if (popRef.current && popRef.current.contains(e.target)) return; setOpen(false); };
     document.addEventListener("mousedown", onDoc);
     window.addEventListener("resize", dismiss);
@@ -66,9 +68,9 @@ export default function Dropdown({
     }
     e.stopPropagation();
     if (e.key === "Escape") { e.preventDefault(); setOpen(false); btnRef.current?.focus(); }
-    else if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(opts.length - 1, i + 1)); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(0, i - 1)); }
-    else if (e.key === "Enter") { e.preventDefault(); if (opts[active]) pick(opts[active].value); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => nextSelectable(i, 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => nextSelectable(i, -1)); }
+    else if (e.key === "Enter") { e.preventDefault(); pick(opts[active]); }
   };
 
   const menuStyle = rect
@@ -95,15 +97,19 @@ export default function Dropdown({
       {open && (
         <div ref={popRef} className="dd-menu" style={menuStyle} role="listbox">
           {opts.length ? opts.map((o, i) => (
-            <button
-              key={String(o.value)} type="button" role="option"
-              aria-selected={i === selIdx}
-              className={"dd-option" + (i === selIdx ? " is-selected" : "") + (i === active ? " is-active" : "")}
-              onMouseEnter={() => setActive(i)} onClick={() => pick(o.value)}
-            >
-              <span className="dd-option-label">{o.label}</span>
-              {i === selIdx && <span className="dd-check">✓</span>}
-            </button>
+            o.heading
+              ? <div key={"h" + i} className="dd-heading">{o.label}</div>
+              : (
+                <button
+                  key={String(o.value)} type="button" role="option"
+                  aria-selected={i === selIdx}
+                  className={"dd-option" + (i === selIdx ? " is-selected" : "") + (i === active ? " is-active" : "")}
+                  onMouseEnter={() => setActive(i)} onClick={() => pick(o)}
+                >
+                  <span className="dd-option-label">{o.label}</span>
+                  {i === selIdx && <span className="dd-check">✓</span>}
+                </button>
+              )
           )) : <div className="dd-empty">No options</div>}
         </div>
       )}

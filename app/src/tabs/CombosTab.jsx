@@ -82,7 +82,14 @@ export default function CombosTab({ dataVersion = 0, reload }) {
     } catch (err) { alertModal({ title: "That wasn't valid JSON", message: err.message }); }
   };
 
-  const deckFilterOpts = [["all", "All decks"], ...decks.map((d) => [d.deckId, d.name])];
+  const byName = (a, b) => (a.name || "").localeCompare(b.name || "");
+  const mineDecks = decks.filter((d) => (d.role || "primary") !== "matchup").sort(byName);
+  const oppDecks = decks.filter((d) => d.role === "matchup").sort(byName);
+  const deckFilterOpts = [
+    ["all", "All decks"],
+    ...(mineDecks.length ? [{ heading: "My decks" }, ...mineDecks.map((d) => [d.deckId, d.name])] : []),
+    ...(oppDecks.length ? [{ heading: "Matchup decks" }, ...oppDecks.map((d) => [d.deckId, d.name])] : []),
+  ];
 
   return (
     <div className="combos-tab" onMouseLeave={clearHover}>

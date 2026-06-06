@@ -30,9 +30,13 @@ export default function TestingTab({ dataVersion = 0 }) {
   const myDeck = decks.find((d) => d.deckId === deckId) || null;
   const pickDeck = (id) => { setDeckId(id); setActiveDeckId(id); }; // persists as the default
 
-  const deckOpts = [...decks]
-    .sort((a, b) => (((a.role || "primary") === "matchup") - ((b.role || "primary") === "matchup")) || (a.name || "").localeCompare(b.name || ""))
-    .map((d) => [d.deckId, d.name + (d.role === "matchup" ? "  · matchup" : "")]);
+  const byName = (a, b) => (a.name || "").localeCompare(b.name || "");
+  const mineDecks = decks.filter((d) => (d.role || "primary") !== "matchup").sort(byName);
+  const oppDecks = decks.filter((d) => d.role === "matchup").sort(byName);
+  const deckOpts = [
+    ...(mineDecks.length ? [{ heading: "My decks" }, ...mineDecks.map((d) => [d.deckId, d.name])] : []),
+    ...(oppDecks.length ? [{ heading: "Matchup decks" }, ...oppDecks.map((d) => [d.deckId, d.name])] : []),
+  ];
 
   return (
     <div className="testing-tab">

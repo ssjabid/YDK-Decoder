@@ -1117,6 +1117,8 @@
 .dd-option.is-selected { color: var(--text); }
 .dd-check { color: var(--accent); font-size: 11px; }
 .dd-empty { padding: 8px 10px; color: var(--text-faint); font-size: 12px; }
+.dd-heading { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 800; padding: 8px 10px 4px; }
+.dd-heading:not(:first-child) { border-top: 1px solid var(--border); margin-top: 4px; }
 /* per-use sizing */
 .format-picker-dd .dd-trigger { min-width: 220px; font-weight: 600; }
 .tier-dd .dd-trigger { min-width: 96px; }
