@@ -170,7 +170,7 @@ export function GoodCardsView({ cards, onHover, onPick }) {
 }
 
 // ── End boards: editable (visual + zone pickers) + read-only ────────
-export function EndBoardsEditor({ boards, onChange, onHover, onPick }) {
+export function EndBoardsEditor({ boards, onChange, onHover, onPick, pool }) {
   const setBoard = (bi, patch) => onChange(boards.map((b, i) => (i === bi ? { ...b, ...patch } : b)));
   const setCards = (bi, cards) => setBoard(bi, { cards });
   return (
@@ -197,7 +197,8 @@ export function EndBoardsEditor({ boards, onChange, onHover, onPick }) {
                   </div>
                 );
               })}
-              <CardPicker placeholder="Search a board piece…" onAdd={(name) => setCards(bi, [...cards, { name, zone: "auto" }])} />
+              <CardPicker pool={pool} placeholder={pool && pool.length ? "Pick a card from this deck…" : "Search a board piece…"}
+                onAdd={(name) => setCards(bi, [...cards, { name, zone: "auto" }])} />
             </div>
           </div>
         );
@@ -248,7 +249,7 @@ function EditField({ label, value, onSave }) {
 // ── Full playbook editor — lives in the Decks tab for matchup decks.
 //    Writes to the opponent deck's methodology (single source of truth that
 //    the Format dashboard reads). Owns its own card preview. ──
-export function PlaybookEditor({ deck, save }) {
+export function PlaybookEditor({ deck, save, cardPool }) {
   const meth = deck.methodology || (deck.methodology = {});
   const [preview, setPreview] = useState(null);
   const onHover = (card, rect) => setPreview((p) => (p && p.pinned ? p : (card ? { card, rect, pinned: false } : null)));
@@ -271,7 +272,7 @@ export function PlaybookEditor({ deck, save }) {
 
       <div className="pb-group">
         <div className="pb-group-title">Their end boards <span className="pb-group-hint">— add the pieces, watch them land on the playmat</span></div>
-        <EndBoardsEditor boards={meth.endboards || []} onChange={(b) => set("endboards", b)} onHover={onHover} onPick={onPick} />
+        <EndBoardsEditor boards={meth.endboards || []} onChange={(b) => set("endboards", b)} onHover={onHover} onPick={onPick} pool={cardPool} />
       </div>
 
       <div className="pb-group">

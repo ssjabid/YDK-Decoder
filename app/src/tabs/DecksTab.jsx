@@ -176,6 +176,15 @@ function DeckPanel({ deck, onChanged }) {
 
   const isMatchup = deck.role === "matchup";
 
+  // Card names actually in this deck (main + extra) — the pool the end-board
+  // editor picks from, so you build boards from THEIR cards, no global search.
+  const deckCardPool = useMemo(() => {
+    const ids = [].concat(dl.main || [], dl.extra || []);
+    const seen = new Set(); const out = [];
+    for (const id of ids) { const c = cardMap[Number(id)]; const n = c && c.name; if (n && !seen.has(n)) { seen.add(n); out.push(n); } }
+    return out.sort((a, b) => a.localeCompare(b));
+  }, [dl, cardMap]);
+
   return (
     <div className="deck-panel-inner">
       <div className="deck-panel-header">
@@ -211,7 +220,7 @@ function DeckPanel({ deck, onChanged }) {
       {isMatchup && (
         <PanelSection title="Playbook — how to beat this deck"
           subtitle="Shown read-only in Format → this matchup" defaultOpen={true}>
-          <PlaybookEditor deck={deck} save={save} />
+          <PlaybookEditor deck={deck} save={save} cardPool={deckCardPool} />
         </PanelSection>
       )}
 

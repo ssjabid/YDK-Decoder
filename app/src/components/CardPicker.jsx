@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { searchLocal, searchApi } from "../lib/cardSearch.js";
+import { searchLocal, searchApi, lookupCardByName } from "../lib/cardSearch.js";
 import { getImageUrls } from "../lib/ydk.js";
 
 // ════════════════════════════════════════════════════════════════════
@@ -9,7 +9,7 @@ import { getImageUrls } from "../lib/ydk.js";
 // Virtuous"). Pick from the dropdown → onAdd(cardName). Used everywhere a
 // card is added: end boards, good-cards, key cards, etc.
 // ════════════════════════════════════════════════════════════════════
-export default function CardPicker({ onAdd, placeholder = "Type a card name…", buttonLabel = "+ Add", buttonClass = "fmt-add-btn" }) {
+export default function CardPicker({ onAdd, placeholder = "Type a card name…", buttonLabel = "+ Add", buttonClass = "fmt-add-btn", pool = null }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [items, setItems] = useState([]);
@@ -23,9 +23,19 @@ export default function CardPicker({ onAdd, placeholder = "Type a card name…",
 
   // Search local first; hit the API (which caches) for queries ≥ 3 chars,
   // then re-read the now-warmer local index.
+  const scoped = Array.isArray(pool) && pool.length > 0;
+
   useEffect(() => {
     if (!open) return;
     const query = q.trim();
+    // Deck-scoped: search ONLY within the provided pool (the decklist) — no API.
+    if (scoped) {
+      const lc = query.toLowerCase();
+      const names = lc ? pool.filter((n) => n.toLowerCase().includes(lc)) : pool;
+      setItems(names.slice(0, 40).map((n) => lookupCardByName(n) || { name: n }));
+      setActive(0);
+      return;
+    }
     setItems(searchLocal(query, 16));
     setActive(0);
     if (query.length >= 3) {
@@ -33,7 +43,7 @@ export default function CardPicker({ onAdd, placeholder = "Type a card name…",
       searchApi(query).then(() => { if (alive && q.trim() === query) setItems(searchLocal(query, 16)); });
       return () => { alive = false; };
     }
-  }, [q, open]);
+  }, [q, open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Position the popover from the input; close on outside mousedown.
   useEffect(() => {
@@ -80,7 +90,7 @@ export default function CardPicker({ onAdd, placeholder = "Type a card name…",
               {c.type && <span className="rt-mention-item-meta">{c.type.split(" ")[0]}</span>}
             </button>
           );
-        }) : <div className="rt-mention-empty">{q.trim().length < 3 ? "Type at least 3 letters…" : `No match for "${q.trim()}" yet…`}</div>}
+        }) : <div className="rt-mention-empty">{scoped ? `No card in this deck matches "${q.trim()}"` : (q.trim().length < 3 ? "Type at least 3 letters…" : `No match for "${q.trim()}" yet…`)}</div>}
       </div>
     </span>
   );
