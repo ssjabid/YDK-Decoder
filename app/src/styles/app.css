@@ -1447,3 +1447,17 @@
 .settings-section.is-danger .settings-section-title { color: var(--role-stopper); }
 .btn-secondary.is-danger { color: var(--role-stopper); border-color: rgba(196,95,95,0.45); }
 .btn-secondary.is-danger:hover { background: rgba(196,95,95,0.12); border-color: var(--role-stopper); }
+
+/* header settings gear (replaces the 5th tab) */
+.app-header-right { display: flex; align-items: center; gap: 12px; }
+.app-gear { display: inline-flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-dim); cursor: pointer; padding: 7px; transition: color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast); }
+.app-gear:hover { color: var(--text); border-color: var(--border-strong); }
+.app-gear.active { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+
+/* clickable "Edit in Decks →" hint */
+.panel-edit-hint.is-link { font-family: inherit; cursor: pointer; }
+.panel-edit-hint.is-link:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+
+/* CardPicker live-search wrapper */
+.cardpick { position: relative; display: inline-flex; }
+.cardpick-menu { width: 300px; }

@@ -18,6 +18,7 @@ import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
 import RichNotes from "../components/RichNotes.jsx";
 import Dropdown from "../components/Dropdown.jsx";
+import CardPicker from "../components/CardPicker.jsx";
 import { PlaybookEditor } from "../components/Matchup.jsx";
 import Icon from "../components/Icon.jsx";
 
@@ -26,7 +27,7 @@ import Icon from "../components/Icon.jsx";
 // rich deck panel (rename / role / delete, methodology editor, notes,
 // multi-build decklists, key-card buckets, combos summary, card grid).
 // ════════════════════════════════════════════════════════════════════
-export default function DecksTab({ dataVersion = 0, reload }) {
+export default function DecksTab({ dataVersion = 0, reload, jump }) {
   const [roleFilter, setRoleFilter] = useState("primary");
   const [localRev, bumpLocal] = useReducer((x) => x + 1, 0);
   const [selectedId, setSelectedId] = useState(getActiveDeckId());
@@ -50,6 +51,16 @@ export default function DecksTab({ dataVersion = 0, reload }) {
   }, [selected, selectedId]);
 
   const pickDeck = (d) => { setSelectedId(d.deckId); setActiveDeckId(d.deckId); };
+
+  // Cross-tab jump (Format "Edit in Decks →"): switch filter + select the deck.
+  useEffect(() => {
+    if (!jump || !jump.deckId) return;
+    const d = loadDecks().find((x) => x.deckId === jump.deckId);
+    if (!d) return;
+    setRoleFilter(d.role === "matchup" ? "matchup" : "primary");
+    setSelectedId(jump.deckId);
+    setActiveDeckId(jump.deckId);
+  }, [jump && jump.n]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onImportFile = async (e) => {
     const file = (e.target.files || [])[0];
@@ -317,7 +328,7 @@ function KeyCardsSection({ deck, save, cardMap, force }) {
 
   // Resolve a keyCard to a card object for the preview (fetched map → cache).
   const cardFor = (kc) => cardMap[Number(kc.cardId)] || lookupCardByName(kc.name) || null;
-  const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
+  const onHover = (card, rect) => setPreview((p) => (p && p.pinned ? p : (card ? { card, rect, pinned: false } : null)));
   const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
   const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
 
@@ -369,13 +380,7 @@ function KeyCardBucket({ deck, category, save, force, cardFor, onHover, onPick }
           <KeyCardRow key={kc.name} deck={deck} kc={kc} save={save} force={force}
             cardFor={cardFor} onHover={onHover} onPick={onPick} />
         ))}
-        {adding ? (
-          <input className="key-cards-add-input" autoFocus placeholder="Card name, Enter to add"
-            onKeyDown={(e) => { if (e.key === "Enter") addCard(e.target.value); else if (e.key === "Escape") setAdding(false); else e.stopPropagation(); }}
-            onBlur={(e) => { if (e.target.value.trim()) addCard(e.target.value); else setAdding(false); }} />
-        ) : (
-          <button type="button" className="key-cards-add-card" onClick={() => setAdding(true)}>+ Add card</button>
-        )}
+        <CardPicker buttonClass="key-cards-add-card" buttonLabel="+ Add card" placeholder="Search a card…" onAdd={(name) => addCard(name)} />
       </div>
     </div>
   );
@@ -394,6 +399,7 @@ function KeyCardRow({ deck, kc, save, force, cardFor, onHover, onPick }) {
       <div className="key-card-row-head">
         <div className="key-card-mini" title={kc.name} style={{ borderColor: border }}
           onMouseEnter={(e) => onHover(card, e.currentTarget.getBoundingClientRect())}
+          onMouseLeave={() => onHover(null)}
           onClick={(e) => onPick(card, e.currentTarget.getBoundingClientRect())}>
           {urls.length ? <img src={urls[0]} alt={kc.name} loading="lazy" /> : <span className="key-card-mini-ph">{kc.name[0]}</span>}
         </div>

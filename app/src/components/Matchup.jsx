@@ -4,6 +4,7 @@ import { getImageUrls } from "../lib/ydk.js";
 import RichNotes, { normalizeNotesHtml } from "./RichNotes.jsx";
 import EndBoardView, { ZONE_OPTIONS } from "./EndBoardView.jsx";
 import Dropdown from "./Dropdown.jsx";
+import CardPicker from "./CardPicker.jsx";
 import CardPreview from "./CardPreview.jsx";
 
 const rid = () => Math.random().toString(36).slice(2, 8);
@@ -55,6 +56,7 @@ export function CardChip({ name, onHover, onPick, onRemove, tone, plain }) {
     <span
       className={"fmt-chip" + (tone ? " is-" + tone : "") + (plain ? " is-plain" : "")}
       onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={() => onHover && onHover(null)}
       onClick={(e) => onPick && onPick(c, e.currentTarget.getBoundingClientRect())}
     >
       {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : null}
@@ -148,7 +150,7 @@ export function GoodCardsEditor({ cards, onChange, onHover, onPick }) {
             onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => setReason(i, e.target.value)} />
         </div>
       ))}
-      <CardAddInput placeholder="Add a card that's good here…" onAdd={(name) => onChange([...(cards || []), { name, notes: "" }])} />
+      <CardPicker placeholder="Search a card that's good here…" onAdd={(name) => onChange([...(cards || []), { name, notes: "" }])} />
     </div>
   );
 }
@@ -195,7 +197,7 @@ export function EndBoardsEditor({ boards, onChange, onHover, onPick }) {
                   </div>
                 );
               })}
-              <CardAddInput placeholder="Add a board piece…" onAdd={(name) => setCards(bi, [...cards, { name, zone: "auto" }])} />
+              <CardPicker placeholder="Search a board piece…" onAdd={(name) => setCards(bi, [...cards, { name, zone: "auto" }])} />
             </div>
           </div>
         );
@@ -249,7 +251,7 @@ function EditField({ label, value, onSave }) {
 export function PlaybookEditor({ deck, save }) {
   const meth = deck.methodology || (deck.methodology = {});
   const [preview, setPreview] = useState(null);
-  const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
+  const onHover = (card, rect) => setPreview((p) => (p && p.pinned ? p : (card ? { card, rect, pinned: false } : null)));
   const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
   const clear = () => setPreview((p) => (p && p.pinned ? p : null));
   const set = (k, v) => { meth[k] = v; save(); };

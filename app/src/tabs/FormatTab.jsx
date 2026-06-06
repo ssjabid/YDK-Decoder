@@ -24,7 +24,7 @@ const TOURNAMENT_TYPES = [
 const rid = () => Math.random().toString(36).slice(2, 8);
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-export default function FormatTab({ dataVersion = 0 }) {
+export default function FormatTab({ dataVersion = 0, onEditDeck }) {
   const [rev, bump] = useReducer((x) => x + 1, 0);
   const [selectedMatchupId, setSelectedMatchupId] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -36,7 +36,8 @@ export default function FormatTab({ dataVersion = 0 }) {
     const ds = loadDecks();
     const names = {};
     for (const d of ds) names[d.deckId] = d.name;
-    return { formats: fmts, format: fmt, decks: ds, deckNames: names, primaryDecks: ds.filter((d) => (d.role || "primary") === "primary") };
+    const primaryDecks = ds.filter((d) => (d.role || "primary") === "primary").sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return { formats: fmts, format: fmt, decks: ds, deckNames: names, primaryDecks };
   }, [dataVersion, rev]);
 
   const update = (mutator) => {
@@ -49,7 +50,7 @@ export default function FormatTab({ dataVersion = 0 }) {
     bump();
   };
 
-  const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
+  const onHover = (card, rect) => setPreview((p) => (p && p.pinned ? p : (card ? { card, rect, pinned: false } : null)));
   const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
   const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
 
@@ -128,7 +129,7 @@ export default function FormatTab({ dataVersion = 0 }) {
           key={selected.matchupId}
           m={selected} format={format} primaryDeck={primaryDeck} deckNames={deckNames}
           opponentDeck={decks.find((d) => d.deckId === selected.opponentDeckId) || null}
-          update={update} onHover={onHover} onPick={onPick}
+          update={update} onHover={onHover} onPick={onPick} onEditDeck={onEditDeck}
           onBack={() => setSelectedMatchupId(null)}
           onRemove={() => { setSelectedMatchupId(null); update((f) => { f.matchups = (f.matchups || []).filter((x) => x.matchupId !== selected.matchupId); }); }}
         />
@@ -188,7 +189,7 @@ function useMatchupUpdate(update, matchupId) {
 //    cards that shine) is edited in Decks → that matchup deck, so there's
 //    one source of truth. Only the side-deck plan + your scouting notes
 //    are interactive here (they're scoped to your deck in this format). ──
-function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, update, onHover, onPick, onBack, onRemove }) {
+function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, update, onHover, onPick, onEditDeck, onBack, onRemove }) {
   const upd = useMatchupUpdate(update, m.matchupId);
   const [, forceRev] = useReducer((x) => x + 1, 0);
   const name = (opponentDeck && opponentDeck.name) || deckNames[m.opponentDeckId] || "Unknown deck";
@@ -205,7 +206,12 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
     fetchCards(ids).then(() => { if (alive) forceRev(); });
     return () => { alive = false; };
   }, [oppId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const editHint = <span className="panel-edit-hint">✎ Edit in Decks → {name}</span>;
+  const editHint = (
+    <button type="button" className="panel-edit-hint is-link" title="Open this deck in the Decks tab to edit"
+      onClick={() => opponentDeck && onEditDeck && onEditDeck(opponentDeck.deckId)}>
+      ✎ Edit in Decks → {name}
+    </button>
+  );
   const remove = async () => {
     const ok = await confirmModal({ title: "Remove this matchup?", message: "The deck stays in your library — only this matchup's plan is removed.", confirmText: "Remove", danger: true });
     if (ok) onRemove();

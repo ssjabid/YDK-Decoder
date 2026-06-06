@@ -41,7 +41,7 @@ export default function CombosTab({ dataVersion = 0, reload }) {
     return { combos, decks, deckNames };
   }, [dataVersion, rev]);
 
-  const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
+  const onHover = (card, rect) => setPreview((p) => (p && p.pinned ? p : (card ? { card, rect, pinned: false } : null)));
   const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
   const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
 
@@ -137,6 +137,7 @@ function Thumb({ name, onHover, onPick }) {
   return (
     <span className="combo-thumb" title={name}
       onMouseEnter={(e) => onHover && onHover(c, e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={() => onHover && onHover(null)}
       onClick={(e) => { e.stopPropagation(); onPick && onPick(c, e.currentTarget.getBoundingClientRect()); }}>
       {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : <span className="combo-thumb-ph">{name[0]}</span>}
       <span className="combo-thumb-name">{name}</span>

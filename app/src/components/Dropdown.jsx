@@ -46,13 +46,16 @@ export default function Dropdown({
       setOpen(false);
     };
     const dismiss = () => setOpen(false);
+    // Close on OUTSIDE scroll only — scrolling within the menu (mouse wheel or
+    // its own scrollbar) must NOT dismiss it.
+    const onScroll = (e) => { if (popRef.current && popRef.current.contains(e.target)) return; setOpen(false); };
     document.addEventListener("mousedown", onDoc);
     window.addEventListener("resize", dismiss);
-    window.addEventListener("scroll", dismiss, true);
+    window.addEventListener("scroll", onScroll, true);
     return () => {
       document.removeEventListener("mousedown", onDoc);
       window.removeEventListener("resize", dismiss);
-      window.removeEventListener("scroll", dismiss, true);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [open]);
 

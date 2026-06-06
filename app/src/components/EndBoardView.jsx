@@ -92,6 +92,7 @@ function Pill({ slot, onHover, onPick }) {
       className="eb-pill"
       title={slot.name}
       onMouseEnter={(e) => onHover && card && onHover(card, e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={() => onHover && onHover(null)}
       onClick={(e) => { e.stopPropagation(); onPick && card && onPick(card, e.currentTarget.getBoundingClientRect()); }}
     >
       <span className="eb-pill-thumb">

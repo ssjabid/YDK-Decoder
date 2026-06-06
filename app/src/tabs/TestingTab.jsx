@@ -73,6 +73,7 @@ function HandCard({ id, name, card, onHover, onPick, tagClass, tagLabel, role })
       style={stripe ? { borderTopColor: stripe } : undefined}
       title={name}
       onMouseEnter={(e) => card && onHover && onHover(card, e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={() => onHover && onHover(null)}
       onClick={(e) => card && onPick && onPick(card, e.currentTarget.getBoundingClientRect())}
     >
       {src ? (
@@ -89,7 +90,7 @@ function HandCard({ id, name, card, onHover, onPick, tagClass, tagLabel, role })
 
 function usePreview() {
   const [preview, setPreview] = useState(null);
-  const onHover = (card, rect) => { if (card) setPreview((p) => (p && p.pinned ? p : { card, rect, pinned: false })); };
+  const onHover = (card, rect) => setPreview((p) => (p && p.pinned ? p : (card ? { card, rect, pinned: false } : null)));
   const onPick = (card, rect) => { if (card) setPreview((p) => (p && p.pinned && p.card.id === card.id ? null : { card, rect, pinned: true })); };
   const clearHover = () => setPreview((p) => (p && p.pinned ? p : null));
   return { preview, setPreview, onHover, onPick, clearHover };
