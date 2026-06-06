@@ -36,6 +36,48 @@ export function comboDeckIds(c) {
   return c.deckId ? [c.deckId] : [];
 }
 
+// ── Handtrap resistance ──────────────────────────────────────────────
+// A line can be tagged with the handtraps it still resolves through, so
+// Testing can answer "what do I do if I get Drolled / Impermed / Fuwa'd?".
+// Names are exact (matched against drawn/known cards by name).
+export const COMMON_HANDTRAPS = [
+  "Ash Blossom & Joyous Spring",
+  "Maxx \"C\"",
+  "Mulcharmy Fuwalos",
+  "Mulcharmy Purulia",
+  "Droll & Lock Bird",
+  "Infinite Impermanence",
+  "Effect Veiler",
+  "Ghost Ogre & Snow Rabbit",
+  "Ghost Belle & Haunted Mansion",
+  "Nibiru, the Primal Being",
+  "D.D. Crow",
+  "Skull Meister",
+  "Dimension Shifter",
+];
+const TRAP_SHORT = {
+  "Ash Blossom & Joyous Spring": "Ash",
+  "Maxx \"C\"": "Maxx C",
+  "Mulcharmy Fuwalos": "Fuwalos",
+  "Mulcharmy Purulia": "Purulia",
+  "Droll & Lock Bird": "Droll",
+  "Infinite Impermanence": "Imperm",
+  "Effect Veiler": "Veiler",
+  "Ghost Ogre & Snow Rabbit": "Ghost Ogre",
+  "Ghost Belle & Haunted Mansion": "Belle",
+  "Nibiru, the Primal Being": "Nibiru",
+  "D.D. Crow": "D.D. Crow",
+  "Skull Meister": "Meister",
+  "Dimension Shifter": "Shifter",
+};
+// Short label for chips/badges (e.g. "Droll", "Imperm", "Fuwalos").
+export const trapShort = (name) => TRAP_SHORT[name] || name;
+
+// Handtraps a combo's line is tagged as playing through.
+export function comboBeatsTraps(c) {
+  return Array.isArray(c.beatsTraps) ? c.beatsTraps.filter(Boolean) : [];
+}
+
 // Card names a step touches — from cards[] or parsed out of the detail text.
 export function stepCards(step) {
   if (Array.isArray(step.cards) && step.cards.length) return step.cards.filter(Boolean);
@@ -167,6 +209,7 @@ export function updateCombo(idx, patch) {
     if ("openingHand" in patch) c.openingHand = (patch.openingHand || []).filter(Boolean);
     if ("steps" in patch) c.steps = (patch.steps || []).map(normalizeStep);
     if ("endboard" in patch) c.endboard = (patch.endboard || []).filter(Boolean);
+    if ("beatsTraps" in patch) c.beatsTraps = [...new Set((patch.beatsTraps || []).filter(Boolean))];
     if ("notes" in patch) c.userNotes = patch.notes || "";
   });
 }
@@ -203,7 +246,7 @@ export function importCombosJson(text) {
 
 // Create a combo by hand (no replay) — opener + end board you specify.
 const rid = () => Math.random().toString(36).slice(2, 8);
-export function addManualCombo({ title, deckId, deckIds, openerSize, opener, endboard, notes }) {
+export function addManualCombo({ title, deckId, deckIds, openerSize, opener, endboard, notes, beatsTraps }) {
   const t = (title || "").trim();
   const ids = [...new Set((deckIds || (deckId ? [deckId] : [])).filter(Boolean))];
   const openerCards = (opener || []).filter(Boolean);
@@ -216,6 +259,7 @@ export function addManualCombo({ title, deckId, deckIds, openerSize, opener, end
     userOpenerSize: (openerSize != null && openerSize !== "") ? Number(openerSize) : openerCards.length,
     openingHand: openerCards,
     endboard: (endboard || []).filter(Boolean),
+    beatsTraps: [...new Set((beatsTraps || []).filter(Boolean))],
     steps: [],
     userNotes: notes || "",
     manual: true,

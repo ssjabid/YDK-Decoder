@@ -35,3 +35,15 @@ Reload the app first, go to the **Combos** tab. Tick each; "Expected" is a pass.
 ## F. Regression
 - [ ] **F1** Existing extracted combos still open, show their line / Simulate / Drill, and their end board (with zones) is preserved if you don't touch it in the editor.
 - [ ] **F2** Console clean, no blank screens.
+
+## G. Handtrap resistance ("plays through")
+- [ ] **G1** In **✎ Edit**, there's a **Plays through** section: pick handtraps the line still resolves through (Ash, Maxx C, **Fuwalos**, Purulia, **Droll**, **Imperm**, Veiler, Ghost Ogre, Belle, Nibiru, D.D. Crow, Meister, Shifter). Save.
+- [ ] **G2** Back in the combo detail, a **"Plays through"** row shows those traps as green chips.
+
+## H. Combos in Testing / practice flows (the main ask)
+- [ ] **H1** **Testing → Going first → Test with** your deck → **Shuffle & draw 5**. Any saved line whose opener is in the hand shows under **Playable lines** (✓ playable / ⚠ one away / ✗ need more).
+- [ ] **H2** Each line shows its **trap badges** (the handtraps it plays through).
+- [ ] **H3** A combo linked to **two decks** shows up when you Test with **either** one (multi-deck).
+- [ ] **H4** **"If they have"** row of handtrap toggles above the lines: click **Droll** → lines that play through Droll float up and show a green **"✓ Plays through Droll"**; lines that don't are dimmed with an amber **"✗ Folds to …"**. Select several (e.g. Droll + Ash) → a line must beat **all** selected to count as surviving. **clear** resets it.
+
+> This is the foundation for "what do I do if I get Drolled / Fuwa'd / Impermed": tag each line with the traps it beats, then in Testing pick the trap(s) the opponent has and see which of your live lines still gets there.

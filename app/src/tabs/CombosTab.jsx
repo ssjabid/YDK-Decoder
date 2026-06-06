@@ -2,7 +2,8 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { loadDecks } from "../lib/storage.js";
 import {
   loadSavedCombos, VIEW_MODES, comboKey, comboTitle, comboOpeningHand,
-  comboEndboard, comboAllCards, comboDeckIds, isCoreStep, stepCards, groupCombos, comboSearchHaystack,
+  comboEndboard, comboAllCards, comboDeckIds, comboBeatsTraps, COMMON_HANDTRAPS, trapShort,
+  isCoreStep, stepCards, groupCombos, comboSearchHaystack,
   renameCombo, setComboDecks, setComboNotes, setComboOpenerSize, deleteCombo, updateCombo,
   importCombosJson, addManualCombo,
 } from "../lib/combos.js";
@@ -265,6 +266,13 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
         </label>
         <span className="combo-meta-info">{(c.steps || []).length} steps{c.extractedAt ? ` · extracted ${fmtDate(c.extractedAt)}` : ""}</span>
       </div>
+
+      {comboBeatsTraps(c).length ? (
+        <div className="combo-trap-row">
+          <span className="combo-trap-row-label">Plays through</span>
+          {comboBeatsTraps(c).map((t) => <span key={t} className="combo-trap-chip" title={t}>{trapShort(t)}</span>)}
+        </div>
+      ) : null}
 
       <div className="combo-mode-switch">
         {[["line", "Line"], ["sim", "Simulate"], ["drill", "Drill"]].map(([m, lbl]) => (
@@ -552,6 +560,28 @@ const ACTION_OPTS = [
 // Keep the current action selectable even if it's not in the standard list.
 const actionOptsFor = (cur) => (!cur || ACTION_OPTS.some(([v]) => v === cur)) ? ACTION_OPTS : [[cur, cur], ...ACTION_OPTS];
 
+// ── Handtrap-resistance multi-select — chips + a dropdown of the common
+//    traps (short labels), excluding ones already tagged. ────────────────
+function TrapPicker({ value, onChange }) {
+  const sel = value || [];
+  const opts = COMMON_HANDTRAPS.filter((t) => !sel.includes(t)).map((t) => [t, trapShort(t)]);
+  return (
+    <div className="combo-trap-picker">
+      {sel.length
+        ? sel.map((t) => (
+            <span key={t} className="combo-trap-chip is-edit" title={t}>{trapShort(t)}
+              <button type="button" className="combo-trap-chip-x" title="Remove"
+                onClick={() => onChange(sel.filter((x) => x !== t))}>×</button>
+            </span>))
+        : <span className="combo-deck-none">— none tagged —</span>}
+      {opts.length
+        ? <Dropdown className="combo-trap-add-dd" value="" options={opts} placeholder="+ plays through…"
+            onChange={(v) => onChange([...new Set([...sel, v])])} />
+        : null}
+    </div>
+  );
+}
+
 function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
   const initialTitle = (c.userTitle && c.userTitle.trim())
     || (c.comboName && c.comboName !== "Untitled combo" ? c.comboName : "");
@@ -564,6 +594,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
   })));
   const origBoard = useMemo(() => comboEndboard(c), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [ebNames, setEbNames] = useState(origBoard.map((x) => x.name));
+  const [traps, setTraps] = useState(comboBeatsTraps(c));
   const [notes, setNotes] = useState(c.userNotes || "");
 
   const linkOpts = deckLinkOpts(decks, deckIds);
@@ -582,7 +613,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
   const save = () => {
     const keep = new Map(origBoard.map((x) => [x.name, x]));
     const endboard = ebNames.map((n) => keep.get(n) || n);
-    updateCombo(idx, { title, deckIds, openerSize, openingHand: hand, steps, endboard, notes });
+    updateCombo(idx, { title, deckIds, openerSize, openingHand: hand, steps, endboard, beatsTraps: traps, notes });
     onSaved();
   };
 
@@ -672,6 +703,11 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
         <div className="combo-block-label">End board <span className="combo-block-hint">what you end on</span></div>
         <ChipRow items={ebNames} onChange={setEbNames} onHover={onHover} onPick={onPick} placeholder="Search a board piece…" />
         {!!ebNames.length && <EndBoardView cards={ebNames} onHover={onHover} onPick={onPick} />}
+      </section>
+
+      <section className="combo-block">
+        <div className="combo-block-label">Plays through <span className="combo-block-hint">handtraps this line still resolves through — drives the Testing "if they have…" filter</span></div>
+        <TrapPicker value={traps} onChange={setTraps} />
       </section>
 
       {!!steps.length && (

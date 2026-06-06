@@ -1441,6 +1441,17 @@
   .combo-edit-step-cards { padding-left: 0; }
 }
 
+/* handtrap-resistance tags (combo detail + editor) */
+.combo-trap-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.combo-trap-row-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; margin-right: 2px; }
+.combo-trap-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.combo-trap-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--role-engine); background: rgba(95,196,154,0.12); border: 1px solid rgba(95,196,154,0.4); border-radius: 999px; padding: 3px 9px; }
+.combo-trap-chip.is-edit { padding-right: 5px; }
+.combo-trap-chip-x { background: none; border: none; color: var(--role-engine); opacity: 0.7; font-size: 13px; line-height: 1; cursor: pointer; padding: 0 1px; }
+.combo-trap-chip-x:hover { opacity: 1; color: var(--role-stopper); }
+.combo-trap-add-dd .dd-trigger { border-style: dashed; color: var(--text-dim); }
+.combo-trap-add-dd .dd-trigger:hover { color: var(--text); border-color: var(--accent); }
+
 /* ════════════════════════════════════════════════════════════════════
    Testing tab — deep pass (role tags, hand readout, walk-the-line,
    board picker, Game 1 / Game 2 sided-hand toggle)
@@ -1459,6 +1470,25 @@
 .combo-line-steps { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 5px; }
 .combo-line-steps li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); }
 .combo-line-steps li.muted { color: var(--text-faint); }
+
+/* "if they have…" handtrap filter (goldfish) */
+.gf-trapfilter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.gf-trapfilter-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
+.gf-trap-toggle { font-size: 11px; font-weight: 600; color: var(--text-dim); background: var(--bg); border: 1px solid var(--border-strong); border-radius: 999px; padding: 3px 10px; cursor: pointer; font-family: inherit; }
+.gf-trap-toggle:hover { border-color: var(--accent); color: var(--text); }
+.gf-trap-toggle.active { background: rgba(216,106,74,0.16); border-color: var(--role-boss); color: var(--role-boss); }
+.gf-trap-clear { font-size: 11px; color: var(--text-faint); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: inherit; }
+.gf-trap-clear:hover { color: var(--text); }
+
+/* trap badges + survive/fold verdict on a combo line */
+.combo-line-traps { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 8px; }
+.combo-line-trap { font-size: 9.5px; font-weight: 700; color: var(--role-engine); background: rgba(95,196,154,0.12); border: 1px solid rgba(95,196,154,0.35); border-radius: 999px; padding: 1px 7px; }
+.combo-line-trap.is-sel { background: rgba(95,196,154,0.28); border-color: var(--role-engine); }
+.combo-line-vs { font-size: 11px; font-weight: 700; margin: 2px 0 4px; }
+.combo-line-vs.is-ok { color: var(--role-engine); }
+.combo-line-vs.is-fold { color: var(--warning); }
+.combo-line.vs-ok { box-shadow: inset 2px 0 0 var(--role-engine); }
+.combo-line.vs-fold { opacity: 0.72; }
 
 .bb-bar { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
 .bb-shuffle { margin-left: auto; }

@@ -5,6 +5,7 @@
 // Same ydk_* keys as the original, so streaks carry over same-origin.
 // ───────────────────────────────────────────────────────────────────
 import { readLs, writeLs, loadSavedCombos } from "./storage.js";
+import { comboDeckIds } from "./combos.js";
 import { classify } from "./classify.js";
 
 const PRACTICE_STREAK_KEY = "ydk_practice_streak"; // { [deckId]: {hands, hits} }
@@ -91,7 +92,7 @@ export function matchCombosToHand(handNames, deckId) {
   let anyPossible = false;
 
   all.forEach((combo, idx) => {
-    if (combo.deckId !== deckId) return;
+    if (!comboDeckIds(combo).includes(deckId)) return;
     const need = (combo.openingHand || []).filter(Boolean);
     if (!need.length) return; // no opener recorded — can't match
     const bag = (handNames || []).filter(Boolean).slice();

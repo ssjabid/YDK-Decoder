@@ -9,7 +9,7 @@ import {
   loadBbStreaks, bumpBb,
 } from "../lib/practice.js";
 import { simulateCombo, describeStep } from "../lib/comboSim.js";
-import { isCoreStep } from "../lib/combos.js";
+import { isCoreStep, comboBeatsTraps, COMMON_HANDTRAPS, trapShort } from "../lib/combos.js";
 import { getPlaybook } from "../components/Matchup.jsx";
 import { getSidePlans, applyPlan, planMissing } from "../lib/sidePlans.js";
 import CardPreview from "../components/CardPreview.jsx";
@@ -116,6 +116,7 @@ function Goldfish({ deck }) {
   const [cardMap, setCardMap] = useState({});
   const [hand, setHand] = useState(null);
   const [streak, setStreak] = useState(() => loadPracticeStreaks()[deck.deckId] || null);
+  const [vsTraps, setVsTraps] = useState([]); // "if they have…" handtraps to test against
   const { preview, setPreview, onHover, onPick, clearHover } = usePreview();
 
   const main = useMemo(() => (deck.main || []).map(String), [deck]);
@@ -151,6 +152,14 @@ function Goldfish({ deck }) {
     : best === "possible" ? { cls: "ok", text: "✓ A saved line opens from this hand" }
     : best === "partial" ? { cls: "warn", text: "⚠ One card away from a saved line" }
     : { cls: "no", text: "No saved line opens — work it out by hand" };
+
+  // "If they have…" — float the lines that play through the chosen handtraps.
+  const statusOrder = { possible: 0, partial: 1, no: 2 };
+  const beatsAllSel = (r) => vsTraps.length > 0 && vsTraps.every((t) => comboBeatsTraps(r.combo).includes(t));
+  const shownLines = vsTraps.length
+    ? [...lines].sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || ((beatsAllSel(b) ? 1 : 0) - (beatsAllSel(a) ? 1 : 0)))
+    : lines;
+  const toggleTrap = (t) => setVsTraps((v) => (v.includes(t) ? v.filter((x) => x !== t) : [...v, t]));
 
   return (
     <div className="goldfish" onMouseLeave={clearHover}>
@@ -199,6 +208,17 @@ function Goldfish({ deck }) {
 
         <section className="practice-panel">
           <div className="practice-panel-title">Playable lines</div>
+          {hand && lines.length ? (
+            <div className="gf-trapfilter">
+              <span className="gf-trapfilter-label">If they have</span>
+              {COMMON_HANDTRAPS.map((t) => (
+                <button key={t} type="button" title={t}
+                  className={"gf-trap-toggle" + (vsTraps.includes(t) ? " active" : "")}
+                  onClick={() => toggleTrap(t)}>{trapShort(t)}</button>
+              ))}
+              {vsTraps.length ? <button type="button" className="gf-trap-clear" onClick={() => setVsTraps([])}>clear</button> : null}
+            </div>
+          ) : null}
           {!hand ? (
             <div className="practice-empty">Draw a hand to see which saved combos are live.</div>
           ) : !lines.length ? (
@@ -207,8 +227,8 @@ function Goldfish({ deck }) {
               Extract some with the Chrome extension (or import JSON in the <strong>Combos</strong> tab) and they'll match here.
             </div>
           ) : (
-            <div className={"lines-list" + (lines.length > 4 ? " is-full" : "")}>
-              {lines.map((r) => <ComboLine key={r.idx} r={r} handNames={hand.names} onHover={onHover} onPick={onPick} />)}
+            <div className={"lines-list" + (shownLines.length > 4 ? " is-full" : "")}>
+              {shownLines.map((r) => <ComboLine key={r.idx} r={r} handNames={hand.names} vsTraps={vsTraps} onHover={onHover} onPick={onPick} />)}
             </div>
           )}
         </section>
@@ -219,7 +239,7 @@ function Goldfish({ deck }) {
   );
 }
 
-function ComboLine({ r, handNames, onHover, onPick }) {
+function ComboLine({ r, handNames, vsTraps, onHover, onPick }) {
   const [open, setOpen] = useState(false);
   const c = r.combo;
   const icon = r.status === "possible" ? "✓" : r.status === "partial" ? "⚠" : "✗";
@@ -229,13 +249,27 @@ function ComboLine({ r, handNames, onHover, onPick }) {
   const have = new Set((handNames || []).filter(Boolean));
   const title = c.userTitle || c.title || c.comboName || c.name || (c.openingHand || []).join(" + ") || "Combo";
   const plays = open ? simulateCombo(c).filter(isCoreStep) : [];
+  const traps = comboBeatsTraps(c);
+  const vs = vsTraps || [];
+  const folds = vs.filter((t) => !traps.includes(t));
+  const survives = vs.length > 0 && folds.length === 0;
   return (
-    <div className={"combo-line is-" + r.status}>
+    <div className={"combo-line is-" + r.status + (vs.length ? (survives ? " vs-ok" : " vs-fold") : "")}>
       <div className="combo-line-head">
         <span className="combo-line-status">{icon}</span>
         <span className="combo-line-name">{title}</span>
+        {traps.length ? (
+          <span className="combo-line-traps">
+            {traps.map((t) => <span key={t} className={"combo-line-trap" + (vs.includes(t) ? " is-sel" : "")} title={"Plays through " + t}>{trapShort(t)}</span>)}
+          </span>
+        ) : null}
         {(c.steps || []).length ? <button type="button" className="combo-line-walk" onClick={() => setOpen((o) => !o)}>{open ? "Hide line" : "Walk the line ▸"}</button> : null}
       </div>
+      {vs.length ? (
+        <div className={"combo-line-vs " + (survives ? "is-ok" : "is-fold")}>
+          {survives ? `✓ Plays through ${vs.map(trapShort).join(" + ")}` : `✗ Folds to ${folds.map(trapShort).join(" + ")}`}
+        </div>
+      ) : null}
       <div className="combo-line-needs">
         <span className="muted">Need{r.need.length === 1 ? "" : "s"}:</span>{" "}
         {r.need.map((n, i) => (
