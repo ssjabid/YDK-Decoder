@@ -251,7 +251,7 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
       </div>
 
       <div className="combo-mode-switch">
-        {[["line", "Line"], ["sim", "▶ Simulate"], ["drill", "🎓 Drill"]].map(([m, lbl]) => (
+        {[["line", "Line"], ["sim", "Simulate"], ["drill", "Drill"]].map(([m, lbl]) => (
           <button key={m} type="button" className={"combo-mode-btn" + (mode === m ? " active" : "")} onClick={() => setMode(m)}>{lbl}</button>
         ))}
       </div>
