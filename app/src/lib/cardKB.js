@@ -92,6 +92,86 @@ export const CARD_KB = {
   "i:p masquerena": BOSS(),
   "selene, queen of the master magicians": BOSS(),
   "the winged dragon of ra - sphere mode": BB(),
+
+  // ── Archetype boss monsters (2025–2026 meta, web-researched) ────────
+  // Branded / Despia
+  "lubellion the searing dragon": BOSS(),
+  "granguignol the dusk dragon": BOSS(),
+  "albion the branded dragon": BOSS(),
+  "masquerade the blazing dragon": BOSS(),
+  "despian quaeritis": BOSS(),
+  // Dracotail (Branded pair)
+  "dracotail arthalion": BOSS(),
+  "dracotail gulamel": BOSS(),
+  "dracotail shaulas": BOSS(),
+  // Maliss
+  "maliss <q> hearts crypter": BOSS(),
+  "maliss <q> white binder": BOSS(),
+  "maliss <q> red ransom": BOSS(),
+  "number 41: bagooska the terribly tired tapir": FG(),
+  "number f0: utopic future": BOSS(),
+  // Mitsurugi / Ryzeal
+  "ame no murakumo no mitsurugi": BOSS(),
+  "ame no habakiri no mitsurugi": BOSS(),
+  "futsu no mitama no mitsurugi": BOSS(),
+  "ryzeal detonator": BOSS(),
+  "ryzeal duo drive": BOSS(),
+  // White Forest / Azamina
+  "diabell, queen of the white forest": BOSS(),
+  "rciela, sinister soul of the white forest": BOSS(),
+  "silvera, wolf tamer of the white forest": BOSS(),
+  "saint azamina": FG(),
+  "azamina mu rcielago": BOSS(),
+  "azamina ilia silvia": BOSS(),
+  // Sky Striker
+  "sky striker ace - kagari": BOSS(),
+  "sky striker ace - shizuku": BOSS(),
+  "sky striker ace - hayate": BOSS(),
+  "sky striker ace - kaina": BOSS(),
+  "sky striker ace - azalea": BOSS(),
+  // Vanquish Soul
+  "vanquish soul caesar valius": BOSS(),
+  "vanquish soul heavy borger": BOSS(),
+  "vanquish soul pluton hg": FG(),
+  "vanquish soul dr. mad love": BOSS(),
+  // Predaplant
+  "predaplant dragostapelia": BOSS(),
+  "predaplant triphyoverutum": BOSS(),
+  "starving venom predapower fusion dragon": BOSS(),
+  "greedy venom fusion dragon": BOSS(),
+  "predaplant chimerafflesia": BOSS(),
+  // Lunalight
+  "lunalight leo dancer": BOSS(),
+  "lunalight cat dancer": BOSS(),
+  "lunalight sabre dancer": BOSS(),
+  "lunalight panther dancer": BOSS(),
+  "lunalight liger dancer": BOSS(),
+  // Fairy Tail
+  "fairy tail - rochka": BOSS(),
+  "fairy tail - wiccat": BOSS(),
+  // Radiant Typhoon
+  "radiant typhoon varuroon, the marine eidolon": BOSS(),
+  "radiant typhoon fonix, the great flame": BOSS(),
+  // Medius the Pure cluster — Power Patron / DoomZ / Artmage / Elfnote / Kewl Tune / Clown Crew
+  "doomz xii end - drastrius": BOSS(),
+  "doomz xiii over - graflareio": BOSS(),
+  "doomz xii zero - drastea": BOSS(),
+  "doomz break - diactorus": BOSS(),
+  "doomz vii seven - elara": BOSS(),
+  "power patron doomz": FG(),
+  "jupiter the power patron of destruction": BOSS(),
+  "nerva the power patron of creation": BOSS(),
+  "junora the power patron of tuning": BOSS(),
+  "artmage diactorus": BOSS(),
+  "artmage non-finito": BOSS(),
+  "artmage finmel": BOSS(),
+  "june pride - elfnotes": BOSS(),
+  "elfnote seraphim strelitzia": BOSS(),
+  "kewl tune loudness war": BOSS(),
+  "kewl tune b2b": BOSS(),
+  "clown crew diabolo": BOSS(),
+  "clown crew meteor": BOSS(),
+  "clown crew drish": BOSS(),
 };
 
 export function lookupKB(name) {
