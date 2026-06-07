@@ -422,6 +422,12 @@ function KeyCardRow({ deck, kc, save, force, cardFor, onHover, onPick }) {
       {open && (
         <div className="key-card-editor">
           <label className="key-card-edit-row">
+            <span>Category</span>
+            <Dropdown className="key-card-pri-dd" value={kc.category || "Tech"}
+              options={KEY_CARD_BUCKETS.map((c) => [c, c])}
+              onChange={(v) => { kc.category = v; kc.auto = false; save(); force(); }} />
+          </label>
+          <label className="key-card-edit-row">
             <span>Stop priority</span>
             <Dropdown className="key-card-pri-dd" value={kc.stopPriority || "none"}
               options={STOP_PRIORITIES.map((p) => [p, p])}

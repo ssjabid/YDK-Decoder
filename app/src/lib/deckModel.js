@@ -179,9 +179,10 @@ export function classifyKeyCardCategory(card) {
 export function extractKeyCards(deck, cardMap) {
   const dl = getDeckPrimaryDecklist(deck);
   if (!dl) return [];
-  // MAIN deck only — key cards are about the core deck cards you'd interact
-  // with (starters/extenders/handtraps to stop), not every Extra-deck boss.
-  const ids = (dl.main || []).map(String);
+  // Main deck (starters/extenders/handtraps to stop) PLUS the Extra deck so the
+  // Boss bucket fills with the deck's actual end-board threats (Mirrorjade,
+  // Lunalight Leo Dancer, …) — exactly what you want to know you're up against.
+  const ids = [...(dl.main || []), ...(dl.extra || [])].map(String);
   const uniqueIds = Array.from(new Set(ids));
   const existing = Array.isArray(deck.keyCards) ? deck.keyCards : [];
   const manualByName = new Map(existing.filter((kc) => kc && kc.auto === false).map((kc) => [kc.name, kc]));
