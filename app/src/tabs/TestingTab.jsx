@@ -277,6 +277,11 @@ function ComboLine({ r, handNames, vsTraps, onHover, onPick }) {
         ))}
         <span className="muted" style={{ marginLeft: 8 }}>· {statusText}</span>
       </div>
+      {c.userOpenerSize != null && (c.openingHand || []).length > c.userOpenerSize && (
+        <div className="combo-line-trim-hint" title="Matching requires every recorded opener card to be in your hand — extracted combos record the whole 5-card hand, so trim it down to the real opener.">
+          ✂ Marked {c.userOpenerSize}-card, but {(c.openingHand || []).length} opener cards are recorded — trim the opening hand in <strong>Combos → ✎ Edit</strong> for accurate matching.
+        </div>
+      )}
       {open && (
         <ol className="combo-line-steps">
           {plays.length ? plays.map((s, i) => <li key={i}><span className="combo-drill-n">{i + 1}</span><span>{describeStep(s)}</span></li>)

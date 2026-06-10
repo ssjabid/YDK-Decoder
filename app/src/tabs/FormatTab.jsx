@@ -549,37 +549,46 @@ function TournamentJournal({ format, deckNames, primaryDecks, update }) {
 
 function RoundEditor({ t, format, deckNames, update, onDelete }) {
   const updT = (fn) => update((f) => { const tt = (f.tournaments || []).find((x) => x.tournamentId === t.tournamentId); if (tt) fn(tt); });
+  // Address rounds by their stable roundId, never by list index — an index
+  // captured at render time can point at the wrong round after a delete.
+  const patchRound = (roundId, fn) => updT((tt) => { const r = (tt.rounds || []).find((x) => x.roundId === roundId); if (r) fn(r); });
+  // Backfill ids on legacy rounds so the id-addressing always works.
+  useEffect(() => {
+    if ((t.rounds || []).some((x) => x && !x.roundId)) {
+      updT((tt) => { (tt.rounds || []).forEach((x) => { if (x && !x.roundId) x.roundId = "r_" + rid(); }); });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const opponents = (format.matchups || []).map((m) => m.opponentDeckId);
   const addRound = () => updT((tt) => { tt.rounds = tt.rounds || []; tt.rounds.push({ roundId: "r_" + rid(), opponentDeckId: "", result: "", notes: "" }); });
   const rounds = t.rounds || [];
   return (
     <div className="journal-rounds">
       {rounds.map((r, i) => (
-        <div key={r.roundId} className="journal-round">
+        <div key={r.roundId || i} className="journal-round">
           <div className="journal-round-top">
             <span className="journal-round-n">Round {i + 1}</span>
-            <button type="button" className="fmt-chip-x" title="Remove round" onClick={() => updT((tt) => { tt.rounds = tt.rounds.filter((_, j) => j !== i); })}>×</button>
+            <button type="button" className="fmt-chip-x" title="Remove round" onClick={() => updT((tt) => { tt.rounds = (tt.rounds || []).filter((x) => x.roundId !== r.roundId); })}>×</button>
           </div>
           <div className="journal-round-fields">
             <div className="journal-rf">
               <span className="journal-rf-label">What did you play against?</span>
               <Dropdown className="journal-opp-dd" value={r.opponentDeckId || ""} placeholder="— opponent deck —"
                 options={opponents.map((id) => [id, deckNames[id] || id])}
-                onChange={(v) => updT((tt) => { tt.rounds[i].opponentDeckId = v; })} />
+                onChange={(v) => patchRound(r.roundId, (rr) => { rr.opponentDeckId = v; })} />
             </div>
             <div className="journal-rf">
               <span className="journal-rf-label">Did you win?</span>
               <div className="journal-wl">
                 {[["W", "Win"], ["L", "Loss"], ["D", "Draw"]].map(([res, lbl]) => (
                   <button key={res} type="button" className={"journal-wl-btn is-" + res.toLowerCase() + (r.result === res ? " active" : "")}
-                    onClick={() => updT((tt) => { tt.rounds[i].result = res; })}>{lbl}</button>
+                    onClick={() => patchRound(r.roundId, (rr) => { rr.result = res; })}>{lbl}</button>
                 ))}
               </div>
             </div>
             <label className="journal-rf jnf-grow">
               <span className="journal-rf-label">Any notes?</span>
               <input className="fmt-add-input is-wide" defaultValue={r.notes} placeholder="how it went, what you'd change next time…"
-                onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => updT((tt) => { tt.rounds[i].notes = e.target.value; })} />
+                onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => patchRound(r.roundId, (rr) => { rr.notes = e.target.value; })} />
             </label>
           </div>
         </div>

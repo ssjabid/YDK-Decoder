@@ -66,7 +66,7 @@ function applyStepToState(state, step) {
   const placedZone = extractZone(detail);
 
   if (action === "Draw" || action === "Search") {
-    if (primary) state.hand.push(primary);
+    for (const n of cards) if (n) state.hand.push(n); // multi-card draws keep every card
   } else if (action === "Normal Summon" || action === "Tribute Summon" || action === "Flip Summon") {
     if (primary) { arrRemoveFirst(state.hand, primary); state.field.push({ card: primary, materials: [], zone: placedZone }); }
   } else if (action === "Special Summon") {
@@ -142,8 +142,16 @@ function applyStepToState(state, step) {
     if (primary && placedZone) { const slot = state.field.find((s) => s.card === primary); if (slot) slot.zone = placedZone; }
   } else if (action === "Send to GY" || action === "Destroy" || action === "Tribute" || action === "Discard") {
     if (!primary) return;
-    if (fromField) fieldRemoveTop(state.field, primary);
-    if (fromHand) arrRemoveFirst(state.hand, primary);
+    let removed = false;
+    if (fromField) removed = fieldRemoveTop(state.field, primary);
+    if (fromHand) removed = arrRemoveFirst(state.hand, primary) || removed;
+    // No source marker (and not from Deck/banish, where nothing is tracked):
+    // remove the copy from where it most plausibly was, so the card isn't
+    // duplicated into the GY while also sitting in hand/field.
+    if (!removed && !fromField && !fromHand && !/from\s+(?:Deck|Extra Deck|banish)/i.test(detail)) {
+      if (action === "Discard") arrRemoveFirst(state.hand, primary) || fieldRemoveTop(state.field, primary);
+      else fieldRemoveTop(state.field, primary) || arrRemoveFirst(state.hand, primary);
+    }
     state.gy.push(primary);
   } else if (action === "Banish") {
     if (!primary) return;
@@ -165,6 +173,7 @@ function applyStepToState(state, step) {
     }
     if (fromField) fieldRemoveTop(state.field, primary);
     if (fromGy) arrRemoveFirst(state.gy, primary);
+    if (fromHand) arrRemoveFirst(state.hand, primary); // e.g. banish a cost from hand
     state.banished.push(primary);
   } else if (action === "AttachMaterial") {
     if (cards.length >= 2) {
