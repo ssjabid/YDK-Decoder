@@ -82,7 +82,16 @@ export default function App() {
   useEffect(() => {
     const onInjected = () => reload();
     window.addEventListener("ydk:combo-injected", onInjected);
-    return () => window.removeEventListener("ydk:combo-injected", onInjected);
+    // Live cross-tab sync: another tab (or the extension injecting into the
+    // legacy decoder on the same origin) writing any ydk_* key refreshes this
+    // tab too — no manual reload needed. `storage` only fires for OTHER tabs'
+    // writes, so this can't loop on our own saves.
+    const onStorage = (e) => { if (e.key == null || String(e.key).startsWith("ydk_")) reload(); };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("ydk:combo-injected", onInjected);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   return (

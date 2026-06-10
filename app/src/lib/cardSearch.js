@@ -51,6 +51,30 @@ export function searchLocal(query, limit = 10) {
   return prefix.concat(sub).slice(0, limit);
 }
 
+// Resolve one exact card name via the API, at most once per session — for
+// the self-healing views (playmat, combo detail). Without the memo, a
+// misspelled name re-queried the API on EVERY mount, forever. In-flight
+// dedup means several views showing the same board share ONE request.
+// Returns whether the name now resolves locally.
+const _resolveFailed = new Set();
+const _resolveInflight = new Map();
+export function resolveCardName(name) {
+  const n = String(name || "");
+  if (!n) return Promise.resolve(false);
+  if (lookupCardByName(n)) return Promise.resolve(true);
+  if (_resolveFailed.has(n)) return Promise.resolve(false);
+  if (_resolveInflight.has(n)) return _resolveInflight.get(n);
+  const p = (async () => {
+    try { await searchApi(n); } catch (_) { /* noop */ }
+    const ok = !!lookupCardByName(n);
+    if (!ok) _resolveFailed.add(n);
+    _resolveInflight.delete(n);
+    return ok;
+  })();
+  _resolveInflight.set(n, p);
+  return p;
+}
+
 // Live fuzzy-name search against YGOPRODeck. Caches results. Returns [].
 export async function searchApi(query) {
   const q = String(query || "").trim();

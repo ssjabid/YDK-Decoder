@@ -3,11 +3,23 @@ import { getImageUrls } from "../lib/ydk.js";
 import { searchLocal, searchApi, lookupCardByName } from "../lib/cardSearch.js";
 import CardPreview from "./CardPreview.jsx";
 
+// Light-touch sanitizer — keeps the formatting tags the editor produces,
+// strips active content (scripts, inline handlers, javascript: URLs).
+// Defense-in-depth: stored notes round-trip through innerHTML, and HTML can
+// arrive from outside via imported backups / pasted combo JSON.
+export function sanitizeNotesHtml(html) {
+  return String(html)
+    .replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
+    .replace(/<\s*\/?\s*(script|style|iframe|object|embed|link|meta)\b[^>]*\/?\s*>/gi, "")
+    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/\s(href|src)\s*=\s*(["']?)\s*javascript:[^"'\s>]*\2/gi, "");
+}
+
 // Plain text → <p> (preserving blank-line paragraphs + <br>); HTML passes
-// through untouched. Idempotent.
+// through sanitized. Idempotent.
 export function normalizeNotesHtml(raw) {
   if (!raw) return "";
-  if (/<[a-z][^>]*>/i.test(raw)) return raw; // already HTML
+  if (/<[a-z][^>]*>/i.test(raw)) return sanitizeNotesHtml(raw); // already HTML
   const esc = String(raw).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return esc.split(/\n{2,}/).map((p) => "<p>" + p.replace(/\n/g, "<br>") + "</p>").join("");
 }
@@ -57,16 +69,21 @@ export default function RichNotes({ value, onSave, placeholder, minHeight = 58 }
     return { node, atOffset: at, query, rect: r.getBoundingClientRect() };
   };
 
+  const apiTimer = useRef(null);
   const detectMention = () => {
     const ctx = caretQuery();
     if (!ctx) { setMention(null); return; }
     setMention({ query: ctx.query, items: searchLocal(ctx.query, 10), activeIdx: 0, rect: ctx.rect });
     if (ctx.query.length >= 3) {
-      searchApi(ctx.query).then(() => {
-        const cur = caretQuery();
-        if (!cur || cur.query !== ctx.query) return; // user moved on
-        setMention((m) => (m ? { ...m, items: searchLocal(ctx.query, 10) } : m));
-      });
+      // Debounced — local results stay instant, the API fires once per pause.
+      clearTimeout(apiTimer.current);
+      apiTimer.current = setTimeout(() => {
+        searchApi(ctx.query).then(() => {
+          const cur = caretQuery();
+          if (!cur || cur.query !== ctx.query) return; // user moved on
+          setMention((m) => (m ? { ...m, items: searchLocal(ctx.query, 10) } : m));
+        });
+      }, 300);
     }
   };
 

@@ -59,9 +59,14 @@ export function slimCardCache() {
   return dirty;
 }
 
+// Ids a successful API response didn't know — skip them for the session
+// instead of re-asking on every load.
+const _sessionMisses = new Set();
+
 // Resolve card data for a set of passcodes. Uses the persistent card cache
-// (same ydk_card_cache key), then fills gaps from the API and writes them
-// back so thumbnails/text survive reloads. Returns { map, apiError }.
+// (same ydk_card_cache key), then fills gaps from the API (chunked so a big
+// id list can't blow the URL limit) and writes them back so thumbnails/text
+// survive reloads. Returns { map, apiError }.
 export async function fetchCards(ids) {
   // ids may be strings (meta-pack decks store passcodes as strings) — coerce.
   const unique = [...new Set(ids.map((x) => Number(x)))].filter((x) => Number.isFinite(x));
@@ -72,11 +77,13 @@ export async function fetchCards(ids) {
     if (cache[id]) map[id] = cache[id];
     else missing.push(id);
   }
-  const realIds = missing.filter((id) => id < 99999999 && id > 99999);
+  const realIds = missing.filter((id) => id < 99999999 && id > 99999 && !_sessionMisses.has(id));
   let apiError = null;
-  if (realIds.length) {
+  let cacheDirty = false;
+  for (let i = 0; i < realIds.length; i += 120) {
+    const chunk = realIds.slice(i, i + 120);
     try {
-      const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${realIds.join(",")}`;
+      const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${chunk.join(",")}`;
       const resp = await fetch(url);
       if (resp.ok) {
         const j = await resp.json();
@@ -84,12 +91,13 @@ export async function fetchCards(ids) {
           const sc = slimCard(c);
           map[c.id] = sc;
           cache[c.id] = sc;
+          cacheDirty = true;
           // alt-art ids resolve to the same card
           for (const im of c.card_images || []) {
             if (!cache[im.id]) cache[im.id] = sc;
           }
         }
-        saveCardCache(cache);
+        for (const id of chunk) if (!map[id] && !cache[id]) _sessionMisses.add(id); // API answered; id unknown
       } else {
         apiError = `HTTP ${resp.status}`;
       }
@@ -97,6 +105,7 @@ export async function fetchCards(ids) {
       apiError = e.message;
     }
   }
+  if (cacheDirty) saveCardCache(cache);
   return { map, apiError };
 }
 

@@ -39,9 +39,12 @@ export default function CardPicker({ onAdd, placeholder = "Type a card name…",
     setItems(searchLocal(query, 16));
     setActive(0);
     if (query.length >= 3) {
+      // Debounced API hit — typing a long name is 1 request, not 15.
       let alive = true;
-      searchApi(query).then(() => { if (alive && q.trim() === query) setItems(searchLocal(query, 16)); });
-      return () => { alive = false; };
+      const timer = setTimeout(() => {
+        searchApi(query).then(() => { if (alive) setItems(searchLocal(query, 16)); });
+      }, 300);
+      return () => { alive = false; clearTimeout(timer); };
     }
   }, [q, open]); // eslint-disable-line react-hooks/exhaustive-deps
 

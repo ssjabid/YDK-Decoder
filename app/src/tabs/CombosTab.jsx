@@ -9,7 +9,7 @@ import {
 } from "../lib/combos.js";
 import { simulateCombo, describeStep, fieldToBoard } from "../lib/comboSim.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
-import { lookupCardByName, searchApi } from "../lib/cardSearch.js";
+import { lookupCardByName, resolveCardName } from "../lib/cardSearch.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
 import CardPreview from "../components/CardPreview.jsx";
 import EndBoardView from "../components/EndBoardView.jsx";
@@ -222,7 +222,9 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
       if (deck) { try { await fetchCards([...(deck.main || []), ...(deck.extra || []), ...(deck.side || [])]); } catch (_) {} }
       const missing = comboAllCards(c).filter((n) => n && !lookupCardByName(n));
       let got = false;
-      for (const n of missing.slice(0, 40)) { try { const r = await searchApi(n); if (r && r.length) got = true; } catch (_) {} }
+      // resolveCardName memoises failures, so unknown names cost one API call
+      // per session — not one per combo open.
+      for (const n of missing.slice(0, 40)) { if (await resolveCardName(n)) got = true; }
       if (alive && (deck || got)) forceRev();
     })();
     return () => { alive = false; };

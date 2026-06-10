@@ -6,7 +6,12 @@ export default function ModalHost() {
   const [req, setReq] = useState(null);
   const inputRef = useRef(null);
 
-  useEffect(() => _subscribe((r) => setReq(r)), []);
+  // If a new request arrives while one is open, resolve the old one with its
+  // cancel value — otherwise its caller's `await` would hang forever.
+  useEffect(() => _subscribe((r) => setReq((prev) => {
+    if (prev && prev.resolve) prev.resolve(prev.kind === "confirm" ? false : prev.kind === "prompt" ? null : undefined);
+    return r;
+  })), []);
   useEffect(() => { if (req && req.kind === "prompt" && inputRef.current) { inputRef.current.focus(); inputRef.current.select(); } }, [req]);
 
   if (!req) return null;

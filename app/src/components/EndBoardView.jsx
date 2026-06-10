@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { lookupCardByName, searchApi } from "../lib/cardSearch.js";
+import { lookupCardByName, resolveCardName } from "../lib/cardSearch.js";
 import { getImageUrls } from "../lib/ydk.js";
 
 // ════════════════════════════════════════════════════════════════════
@@ -15,6 +15,7 @@ import { getImageUrls } from "../lib/ydk.js";
 // ════════════════════════════════════════════════════════════════════
 const MAIN_ZONES = ["M-1", "M-2", "M-3", "M-4", "M-5"];
 const ST_ZONES = ["S-1", "S-2", "S-3", "S-4", "S-5"];
+
 
 export const ZONE_OPTIONS = [
   ["auto", "Auto-place"],
@@ -115,7 +116,9 @@ export default function EndBoardView({ cards, onHover, onPick, compact = false }
     if (!missing.length) return;
     (async () => {
       let got = false;
-      for (const n of [...new Set(missing)]) { try { const r = await searchApi(n); if (r && r.length) got = true; } catch (_) { /* noop */ } }
+      // resolveCardName memoises failures session-wide, so a bad name costs
+      // ONE api call total — not one per playmat mount.
+      for (const n of [...new Set(missing)]) { if (await resolveCardName(n)) got = true; }
       if (alive && got) setRev((x) => x + 1);
     })();
     return () => { alive = false; };
