@@ -127,7 +127,18 @@ export function deleteDeck(deckId) {
   const combos = loadSavedCombos();
   let comboChanged = false;
   for (const c of combos) {
-    if (c && c.deckId === deckId) { c.deckId = null; c.decklistId = null; comboChanged = true; }
+    if (!c) continue;
+    const hadLegacy = c.deckId === deckId;
+    const hadMulti = Array.isArray(c.deckIds) && c.deckIds.includes(deckId);
+    if (!hadLegacy && !hadMulti) continue;
+    if (Array.isArray(c.deckIds)) c.deckIds = c.deckIds.filter((id) => id !== deckId);
+    if (hadLegacy) {
+      // Fall back to the next multi-link (a combo on two DoomZ variants keeps
+      // the surviving one as its primary), else unassign.
+      c.deckId = (c.deckIds && c.deckIds[0]) || null;
+      if (!c.deckId) c.decklistId = null;
+    }
+    comboChanged = true;
   }
   if (comboChanged) saveSavedCombos(combos);
 

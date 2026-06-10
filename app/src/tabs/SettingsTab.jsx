@@ -1,7 +1,7 @@
 import { useMemo, useReducer, useRef, useState } from "react";
 import { getStoredTheme, setStoredTheme, loadDecks, loadFormats, loadSavedCombos, loadCardCache } from "../lib/storage.js";
 import { loadMetaPack } from "../lib/metaPack.js";
-import { downloadBackup, restoreMerge, restoreReplace, storageStats, clearCardCache, clearAllData, lastBackupAt } from "../lib/backup.js";
+import { downloadBackup, restoreMerge, restoreReplace, hasSafetySnapshot, undoReplace, storageStats, clearCardCache, clearAllData, lastBackupAt } from "../lib/backup.js";
 import { confirmModal, alertModal, promptModal } from "../lib/modal.js";
 import Icon from "../components/Icon.jsx";
 
@@ -58,10 +58,10 @@ export default function SettingsTab({ reload }) {
     catch { alertModal({ title: "Not valid JSON", message: "That file couldn't be parsed as a backup." }); return; }
     try {
       if (restoreMode.current === "replace") {
-        const ok = await confirmModal({ title: "Replace ALL data?", message: "This wipes your current decks, combos, formats + settings and replaces them with the backup. This cannot be undone.", confirmText: "Replace everything", danger: true });
+        const ok = await confirmModal({ title: "Replace ALL data?", message: "This wipes your current decks, combos, formats + settings and replaces them with the backup. A safety snapshot of what you have now is kept, so you can undo once if the file turns out to be wrong.", confirmText: "Replace everything", danger: true });
         if (!ok) return;
         const c = restoreReplace(json);
-        setStatus({ ok: true, msg: `Replaced all data from backup (${c.decks || 0} decks · ${c.combos || 0} combos).` });
+        setStatus({ ok: true, msg: `Replaced all data from backup (${c.decks || 0} decks · ${c.combos || 0} combos). Wrong file? Use “Undo replace” below.` });
       } else {
         const a = restoreMerge(json);
         setStatus({ ok: true, msg: `Merged backup: +${a.decks} decks · +${a.combos} combos · +${a.formats} formats · +${a.cards} cards.` });
@@ -160,10 +160,23 @@ export default function SettingsTab({ reload }) {
         <div className="settings-row">
           <div>
             <div className="settings-label">Replace ALL data from a backup</div>
-            <div className="settings-hint">Wipes current data and restores the backup verbatim. Destructive.</div>
+            <div className="settings-hint">Wipes current data and restores the backup verbatim. A one-shot safety snapshot is kept so this is undoable once.</div>
           </div>
           <button type="button" className="btn-secondary is-danger" onClick={() => pickRestore("replace")}>Replace from file…</button>
         </div>
+        {hasSafetySnapshot() && (
+          <div className="settings-row">
+            <div>
+              <div className="settings-label">Undo the last replace</div>
+              <div className="settings-hint">Brings back the data you had before the last “Replace from file”. One use — the snapshot is consumed.</div>
+            </div>
+            <button type="button" className="btn-secondary" onClick={async () => {
+              if (!(await confirmModal({ title: "Undo the last replace?", message: "Your data returns to exactly what it was before the replace. What you restored from the file is discarded.", confirmText: "Undo replace" }))) return;
+              try { const c = undoReplace(); setStatus({ ok: true, msg: `Replace undone (${c.decks} decks · ${c.combos} combos back).` }); reload && reload(); bump(); }
+              catch (err) { alertModal({ title: "Couldn't undo", message: err.message }); }
+            }}>Undo replace</button>
+          </div>
+        )}
         <div className="settings-row">
           <div>
             <div className="settings-label">Delete everything</div>

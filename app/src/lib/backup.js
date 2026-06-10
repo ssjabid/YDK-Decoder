@@ -88,11 +88,34 @@ export function restoreMerge(json) {
 }
 
 // REPLACE — destructive: wipe every known key, then write the backup verbatim.
-export function restoreReplace(json) {
-  const inc = parseBackup(json);
+// A safety snapshot of the data being replaced is kept under a key that is
+// deliberately NOT in KEYS, so the wipe loop can't touch it — one bad backup
+// file is no longer fatal (Settings shows an "Undo replace" while it exists).
+const SAFETY_KEY = "ydk_restore_safety";
+
+function applyReplace(inc) {
   for (const key of Object.values(KEYS)) localStorage.removeItem(key);
   for (const [field, key] of Object.entries(KEYS)) { if (inc[field] != null) writeLs(key, inc[field]); }
-  return json.counts || { decks: (inc.decks || []).length, combos: (inc.savedCombos || []).length };
+  return { decks: (inc.decks || []).length, combos: (inc.savedCombos || []).length };
+}
+
+export function restoreReplace(json) {
+  const inc = parseBackup(json);
+  try { localStorage.setItem(SAFETY_KEY, JSON.stringify(buildBackup())); } catch (_) { /* storage full — proceed without */ }
+  const counts = applyReplace(inc);
+  return json.counts || counts;
+}
+
+export function hasSafetySnapshot() {
+  try { return !!localStorage.getItem(SAFETY_KEY); } catch { return false; }
+}
+
+export function undoReplace() {
+  const raw = localStorage.getItem(SAFETY_KEY);
+  if (!raw) throw new Error("No safety snapshot to restore.");
+  const counts = applyReplace(parseBackup(JSON.parse(raw)));
+  localStorage.removeItem(SAFETY_KEY);
+  return counts;
 }
 
 // Approximate per-area localStorage usage (chars ≈ bytes).

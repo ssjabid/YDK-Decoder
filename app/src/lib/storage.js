@@ -5,6 +5,7 @@
 // backup JSON format also stays identical (Settings → Backup/Restore works
 // across both apps). DO NOT rename these keys.
 // ───────────────────────────────────────────────────────────────────
+import { alertModal } from "./modal.js"; // no import cycle: modal.js is standalone
 
 export const KEYS = {
   decks:            "ydk_decks",
@@ -35,13 +36,39 @@ export function readLs(key) {
   } catch { return null; }
 }
 
+const isQuotaErr = (e) => !!e && (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED" || e.code === 22 || e.code === 1014);
+let _quotaNotified = false; // one modal per session, not one per keystroke
+
+// Quota-aware write. localStorage filling up used to fail SILENTLY (the
+// worst possible failure: the user keeps working, nothing persists). Now:
+// the card cache — the only re-fetchable data — is sacrificed to make room,
+// and if that still isn't enough the user gets a loud, actionable error.
 export function writeLs(key, value) {
+  let s;
   try {
     if (value == null) { localStorage.removeItem(key); return; }
-    const s = typeof value === "string" ? value : JSON.stringify(value);
+    s = typeof value === "string" ? value : JSON.stringify(value);
+  } catch (e) { console.warn("[YDK] writeLs failed for", key, e); return; }
+  try {
     localStorage.setItem(key, s);
   } catch (e) {
-    console.warn("[YDK] writeLs failed for", key, e);
+    if (key === KEYS.cardCache) { console.warn("[YDK] card-cache write skipped (storage full)"); return; } // cache is best-effort
+    if (isQuotaErr(e)) {
+      try {
+        localStorage.setItem(KEYS.cardCache, "{}");
+        localStorage.setItem(key, s);
+        if (!_quotaNotified) {
+          _quotaNotified = true;
+          alertModal({ title: "Storage was full", message: "Browser storage hit its limit, so the card image cache was cleared to make room — your data saved fine. Card art and text re-download as you browse." });
+        }
+        return;
+      } catch (_) { /* fall through to the hard warning */ }
+    }
+    console.warn("[YDK] writeLs FAILED for", key, e);
+    if (!_quotaNotified) {
+      _quotaNotified = true;
+      alertModal({ danger: true, title: "Save failed — storage is full", message: "Your last change could NOT be saved. Download a backup right now (Settings → Backup), then free space with Settings → Danger zone → Clear cache." });
+    }
   }
 }
 

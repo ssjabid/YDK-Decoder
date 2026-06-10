@@ -31,6 +31,34 @@ export function getImageUrls(id) {
   ];
 }
 
+// Keep only the fields the app actually reads (preview, classify, sim,
+// placement). The raw API object carries card_sets / card_prices / every
+// alt-art entry — 5-10× heavier, and it was pushing localStorage toward its
+// quota, where saves start silently failing.
+const SLIM_FIELDS = ["id", "name", "type", "frameType", "desc", "race", "attribute", "archetype", "atk", "def", "level", "linkval", "scale"];
+export function slimCard(c) {
+  if (!c || typeof c !== "object") return c;
+  const s = {};
+  for (const k of SLIM_FIELDS) if (c[k] !== undefined) s[k] = c[k];
+  return s;
+}
+
+// One-time pass: re-slim any heavyweight entries an older build cached.
+// Idempotent + cheap; run on app mount.
+export function slimCardCache() {
+  const cache = loadCardCache();
+  let dirty = false;
+  for (const k in cache) {
+    const c = cache[k];
+    if (c && (c.card_sets || c.card_prices || c.card_images || c.banlist_info)) {
+      cache[k] = slimCard(c);
+      dirty = true;
+    }
+  }
+  if (dirty) saveCardCache(cache);
+  return dirty;
+}
+
 // Resolve card data for a set of passcodes. Uses the persistent card cache
 // (same ydk_card_cache key), then fills gaps from the API and writes them
 // back so thumbnails/text survive reloads. Returns { map, apiError }.
@@ -53,11 +81,12 @@ export async function fetchCards(ids) {
       if (resp.ok) {
         const j = await resp.json();
         for (const c of j.data || []) {
-          map[c.id] = c;
-          cache[c.id] = c;
+          const sc = slimCard(c);
+          map[c.id] = sc;
+          cache[c.id] = sc;
           // alt-art ids resolve to the same card
           for (const im of c.card_images || []) {
-            if (!cache[im.id]) cache[im.id] = c;
+            if (!cache[im.id]) cache[im.id] = sc;
           }
         }
         saveCardCache(cache);

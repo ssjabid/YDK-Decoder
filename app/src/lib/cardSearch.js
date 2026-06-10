@@ -7,6 +7,7 @@
 //      to the cache so chips + hover previews work offline afterward.
 // ───────────────────────────────────────────────────────────────────
 import { loadCardCache, saveCardCache } from "./storage.js";
+import { slimCard } from "./ydk.js";
 
 let _index = null;
 let _indexSize = -1;
@@ -63,8 +64,9 @@ export async function searchApi(query) {
     if (cards.length) {
       const cache = loadCardCache();
       for (const c of cards) {
-        cache[c.id] = c;
-        for (const im of c.card_images || []) if (!cache[im.id]) cache[im.id] = c;
+        const sc = slimCard(c); // cache the lean shape — see ydk.js slimCard
+        cache[c.id] = sc;
+        for (const im of c.card_images || []) if (!cache[im.id]) cache[im.id] = sc;
       }
       saveCardCache(cache);
       _index = null; // invalidate so nameIndex rebuilds with the new cards

@@ -1517,6 +1517,15 @@
 
 /* header settings gear (replaces the 5th tab) */
 .app-header-right { display: flex; align-items: center; gap: 12px; }
+
+/* backup nudge — amber, dismissable, sits between tabs and content */
+.backup-nudge { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 0; padding: 10px 14px; background: rgba(229,169,60,0.08); border: 1px solid rgba(229,169,60,0.35); border-radius: var(--radius-md); }
+.backup-nudge-text { font-size: 12.5px; color: var(--text); flex: 1; min-width: 200px; }
+.backup-nudge-btn { white-space: nowrap; }
+
+/* tab error boundary — contained render failure, never a blank app */
+.error-boundary { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.error-boundary-msg { font-family: "SF Mono", Menlo, monospace; font-size: 11.5px; color: var(--role-stopper); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; max-width: 100%; overflow-wrap: anywhere; }
 .app-gear { display: inline-flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-dim); cursor: pointer; padding: 7px; transition: color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast); }
 .app-gear:hover { color: var(--text); border-color: var(--border-strong); }
 .app-gear.active { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }

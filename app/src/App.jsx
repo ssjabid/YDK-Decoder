@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
-import { getStoredTheme } from "./lib/storage.js";
+import { Component, useEffect, useState } from "react";
+import { getStoredTheme, loadDecks, loadSavedCombos, KEYS, readLs, writeLs } from "./lib/storage.js";
 import { ensureMetaFresh, backfillPlaybookFromMatchups } from "./lib/metaPack.js";
 import { ingestComboFromUrl } from "./lib/combos.js";
+import { slimCardCache } from "./lib/ydk.js";
+import { downloadBackup, lastBackupAt } from "./lib/backup.js";
 import DecksTab from "./tabs/DecksTab.jsx";
 import SettingsTab from "./tabs/SettingsTab.jsx";
 import FormatTab from "./tabs/FormatTab.jsx";
@@ -16,6 +18,40 @@ const TABS = [
   { id: "combos", label: "Combos", icon: "summon" },
   { id: "testing", label: "Testing", icon: "target" },
 ];
+
+// One bad render (e.g. a malformed combo object) used to blank the whole app
+// with no recovery. Now it's contained to the tab with a way back.
+class TabErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidUpdate(prev) { if (prev.resetKey !== this.props.resetKey && this.state.error) this.setState({ error: null }); }
+  componentDidCatch(error, info) { console.error("[YDK] render error:", error, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="placeholder error-boundary">
+          <strong>Something broke while drawing this view.</strong>
+          <div className="error-boundary-msg">{String((this.state.error && this.state.error.message) || this.state.error)}</div>
+          <div>Your data is safe — this is a display error, nothing was deleted.</div>
+          <button type="button" className="btn-secondary" onClick={this.props.onReset}>← Back to Decks</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Backup nudge — real user data + no backup in 7 days (and not snoozed).
+function backupNudgeDue() {
+  try {
+    const hasData = loadSavedCombos().length > 0 || loadDecks().some((d) => (d.role || "primary") !== "matchup");
+    if (!hasData) return false;
+    const snooze = readLs(KEYS.backupNudgeSnooze);
+    if (snooze && Date.parse(snooze) > Date.now()) return false;
+    const last = lastBackupAt();
+    return !last || Date.now() - Date.parse(last) > 7 * 86400e3;
+  } catch { return false; }
+}
 
 export default function App() {
   const [tab, setTab] = useState("decks");
@@ -33,11 +69,15 @@ export default function App() {
 
   useEffect(() => {
     let alive = true;
+    try { slimCardCache(); } catch (_) { /* noop */ } // one-time: shrink heavyweight cached cards
     try { backfillPlaybookFromMatchups(); } catch (_) { /* noop */ }
     try { if (ingestComboFromUrl() > 0) reload(); } catch (_) { /* noop */ }
     ensureMetaFresh().then((r) => { if (alive && r && r.updated) reload(); });
     return () => { alive = false; };
   }, []);
+
+  const [nudge, setNudge] = useState(false);
+  useEffect(() => { setNudge(backupNudgeDue()); }, [dataVersion]);
 
   useEffect(() => {
     const onInjected = () => reload();
@@ -70,12 +110,22 @@ export default function App() {
         ))}
       </nav>
 
+      {nudge && (
+        <div className="backup-nudge">
+          <span className="backup-nudge-text">It's been a while since your last backup — your work lives only in this browser.</span>
+          <button type="button" className="btn-secondary backup-nudge-btn" onClick={() => { downloadBackup(); setNudge(false); }}>Back up now</button>
+          <button type="button" className="link-btn" onClick={() => { writeLs(KEYS.backupNudgeSnooze, new Date(Date.now() + 86400e3).toISOString()); setNudge(false); }}>Remind me tomorrow</button>
+        </div>
+      )}
+
       <main key={tab} className="tab-content">
-        {tab === "decks" && <DecksTab dataVersion={dataVersion} reload={reload} jump={deckJump} />}
-        {tab === "format" && <FormatTab dataVersion={dataVersion} onEditDeck={goToDeck} />}
-        {tab === "combos" && <CombosTab dataVersion={dataVersion} reload={reload} />}
-        {tab === "testing" && <TestingTab dataVersion={dataVersion} />}
-        {tab === "settings" && <SettingsTab reload={reload} />}
+        <TabErrorBoundary resetKey={tab + ":" + dataVersion} onReset={() => { setTab("decks"); reload(); }}>
+          {tab === "decks" && <DecksTab dataVersion={dataVersion} reload={reload} jump={deckJump} />}
+          {tab === "format" && <FormatTab dataVersion={dataVersion} onEditDeck={goToDeck} />}
+          {tab === "combos" && <CombosTab dataVersion={dataVersion} reload={reload} />}
+          {tab === "testing" && <TestingTab dataVersion={dataVersion} />}
+          {tab === "settings" && <SettingsTab reload={reload} />}
+        </TabErrorBoundary>
       </main>
       <ModalHost />
     </div>
