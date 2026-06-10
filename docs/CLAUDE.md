@@ -2,6 +2,36 @@
 
 This file is for AI assistants (like Claude Code) working on this project. Read this entire file before making changes.
 
+---
+
+## ⚡ CURRENT BUILD (read this first — updated 2026-06)
+
+**The active app is now a React + Vite SPA in `app/`** — not the legacy HTML
+decoder. Most of this file below was written for the original single-file
+`decoder/ydk_decoder.html` and is kept for history + domain rules; where it says
+"vanilla JS, no build step", that describes the **legacy decoder**, which still
+exists and is preserved. New work happens in `app/`.
+
+- **`app/`** — React 19 + Vite 8, plain JSX (no TypeScript), plain CSS with design
+  tokens (`src/styles/tokens.css` + `app.css`). Client-only. Run with `cd app &&
+  npm run dev`; build with `npm run build`. Deps are only `react`/`react-dom`.
+- **Tabs:** Decks / Format / Combos / Testing, plus a Settings gear. (Cards is a
+  sub-view inside Decks.)
+- **Shared storage:** the React app uses the **same `ydk_*` localStorage keys** and
+  the **same backup JSON format** as the legacy decoder + extension (see
+  `app/src/lib/storage.js`). Do NOT rename those keys. Storage is per-origin, so
+  the React app only sees extension-extracted combos when served from the same
+  origin the extension targets (`localhost:8000`).
+- **Still true and still preserved:** `decoder/ydk_decoder.html` (legacy app) and
+  the whole `extension/` (especially `combo-import-helper.js` — do not rewrite).
+- The **Yu-Gi-Oh domain rules, role taxonomy, naming, and DON'Ts** in this file
+  still apply to the React app.
+
+➡ For the React app's own readme see `app/README.md`. For a full-feature
+review/level-up prompt see `docs/FABLE5_REVIEW_PROMPT.md`.
+
+---
+
 ## Project summary
 
 **Goal:** Personal tool for Abid to memorize Yu-Gi-Oh decks (focus: DoomZ / Power Patron).
@@ -84,11 +114,15 @@ Originally the extension stored only `latestCombo` and the decoder had no librar
 ## Conventions
 
 ### Code style
-- Vanilla JS throughout (no framework, no build step)
-- HTML files are single-file (all CSS/JS inline) where possible
-- Dark mode by default — CSS custom properties in `:root` of every file
-- Fixed 32px height filter pills, role-colored dots, uniform widths
-- Minimal, slick, professional — no emojis in UI
+- **React app (`app/`, current):** React 19 + Vite, plain JSX (no TypeScript),
+  plain CSS with design tokens. Dependencies stay minimal (`react`/`react-dom`
+  only) — no UI framework, state library, or CSS-in-JS.
+- **Legacy decoder (`decoder/`):** vanilla JS, single-file HTML (all CSS/JS
+  inline), no build step. Preserved as-is.
+- Dark mode by default — CSS custom properties / design tokens.
+- Fixed-height filter pills, role-colored dots, uniform widths.
+- Minimal, slick, professional — no emojis as UI, no gratuitous motion (honor
+  `prefers-reduced-motion`).
 
 ### Naming
 - DoomZ card names use exact DuelingBook strings including quotes: `DoomZ Command "A.D.R.A.S.T.E.I.A."` with the literal quote marks and periods
@@ -126,7 +160,18 @@ A card can have multiple roles. Amalthe is Starter + Searcher + Extender.
 7. Watch console (right-click icon → Inspect popup)
 8. Check `sample-data/` — extractions should still produce consistent structured output
 
-## How to test a change to the decoder
+## How to test a change to the React app (`app/`, current)
+
+1. Make your code change.
+2. `cd app && npm run dev` — Vite serves with HMR; open the printed localhost URL.
+3. `npm run build` must stay clean; `npm run lint` for hygiene.
+4. **Verify in the browser, not just the build** — drive the actual UI (Decks →
+   "Load meta decks", add/edit a combo, draw a hand in Testing), watch the
+   console for errors, and confirm changes persist across a reload.
+5. To share data with the extension + legacy decoder, serve the built app from
+   the **same origin** (`localhost:8000`) — storage is per-origin.
+
+## How to test a change to the decoder (legacy)
 
 1. Make your code change
 2. Ensure server is running: `py -m http.server 8000` in the repo root
@@ -137,10 +182,12 @@ A card can have multiple roles. Amalthe is Starter + Searcher + Extender.
 ## Critical DON'Ts
 
 - ❌ **Don't rewrite `combo-import-helper.js`** — it solves dozens of DuelingBook DOM quirks that took many iterations to discover
-- ❌ **Don't add external dependencies** — project is intentionally zero-build, zero-npm. Vanilla JS only.
-- ❌ **Don't rely on file://** — always assume localhost
-- ❌ **Don't invent card text** — if a card (especially BLZD set) isn't in YGOPRODeck's API yet, leave a VERIFY flag and let the user paste actual text
+- ❌ **Don't rename `ydk_*` localStorage keys or break the backup JSON format** — they're shared across the React app, the legacy decoder, and the extension
+- ❌ **Don't add heavy dependencies to the React app** — keep it `react`/`react-dom` only; no UI framework, state library, or CSS-in-JS. (The *legacy decoder* stays zero-build vanilla JS.)
+- ❌ **Don't rely on file://** — always assume a served localhost (API + images need a real origin)
+- ❌ **Don't invent card text or rulings** — if a card isn't in YGOPRODeck's API yet, leave it flagged; respect real rules (e.g. the one-Extra-Monster-Zone rule unless Extra Linked)
 - ❌ **Don't add analytics / tracking** — this is a personal tool, no phoning home
+- ❌ **Don't break or delete the legacy decoder / extension** — they're preserved on purpose
 
 ## User context
 

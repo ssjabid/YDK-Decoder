@@ -1,6 +1,14 @@
 # ROADMAP
 
-Status as of **2026-05-28**.
+> **⚡ 2026-06 — development moved to the React app in `app/`.** This roadmap was
+> written for the legacy `decoder/ydk_decoder.html`. Its shipped/backlog items are
+> still useful context, but the active product is now the React + Vite build (see
+> `HANDOFF.md` → "Current build" and `docs/FABLE5_REVIEW_PROMPT.md`). Most "shipped"
+> features below were rebuilt in React with parity-plus; the live backlog now is:
+> serve the React build at `localhost:8000` (extension handoff), narrow/mobile
+> layout, spaced-repetition drilling, and per-combo mastery tracking.
+
+Status as of **2026-05-28** (legacy decoder).
 Read top to bottom. The "Shipped" section is what already works in the
 current build. The "In progress / next" section is the active queue.
 "Backlog" is everything that's been triaged but isn't being worked on yet.

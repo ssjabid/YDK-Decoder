@@ -1,7 +1,47 @@
 # HANDOFF — YDK Decoder
 
 Snapshot of the project state for whoever picks this up next (including future-me).
-Last updated: **2026-05-30**.
+Last updated: **2026-06-10**.
+
+---
+
+## ⚡ Current build: the React app in `app/` (2026-06)
+
+**Development moved to a React + Vite SPA in `app/`.** Everything below this banner
+describes the **legacy single-file decoder** (`decoder/ydk_decoder.html`) and the
+extension — both still exist and are preserved, and the Yu-Gi-Oh domain knowledge
++ data model below all still apply. But the app Abid uses now is the React build.
+
+**Stack:** React 19 + Vite 8, plain JSX, plain CSS tokens. Deps: `react`/`react-dom`
+only. Client-only; **same `ydk_*` localStorage keys + backup format** as the legacy
+app (`app/src/lib/storage.js`), so data carries across. Run: `cd app && npm run dev`.
+
+**Tabs (parity with + beyond the legacy app):**
+- **Decks** — deck list, decklist viewer, methodology/matchup **playbook** editor,
+  **key-card buckets** (Boss/Starter/Extender/Handtrap/Floodgate/Tech; Boss now
+  includes the Extra deck) with a per-card **Category** control.
+- **Format** — read-only matchup **dashboard** with "Edit in Decks →" deep links,
+  format export/import, "+ Add from library", **side-deck planner** (named patterns,
+  going first/second, copy-count dots, visual OUT/IN summary), **tournament journal**
+  (event name · type · date, rounds, aggregated record).
+- **Combos** — list + image **gallery**, detail with **Line / Simulate / Drill**, a
+  full **combo editor** (multi-deck links via `deckIds[]`, opener-size control, edit
+  opening hand / end board, full **step editor**: add/remove/reorder/retext + per-step
+  cards, live simulated board, **"plays through" handtrap tags** `beatsTraps[]`),
+  manual builder, paste/import JSON, extension ingestion.
+- **Testing** — **Going first** (goldfish → role-tagged hand → playable lines matched
+  from saved combos, handtrap badges, **"if they have <handtrap>" filter**) and
+  **Going second** (board breaker with Game-1 / sided Game-2 hands).
+- **Settings** (gear) — data overview, **backup/restore** (same JSON as legacy),
+  theme, danger zone.
+
+**Recent fixes (this build):** key-card Boss bucket now buckets the Extra deck;
+per-key-card Category dropdown; combo multi-deck linking surfaces in Testing.
+
+**Open item:** serve the React build at `localhost:8000` (same origin as the
+extension target) so extension-extracted combos appear directly; narrow-viewport
+layout. Docs: `app/README.md` (React app), `docs/FABLE5_REVIEW_PROMPT.md`
+(review/level-up prompt), `docs/REACT_*` (test checklists).
 
 ---
 
