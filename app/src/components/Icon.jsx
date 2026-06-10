@@ -57,7 +57,7 @@ const PATHS = {
 
 export default function Icon({ name, size = 18, className = "", strokeWidth = 1.7 }) {
   const body = PATHS[name];
-  if (!body) return null;
+  if (!body) { console.warn(`[YDK] Icon: unknown name "${name}"`); return null; } // surface typos instead of silently rendering nothing
   return (
     <svg
       className={"icon " + className}

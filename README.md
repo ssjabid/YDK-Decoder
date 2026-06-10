@@ -22,12 +22,15 @@ storage is per-origin). Serve everything from `localhost:8000`.
 ```bash
 cd app
 npm install
-npm run dev      # open the printed localhost URL
-npm run build    # production build
+npm run dev         # development (own port, own localStorage)
+npm run build:8000  # build into ../react — then it's served at localhost:8000
 ```
-Card images + the YGOPRODeck API need a served origin (not `file://`). To share
-data with the extension + legacy decoder, build the app and serve it from
-`localhost:8000`.
+**To share data with the extension + legacy decoder** (one localStorage for all
+three): run `npm run build:8000` once, start `py -m http.server 8000` in the
+repo root, and open **`http://localhost:8000/react/`**. Extension-extracted
+combos appear there live (same origin + cross-tab sync). Re-run `build:8000`
+after pulling app changes. Card images + the API need a served origin (not
+`file://`).
 
 ## Quick start — legacy decoder (Windows PowerShell)
 ```powershell

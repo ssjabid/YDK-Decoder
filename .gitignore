@@ -40,3 +40,4 @@ build/
 # Chrome extension packaging
 *.crx
 *.pem
+react/
