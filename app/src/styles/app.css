@@ -1771,3 +1771,77 @@
 .testing-modebar, .bb-bar { margin-bottom: 16px; }
 .tabs { margin-bottom: 24px; }
 header.app-header { margin-bottom: 24px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   P2 · ONE SEGMENTED CONTROL + ONE BUTTON FAMILY (UI_OVERHAUL_PLAN B1/B2)
+   Like P1, this is a cascade-final identity layer: the six legacy
+   segmented-control class sets and the stray button identities are all
+   pinned to ONE look each. `.seg` / `.seg-btn` is the canonical pattern
+   for new code. Semantic modifiers (W/L/D colors, matchup-role tint,
+   .is-danger) keep working — they have higher specificity on purpose.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* segmented container — one look */
+.seg,
+.combo-viewtoggle, .combo-mode-switch, .theme-toggle, .bb-leg-switch,
+.journal-wl, .decks-role-filter, .testing-modebar {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* segmented inner button — one look */
+.seg-btn,
+.combo-viewtoggle-btn, .combo-mode-btn, .theme-toggle-btn, .bb-leg-btn,
+.journal-wl-btn, .decks-role-btn, .testing-mode-btn {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: inherit; font-weight: 600; cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast);
+}
+.seg-btn:hover,
+.combo-viewtoggle-btn:hover, .combo-mode-btn:hover, .theme-toggle-btn:hover,
+.bb-leg-btn:hover, .journal-wl-btn:hover, .decks-role-btn:hover, .testing-mode-btn:hover {
+  color: var(--text);
+}
+.seg-btn.active,
+.combo-viewtoggle-btn.active, .combo-mode-btn.active, .theme-toggle-btn.active,
+.bb-leg-btn.active, .journal-wl-btn.active, .decks-role-btn.active, .testing-mode-btn.active {
+  background: var(--accent-dim);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--accent-soft);
+}
+.seg-btn:disabled,
+.combo-viewtoggle-btn:disabled, .combo-mode-btn:disabled, .theme-toggle-btn:disabled,
+.bb-leg-btn:disabled, .journal-wl-btn:disabled, .decks-role-btn:disabled, .testing-mode-btn:disabled {
+  opacity: 0.4; cursor: default;
+}
+
+/* md secondary buttons — one identity (solid) */
+.back-btn, .combo-sim-btn, .combo-replay-link, .combo-gcard-open {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+}
+.back-btn:hover, .combo-sim-btn:hover:not(:disabled), .combo-replay-link:hover, .combo-gcard-open:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.back-btn.is-danger:hover { background: rgba(196,95,95,0.1); }
+.combo-gcard-open { height: var(--ctl-sm); padding-top: 0; padding-bottom: 0; display: inline-flex; align-items: center; border-radius: var(--radius-md); }
+
+/* ghost-add buttons — one identity (dashed) */
+.fmt-add-btn, .deck-inline-btn, .sbp-plan-add,
+.combo-deck-add-dd .dd-trigger, .combo-trap-add-dd .dd-trigger {
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-dim);
+}
+.fmt-add-btn:hover, .deck-inline-btn:hover, .sbp-plan-add:hover,
+.combo-deck-add-dd .dd-trigger:hover, .combo-trap-add-dd .dd-trigger:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
+}

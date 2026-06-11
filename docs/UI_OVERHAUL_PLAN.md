@@ -117,7 +117,7 @@ one disabled treatment. One EmptyState component (one line + one action).
 | Phase | Contents | Risk | Visible win |
 |---|---|---|---|
 | **P1** ✅ 2026-06-11 | A1–A4 foundation — shipped as a cascade-final "control scale" layer at the end of app.css (+ --ctl-sm/md/lg tokens). Programmatic audit: 73 controls across all 7 views, 0 off-scale. | none | every row reads as one family |
-| **P2** | B1–B2 segmented + buttons | low | the six toggles become one control |
+| **P2** ✅ 2026-06-11 | B1–B2 shipped as a cascade-final identity layer: `.seg`/`.seg-btn` canonical spec + the six legacy segmented sets pinned to it (audited: all visible containers compute byte-identical bg/border/radius/active); md-secondary buttons (back/sim/replay/gcard-open) one identity; ghost-add dashed family one identity. Semantic modifiers (W/L/D colors, my/matchup tint, is-danger) survive by specificity, by design. | low | the six toggles become one control |
 | **P3** | C1–C3 toolbars, meta rows, detail headers | low | screens stop feeling "assembled" |
 | **P4** | B3–B4, C4–C5 empty states, icons, tiles | low | polish everywhere you look |
 | **P5** | D1–D5 motion + wayfinding | low | the "melodic" feel |
