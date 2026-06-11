@@ -8,8 +8,9 @@ import {
   getDeckPrimaryDecklist, ensureDeckShape, persistDeck, convertDeckRole, deleteDeck,
   setActiveBuild, addDecklistFromYdkText, deleteDecklist, downloadDecklist,
   extractKeyCards, countMissingCardData, buildKeyRatiosHtml,
-  KEY_CARD_BUCKETS, STOP_PRIORITIES,
+  KEY_CARD_BUCKETS, STOP_PRIORITIES, classifyKeyCardCategory,
 } from "../lib/deckModel.js";
+import { pAtLeast, pct } from "../lib/deckMath.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { lookupCardByName } from "../lib/cardSearch.js";
 import { confirmModal, alertModal } from "../lib/modal.js";
@@ -213,6 +214,12 @@ function DeckPanel({ deck, onChanged }) {
         <CardsView deck={deck} />
       </PanelSection>
 
+      {!isMatchup && (
+        <PanelSection title="Opening odds — deck health" defaultOpen={true}>
+          <OddsSection deck={deck} cardMap={cardMap} />
+        </PanelSection>
+      )}
+
       <PanelSection title="Methodology — how this deck plays" defaultOpen={true}>
         <MethodologySection deck={deck} save={save} cardMap={cardMap} />
       </PanelSection>
@@ -241,6 +248,57 @@ function DeckPanel({ deck, onChanged }) {
         <CombosSection deck={deck} />
       </PanelSection>
     </div>
+  );
+}
+
+// ── Opening odds — exact hypergeometric deck health (primary decks) ──
+// Starter/handtrap tags come from the same KB+text classification the
+// key-card buckets use, counted per copy across the active build's main.
+function OddsSection({ deck, cardMap }) {
+  const dl = getDeckPrimaryDecklist(deck);
+  const main = (dl && dl.main) || [];
+  const N = main.length;
+  let starters = 0, handtraps = 0, unknown = 0;
+  for (const id of main) {
+    const card = cardMap[Number(id)];
+    if (!card) { unknown++; continue; }
+    const cat = classifyKeyCardCategory(card);
+    if (cat === "Starter") starters++;
+    else if (cat === "Handtrap") handtraps++;
+  }
+  if (!N) return <div className="read-field is-empty">— no main deck yet</div>;
+  const rows = [["Going 1st", 5], ["Going 2nd", 6]].map(([lbl, k]) => ({
+    lbl, k,
+    s1: pAtLeast(N, starters, k, 1),
+    s2: pAtLeast(N, starters, k, 2),
+    t1: pAtLeast(N, handtraps, k, 1),
+    brick: 1 - pAtLeast(N, starters, k, 1),
+  }));
+  return (
+    <div className="odds">
+      <div className="odds-counts">
+        <strong>{starters}</strong> starters · <strong>{handtraps}</strong> handtraps · {N} cards
+        {unknown ? <span className="odds-unknown" title="Cards without data are counted as neither — open the decklist so they load."> · {unknown} unclassified</span> : null}
+        <span className="odds-hint"> — mis-tagged? Fix it in Key cards.</span>
+      </div>
+      <div className="odds-grid">
+        <div className="odds-head"></div><div className="odds-head">≥1 starter</div><div className="odds-head">≥2 starters</div><div className="odds-head">≥1 handtrap</div><div className="odds-head">brick (0 starters)</div>
+        {rows.map((r) => (
+          <FragmentRow key={r.lbl} r={r} />
+        ))}
+      </div>
+    </div>
+  );
+}
+function FragmentRow({ r }) {
+  return (
+    <>
+      <div className="odds-row-label">{r.lbl} <span className="odds-k">({r.k})</span></div>
+      <div className="odds-cell is-good">{pct(r.s1)}</div>
+      <div className="odds-cell">{pct(r.s2)}</div>
+      <div className="odds-cell">{pct(r.t1)}</div>
+      <div className={"odds-cell" + (r.brick > 0.15 ? " is-bad" : "")}>{pct(r.brick)}</div>
+    </>
   );
 }
 
