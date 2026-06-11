@@ -5,7 +5,7 @@ import {
   comboEndboard, comboAllCards, comboDeckIds, comboBeatsTraps, COMMON_HANDTRAPS, trapShort,
   isCoreStep, stepCards, groupCombos, comboSearchHaystack,
   renameCombo, setComboDecks, setComboNotes, setComboOpenerSize, deleteCombo, updateCombo,
-  importCombosJson, addManualCombo,
+  duplicateCombo, importCombosJson, addManualCombo,
 } from "../lib/combos.js";
 import { simulateCombo, describeStep, fieldToBoard } from "../lib/comboSim.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
@@ -154,7 +154,8 @@ export default function CombosTab({ dataVersion = 0, reload }) {
           <section className="combo-detail-panel">
             {selected
               ? <ComboDetail key={comboKey(selected.c, selected.i)} c={selected.c} idx={selected.i} decks={decks} deckNames={deckNames}
-                  onChange={refresh} onHover={onHover} onPick={onPick} />
+                  onChange={refresh} onHover={onHover} onPick={onPick}
+                  onDuplicate={() => { const k = duplicateCombo(selected.i); if (k) { setSelKey(k); refresh(); } }} />
               : <div className="decks-content-empty">Pick a combo from the left.</div>}
           </section>
         </div>
@@ -203,7 +204,7 @@ function ComboTile({ c, active, deckName, onClick }) {
 }
 
 // ── Detail / line view ───────────────────────────────────────────────
-function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
+function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick, onDuplicate }) {
   const [, forceRev] = useReducer((x) => x + 1, 0);
   const [view, setView] = useState("full");
   const [mode, setMode] = useState("line");
@@ -253,6 +254,7 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick }) {
         {c.replayUrl && <a className="combo-replay-link" href={c.replayUrl} target="_blank" rel="noreferrer" title="Open the DuelingBook replay">↗ replay</a>}
         <span className="combo-detail-bar-spacer" />
         <button type="button" className="back-btn" onClick={() => setEditing(true)}>✎ Edit</button>
+        <button type="button" className="back-btn" title="Copy this combo as a new variant line" onClick={onDuplicate}>⧉ Duplicate</button>
         <button type="button" className="back-btn is-danger" onClick={remove}>× Delete</button>
       </div>
 
@@ -688,6 +690,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
                   <span className="combo-edit-step-ctrls">
                     <button type="button" className="combo-edit-mini" title="Move up" disabled={i === 0} onClick={() => moveStep(i, -1)}>↑</button>
                     <button type="button" className="combo-edit-mini" title="Move down" disabled={i === steps.length - 1} onClick={() => moveStep(i, 1)}>↓</button>
+                    <button type="button" className="combo-edit-mini" title="Insert a step below" onClick={() => setSteps((s) => [...s.slice(0, i + 1), { action: "Activate", detail: "", cards: [], timestamp: "" }, ...s.slice(i + 1)])}>+</button>
                     <button type="button" className="combo-edit-mini is-danger" title="Delete step" onClick={() => removeStep(i)}>×</button>
                   </span>
                 </div>

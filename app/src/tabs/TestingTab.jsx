@@ -151,11 +151,12 @@ function Goldfish({ deck, oppDecks = [] }) {
   const best = lines[0] && lines[0].status;
   const verdict = !hand ? null
     : best === "possible" ? { cls: "ok", text: "✓ A saved line opens from this hand" }
+    : best === "likely" ? { cls: "ok", text: "≈ A line is likely live — starter in hand" }
     : best === "partial" ? { cls: "warn", text: "⚠ One card away from a saved line" }
     : { cls: "no", text: "No saved line opens — work it out by hand" };
 
   // "If they have…" — float the lines that play through the chosen handtraps.
-  const statusOrder = { possible: 0, partial: 1, no: 2 };
+  const statusOrder = { possible: 0, likely: 1, partial: 2, no: 3 };
   const beatsAllSel = (r) => vsTraps.length > 0 && vsTraps.every((t) => comboBeatsTraps(r.combo).includes(t));
   const shownLines = vsTraps.length
     ? [...lines].sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || ((beatsAllSel(b) ? 1 : 0) - (beatsAllSel(a) ? 1 : 0)))
@@ -254,8 +255,9 @@ function Goldfish({ deck, oppDecks = [] }) {
 function ComboLine({ r, handNames, vsTraps, onHover, onPick }) {
   const [open, setOpen] = useState(false);
   const c = r.combo;
-  const icon = r.status === "possible" ? "✓" : r.status === "partial" ? "⚠" : "✗";
+  const icon = r.status === "possible" ? "✓" : r.status === "likely" ? "≈" : r.status === "partial" ? "⚠" : "✗";
   const statusText = r.status === "possible" ? "Playable"
+    : r.status === "likely" ? `Likely playable — ${c.userOpenerSize} opener piece${c.userOpenerSize === 1 ? "" : "s"} incl. a starter`
     : r.status === "partial" ? `Need 1 more: ${r.missing[0]}`
     : `Need ${r.missing.length}: ${r.missing.slice(0, 2).join(", ")}${r.missing.length > 2 ? "…" : ""}`;
   const have = new Set((handNames || []).filter(Boolean));

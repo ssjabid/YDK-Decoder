@@ -429,11 +429,13 @@
   padding: 9px 12px;
 }
 .combo-line.is-possible { border-left-color: var(--role-engine); }
+.combo-line.is-likely   { border-left-color: var(--role-searcher); }
 .combo-line.is-partial  { border-left-color: var(--warning); }
 .combo-line.is-no       { border-left-color: var(--border-strong); opacity: 0.62; }
 .combo-line-head { display: flex; align-items: center; gap: 8px; }
 .combo-line-status { font-size: 13px; width: 16px; text-align: center; }
 .combo-line.is-possible .combo-line-status { color: var(--role-engine); }
+.combo-line.is-likely   .combo-line-status { color: var(--role-searcher); }
 .combo-line.is-partial  .combo-line-status { color: var(--warning); }
 .combo-line.is-no       .combo-line-status { color: var(--text-faint); }
 .combo-line-name { font-size: 13px; font-weight: 600; }

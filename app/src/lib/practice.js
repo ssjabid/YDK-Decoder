@@ -7,6 +7,8 @@
 import { readLs, writeLs, loadSavedCombos } from "./storage.js";
 import { comboDeckIds } from "./combos.js";
 import { classify } from "./classify.js";
+import { lookupCardByName } from "./cardSearch.js";
+import { classifyKeyCardCategory } from "./deckModel.js";
 
 const PRACTICE_STREAK_KEY = "ydk_practice_streak"; // { [deckId]: {hands, hits} }
 const BB_STREAK_KEY = "ydk_bb_streak";             // { "myId:oppId": {tries, breaks, partials} }
@@ -104,12 +106,24 @@ export function matchCombosToHand(handNames, deckId) {
     }
     let status;
     if (missing.length === 0) { status = "possible"; anyPossible = true; }
+    else if (combo.userOpenerSize != null && need.length > combo.userOpenerSize) {
+      // Oversized recorded opener (extracted combos record the whole drawn
+      // hand). Heuristic, per Abid: LIKELY live when the hand holds at least
+      // N of its cards and one of them is a Starter-role card.
+      const present = need.filter((n) => !missing.includes(n));
+      // classifyKeyCardCategory (KB + card-text), NOT classify().roles — the
+      // keyword classifier almost never emits "Starter" on its own.
+      const hasStarter = present.some((n) => { const card = lookupCardByName(n); return !!card && classifyKeyCardCategory(card) === "Starter"; });
+      if (present.length >= combo.userOpenerSize && hasStarter) { status = "likely"; anyPossible = true; }
+      else if (missing.length === 1) status = "partial";
+      else status = "no";
+    }
     else if (missing.length === 1) status = "partial";
     else status = "no";
     out.push({ combo, status, missing, idx, need });
   });
 
-  const order = { possible: 0, partial: 1, no: 2 };
+  const order = { possible: 0, likely: 1, partial: 2, no: 3 };
   out.sort((a, b) =>
     (order[a.status] - order[b.status]) ||
     ((b.combo.steps || []).length - (a.combo.steps || []).length));

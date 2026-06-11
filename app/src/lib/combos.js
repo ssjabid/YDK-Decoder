@@ -189,6 +189,27 @@ export function deleteCombo(idx) {
   withCombos((all) => { all.splice(idx, 1); });
 }
 
+// Deep-copy a combo as a new manual one — the fast path for variant lines
+// ("same opener, but through Droll"): duplicate, tweak steps, retag.
+export function duplicateCombo(idx) {
+  let key = null;
+  withCombos((all) => {
+    const src = all[idx];
+    if (!src) return;
+    const copy = JSON.parse(JSON.stringify(src));
+    copy.replayId = "manual_" + rid();
+    delete copy.replayUrl;
+    copy.userTitle = comboTitle(src) + " (variant)";
+    copy.comboName = copy.userTitle;
+    copy.manual = true;
+    copy.extractedAt = null;
+    delete copy.sortIndex;
+    all.push(copy);
+    key = comboKey(copy, all.length - 1);
+  });
+  return key;
+}
+
 // Apply an edit form to a combo in one write — name, deck links, opener size,
 // opening hand, steps, end board, and notes. Only patches the keys present.
 // Steps drive Simulate + Drill, so editing them re-flows both immediately.
