@@ -787,10 +787,10 @@
 .decks-role-btn.active[data-role="primary"] { background: rgba(95,196,154,0.18); color: var(--role-engine); }
 .decks-role-btn.active[data-role="matchup"] { background: rgba(196,95,122,0.18); color: var(--role-handtrap); }
 
-/* Toolbar — equal-size Import / Load buttons */
+/* Toolbar — equal-size Import / Load buttons (height comes from the scale) */
 .decks-toolbar .btn-primary,
 .decks-toolbar .btn-secondary {
-  min-width: 210px; justify-content: center; padding: 0 18px; height: 42px; box-sizing: border-box;
+  min-width: 210px; justify-content: center; padding: 0 18px;
 }
 
 /* Deck panel — equal-size Convert / Delete */
@@ -1433,15 +1433,10 @@
 .combo-tile-mastery.is-shaky { color: var(--warning); border: 1px solid rgba(229,169,60,0.5); }
 .combo-tile-mastery.is-solid { color: var(--role-engine); border: 1px solid rgba(95,196,154,0.5); }
 
-/* One metric set for all segmented-control buttons (tabs inside panels) and
-   small bar actions, so rows read as one consistent family app-wide. */
-.combo-viewtoggle-btn, .combo-mode-btn, .bb-leg-btn, .theme-toggle-btn, .testing-mode-btn, .decks-role-btn { font-size: 12.5px; }
-.combo-viewtoggle-btn, .combo-mode-btn, .bb-leg-btn, .theme-toggle-btn { padding: 6px 14px; }
-
 /* cover-card picker in the editor's opening-hand header */
 .combo-cover-pick { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
 .combo-cover-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
-.combo-cover-dd .dd-trigger { font-size: 11.5px; padding: 4px 10px; max-width: 220px; }
+.combo-cover-dd .dd-trigger { max-width: 220px; }
 
 /* multi-deck links + wide meta fields (shared by detail / builder / editor) */
 .combo-detail-bar-spacer { flex: 1; }
@@ -1561,7 +1556,6 @@
 .lvd-verdict.is-fold { color: var(--warning); }
 .lvd-verdict.is-untagged { color: var(--text-faint); font-weight: 400; }
 
-.gf-vsopp-dd .dd-trigger { font-size: 11px; padding: 3px 10px; }
 
 /* trap badges + survive/fold verdict on a combo line */
 .combo-line-traps { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 8px; }
@@ -1689,3 +1683,91 @@
 /* Testing — side-plan picker + missing-card flag */
 .bb-side-dd .dd-trigger { min-width: 190px; }
 .bb-side-missing { color: var(--warning); font-size: 11px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   P1 · FOUNDATION — the control scale (docs/UI_OVERHAUL_PLAN.md)
+   Exactly three interactive-control heights app-wide:
+       sm 26px   inline minis + filter chips
+       md 32px   the default — dropdowns, inputs, segmented, detail buttons
+       lg 40px   page-level primary clusters (at most one per screen)
+   This layer is LAST in the cascade on purpose: each class keeps its
+   identity (color, border, icon) in its own rule — SIZE lives here, once.
+   New controls join one of these lists; never bespoke padding.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* lg — toolbar + settings primary actions */
+.btn-primary, .btn-secondary {
+  height: var(--ctl-lg);
+  padding-top: 0; padding-bottom: 0;
+}
+
+/* md — standalone buttons */
+.back-btn, .combo-replay-link, .combo-sim-btn, .deck-inline-btn, .fmt-add-btn,
+.sbp-plan-add {
+  height: var(--ctl-md);
+  padding-top: 0; padding-bottom: 0;
+  display: inline-flex; align-items: center;
+  font-size: 12.5px;
+}
+
+/* md — dropdown triggers + single-line text inputs */
+.dd-trigger,
+.fmt-add-input, .combo-search-input, .modal-input, .jnf-name,
+.combo-edit-detail, .ifthen-input, .deck-field-input.is-single {
+  height: var(--ctl-md);
+  padding-top: 0; padding-bottom: 0;
+  font-size: 12.5px;
+}
+.dd-trigger { align-items: center; }
+
+/* segmented controls — md container, sm inner buttons (2px + 1px borders) */
+.combo-viewtoggle, .combo-mode-switch, .theme-toggle, .bb-leg-switch,
+.journal-wl, .decks-role-filter, .testing-modebar {
+  height: var(--ctl-md);
+  padding: 2px; gap: 2px;
+  display: inline-flex; align-items: stretch;
+}
+.combo-viewtoggle-btn, .combo-mode-btn, .theme-toggle-btn, .bb-leg-btn,
+.journal-wl-btn, .decks-role-btn, .testing-mode-btn {
+  height: calc(var(--ctl-md) - 6px);
+  padding-top: 0; padding-bottom: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12.5px;
+}
+
+/* sm — inline minis + filter chips */
+.combo-edit-mini { width: var(--ctl-sm); height: var(--ctl-sm); }
+.rt-btn { height: var(--ctl-sm); min-width: var(--ctl-sm); }
+.gf-trap-toggle, .gf-trap-clear, .combo-line-walk {
+  height: var(--ctl-sm);
+  padding-top: 0; padding-bottom: 0;
+  display: inline-flex; align-items: center;
+}
+
+/* exceptions: btn-secondary used INSIDE content rows is md, not lg */
+.combo-grade-btn, .backup-nudge-btn { height: var(--ctl-md); font-size: 12.5px; }
+
+/* ── S4 · radius discipline: interactive controls = radius-md ─────────── */
+.dd-trigger, .fmt-add-btn, .fmt-add-input, .combo-search-input, .jnf-name,
+.combo-edit-detail, .ifthen-input, .combo-sim-btn, .deck-inline-btn,
+.combo-deck-chip, .modal-input {
+  border-radius: var(--radius-md);
+}
+
+/* ── S6 · states, one way ─────────────────────────────────────────────── */
+:where(button, a, input, [role="button"], [tabindex="0"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+:where(.btn-primary, .btn-secondary, .back-btn, .combo-sim-btn, .deck-inline-btn,
+.fmt-add-btn, .combo-viewtoggle-btn, .combo-mode-btn, .theme-toggle-btn,
+.bb-leg-btn, .journal-wl-btn, .testing-mode-btn, .decks-role-btn,
+.gf-trap-toggle, .combo-edit-mini, .combo-replay-link):active {
+  transform: translateY(1px);
+}
+
+/* ── S5 · macro spacing rhythm: toolbars gap 8 / below 16, page blocks 24 ── */
+.combos-toolbar, .decks-toolbar { gap: 8px; margin-bottom: 16px; }
+.testing-modebar, .bb-bar { margin-bottom: 16px; }
+.tabs { margin-bottom: 24px; }
+header.app-header { margin-bottom: 24px; }
