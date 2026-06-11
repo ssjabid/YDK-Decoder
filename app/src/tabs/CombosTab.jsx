@@ -8,6 +8,7 @@ import {
   duplicateCombo, importCombosJson, addManualCombo,
 } from "../lib/combos.js";
 import { simulateCombo, describeStep, fieldToBoard } from "../lib/comboSim.js";
+import { loadMastery, bumpMastery, masteryLabel } from "../lib/practice.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { lookupCardByName, resolveCardName } from "../lib/cardSearch.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
@@ -183,6 +184,7 @@ function Thumb({ name, onHover, onPick }) {
 function ComboTile({ c, active, deckName, onClick }) {
   const hand = comboOpeningHand(c).slice(0, 3);
   const steps = (c.steps || []).length;
+  const mastery = masteryLabel(loadMastery()[comboKey(c, 0)]);
   return (
     <button type="button" className={"combo-tile" + (active ? " active" : "")} onClick={onClick}>
       <span className="combo-tile-arts">
@@ -196,6 +198,7 @@ function ComboTile({ c, active, deckName, onClick }) {
         <span className="combo-tile-meta">
           <span>{steps} steps</span>
           {deckName && <span className="combo-tile-deck">{deckName}</span>}
+          {mastery && <span className={"combo-tile-mastery is-" + mastery} title={mastery === "shaky" ? "You fumble this one — drill it" : "3+ clean drills in a row"}>{mastery}</span>}
           {c.userNotes && String(c.userNotes).trim() && <span className="combo-tile-badge" title="Has notes">✎</span>}
         </span>
       </span>
@@ -395,13 +398,20 @@ function SimPile({ label, cards, onHover, onPick }) {
 function DrillView({ combo, onHover, onPick }) {
   const plays = simulateCombo(combo).filter(isCoreStep);
   const hand = comboOpeningHand(combo);
+  const key = comboKey(combo, 0);
   const [revealed, setRevealed] = useState(0);
-  useEffect(() => { setRevealed(0); }, [combo.replayId, combo.replayUrl]);
+  const [rec, setRec] = useState(() => loadMastery()[key] || null);
+  const [graded, setGraded] = useState(false);
+  useEffect(() => { setRevealed(0); setGraded(false); setRec(loadMastery()[key] || null); }, [combo.replayId, combo.replayUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  const grade = (ok) => { setRec(bumpMastery(key, ok)); setGraded(true); };
   return (
     <section className="combo-block">
       <div className="combo-drill">
         <div className="combo-drill-opener">
-          <div className="combo-block-label">You open with</div>
+          <div className="combo-block-label">
+            You open with
+            {rec && (rec.got || rec.fumbled) ? <span className="combo-block-hint">drilled {rec.got + rec.fumbled}× · {rec.streak} clean in a row</span> : null}
+          </div>
           {hand.length
             ? <div className="combo-hand-row">{hand.map((n, i) => <Thumb key={i} name={n} onHover={onHover} onPick={onPick} />)}</div>
             : <div className="read-field is-empty">No opener recorded — play from the first step.</div>}
@@ -416,7 +426,19 @@ function DrillView({ combo, onHover, onPick }) {
             {revealed === 0 ? "Reveal first play →" : `Reveal play ${revealed + 1} →`}
           </button>
         ) : (
-          <div className="combo-drill-done">✓ That's the full line ({plays.length} plays). <button type="button" className="link-btn" onClick={() => setRevealed(0)}>Restart drill</button></div>
+          <div className="combo-drill-done">
+            ✓ Full line ({plays.length} plays).
+            {!graded ? (
+              <span className="combo-drill-grade">
+                Did you have it?
+                <button type="button" className="btn-secondary combo-grade-btn is-got" onClick={() => grade(true)}>✓ Got it</button>
+                <button type="button" className="btn-secondary combo-grade-btn is-fumbled" onClick={() => grade(false)}>✗ Fumbled</button>
+              </span>
+            ) : (
+              <span className="combo-drill-graded">{rec && rec.streak > 0 ? `${rec.streak} clean in a row` : "noted — drill it again soon"}</span>
+            )}
+            <button type="button" className="link-btn" onClick={() => { setRevealed(0); setGraded(false); }}>Restart</button>
+          </div>
         )}
       </div>
     </section>

@@ -1417,7 +1417,15 @@
 .combo-drill-step { display: flex; align-items: center; gap: 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; animation: section-in 180ms cubic-bezier(0.2,0.7,0.3,1); }
 .combo-drill-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 11px; font-weight: 800; flex-shrink: 0; }
 .combo-drill-reveal { align-self: flex-start; }
-.combo-drill-done { font-size: 13px; color: var(--role-engine); font-weight: 600; }
+.combo-drill-done { font-size: 13px; color: var(--role-engine); font-weight: 600; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.combo-drill-grade { display: inline-flex; align-items: center; gap: 8px; color: var(--text-dim); font-weight: 400; }
+.combo-grade-btn { padding: 4px 12px; font-size: 12px; }
+.combo-grade-btn.is-got { color: var(--role-engine); border-color: rgba(95,196,154,0.5); }
+.combo-grade-btn.is-fumbled { color: var(--warning); border-color: rgba(229,169,60,0.5); }
+.combo-drill-graded { color: var(--text-dim); font-weight: 400; font-size: 12px; }
+.combo-tile-mastery { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; border-radius: 4px; padding: 1px 6px; }
+.combo-tile-mastery.is-shaky { color: var(--warning); border: 1px solid rgba(229,169,60,0.5); }
+.combo-tile-mastery.is-solid { color: var(--role-engine); border: 1px solid rgba(95,196,154,0.5); }
 
 /* multi-deck links + wide meta fields (shared by detail / builder / editor) */
 .combo-detail-bar-spacer { flex: 1; }

@@ -42,6 +42,27 @@ export function resetPracticeStreak(deckId) {
   savePracticeStreaks(m);
 }
 
+// ── Drill mastery — per-combo "got it / fumbled" recall tracking ──────
+// { [comboKey]: { got, fumbled, streak, last } } — streak = clean in a row.
+const DRILL_MASTERY_KEY = "ydk_drill_mastery";
+export function loadMastery() { return readLs(DRILL_MASTERY_KEY) || {}; }
+export function bumpMastery(comboKey, ok) {
+  const m = loadMastery();
+  const rec = m[comboKey] || { got: 0, fumbled: 0, streak: 0 };
+  if (ok) { rec.got += 1; rec.streak += 1; } else { rec.fumbled += 1; rec.streak = 0; }
+  rec.last = new Date().toISOString();
+  m[comboKey] = rec;
+  writeLs(DRILL_MASTERY_KEY, m);
+  return rec;
+}
+// "shaky" = fumbles outnumber clean runs; "solid" = 3+ clean in a row.
+export function masteryLabel(rec) {
+  if (!rec || (!rec.got && !rec.fumbled)) return null;
+  if (rec.fumbled > rec.got) return "shaky";
+  if (rec.streak >= 3) return "solid";
+  return null;
+}
+
 // ── Board-breaker tally ──────────────────────────────────────────────
 export function loadBbStreaks() { return readLs(BB_STREAK_KEY) || {}; }
 export function saveBbStreaks(m) { writeLs(BB_STREAK_KEY, m || {}); }

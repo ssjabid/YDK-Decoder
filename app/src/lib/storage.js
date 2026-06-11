@@ -15,6 +15,7 @@ export const KEYS = {
   currentDeck:      "ydk_current_deck",
   practiceStreak:   "ydk_practice_streak",
   practiceGoing:    "ydk_practice_going",
+  drillMastery:     "ydk_drill_mastery",
   cardsView:        "ydk_cards_view",
   comboViewMode:    "ydk_combo_view_mode",
   comboDeckFilter:  "ydk_combo_deck_filter",
