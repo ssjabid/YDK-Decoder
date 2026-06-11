@@ -24,7 +24,7 @@ const USER_FIELDS = ["freeformNotes", "sideboard", "sidePlans", "priorityFirst",
 // Playbook fields now live on the OPPONENT DECK's methodology (single source
 // of truth, edited in the Decks tab). The pack doesn't author them, so they're
 // user/backfill-owned — preserve them whenever a deck is refreshed.
-const PLAYBOOK_FIELDS = ["vsChokepoint", "vsPlanFirst", "vsPlanSecond", "vsPriorityFirst", "vsPrioritySecond", "goodCards", "endboards", "vsNotes"];
+const PLAYBOOK_FIELDS = ["vsChokepoint", "vsPlanFirst", "vsPlanSecond", "vsPriorityFirst", "vsPrioritySecond", "vsIfThen", "goodCards", "endboards", "vsNotes"];
 const nonEmpty = (v) => v != null && (Array.isArray(v) ? v.length : (typeof v === "object" ? Object.keys(v).length : String(v).length));
 
 export async function fetchMetaPack() {

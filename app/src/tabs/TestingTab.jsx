@@ -10,6 +10,7 @@ import {
 } from "../lib/practice.js";
 import { simulateCombo, describeStep } from "../lib/comboSim.js";
 import { isCoreStep, comboBeatsTraps, COMMON_HANDTRAPS, trapShort } from "../lib/combos.js";
+import { opponentHandtraps } from "../lib/matchupIntel.js";
 import { getPlaybook } from "../components/Matchup.jsx";
 import { getSidePlans, applyPlan, planMissing } from "../lib/sidePlans.js";
 import CardPreview from "../components/CardPreview.jsx";
@@ -56,11 +57,10 @@ export default function TestingTab({ dataVersion = 0 }) {
 
       {!myDeck ? (
         <div className="placeholder">
-          <strong>No deck to test.</strong> Go to the <strong>Decks</strong> tab and
-          import a deck, then pick it in <strong>Test with</strong> above.
+          <strong>No deck to test.</strong> Import one in <strong>Decks</strong>, then pick it above.
         </div>
       ) : mode === "first" ? (
-        <Goldfish deck={myDeck} />
+        <Goldfish deck={myDeck} oppDecks={oppDecks} />
       ) : (
         <BoardBreaker myDeck={myDeck} dataVersion={dataVersion} />
       )}
@@ -112,11 +112,12 @@ function usePreview() {
 // ════════════════════════════════════════════════════════════════════
 // GOING FIRST — Goldfish.
 // ════════════════════════════════════════════════════════════════════
-function Goldfish({ deck }) {
+function Goldfish({ deck, oppDecks = [] }) {
   const [cardMap, setCardMap] = useState({});
   const [hand, setHand] = useState(null);
   const [streak, setStreak] = useState(() => loadPracticeStreaks()[deck.deckId] || null);
   const [vsTraps, setVsTraps] = useState([]); // "if they have…" handtraps to test against
+  const [vsOppId, setVsOppId] = useState(""); // preset: pick an opponent → their traps
   const { preview, setPreview, onHover, onPick, clearHover } = usePreview();
 
   const main = useMemo(() => (deck.main || []).map(String), [deck]);
@@ -159,7 +160,14 @@ function Goldfish({ deck }) {
   const shownLines = vsTraps.length
     ? [...lines].sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || ((beatsAllSel(b) ? 1 : 0) - (beatsAllSel(a) ? 1 : 0)))
     : lines;
-  const toggleTrap = (t) => setVsTraps((v) => (v.includes(t) ? v.filter((x) => x !== t) : [...v, t]));
+  const toggleTrap = (t) => { setVsOppId(""); setVsTraps((v) => (v.includes(t) ? v.filter((x) => x !== t) : [...v, t])); };
+  // Preset: pick an opponent → pre-select the handtraps THEY actually run.
+  const pickVsOpp = (id) => {
+    setVsOppId(id);
+    if (!id) { setVsTraps([]); return; }
+    const opp = oppDecks.find((d) => d.deckId === id);
+    setVsTraps(opponentHandtraps(opp));
+  };
 
   return (
     <div className="goldfish" onMouseLeave={clearHover}>
@@ -216,7 +224,11 @@ function Goldfish({ deck }) {
                   className={"gf-trap-toggle" + (vsTraps.includes(t) ? " active" : "")}
                   onClick={() => toggleTrap(t)}>{trapShort(t)}</button>
               ))}
-              {vsTraps.length ? <button type="button" className="gf-trap-clear" onClick={() => setVsTraps([])}>clear</button> : null}
+              {oppDecks.length ? (
+                <Dropdown className="gf-vsopp-dd" value={vsOppId} placeholder="vs deck…" align="right"
+                  options={[["", "— any"], ...oppDecks.map((d) => [d.deckId, d.name])]} onChange={pickVsOpp} ariaLabel="Preset: opponent's handtraps" />
+              ) : null}
+              {vsTraps.length ? <button type="button" className="gf-trap-clear" onClick={() => { setVsTraps([]); setVsOppId(""); }}>clear</button> : null}
             </div>
           ) : null}
           {!hand ? (

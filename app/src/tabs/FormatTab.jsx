@@ -9,8 +9,10 @@ import { downloadFormat, importFormat } from "../lib/formatIO.js";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
 import Dropdown from "../components/Dropdown.jsx";
-import { getPlaybook, GamePlanView, EndBoardsView, GoodCardsView, ReadField } from "../components/Matchup.jsx";
+import { getPlaybook, GamePlanView, EndBoardsView, GoodCardsView, ReadField, IfThenView } from "../components/Matchup.jsx";
 import { getSidePlans, newPlan, planTotals } from "../lib/sidePlans.js";
+import { opponentHandtraps, linesVsTraps } from "../lib/matchupIntel.js";
+import { comboTitle, trapShort } from "../lib/combos.js";
 import Icon from "../components/Icon.jsx";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
@@ -272,6 +274,14 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
           <GamePlanView pb={pb} />
         </PanelSection>
 
+        <PanelSection title="Mid-game calls — if / then" defaultOpen={true} right={editHint}>
+          <IfThenView rows={pb.ifThen} />
+        </PanelSection>
+
+        <PanelSection title="Your lines vs this deck" defaultOpen={true}>
+          <LinesVsDeck opponentDeck={opponentDeck} primaryDeck={primaryDeck} />
+        </PanelSection>
+
         <PanelSection title="Their end boards" defaultOpen={true} right={editHint}>
           <EndBoardsView boards={pb.endboards} onHover={onHover} onPick={onPick} />
           <div className="drill-hint">Feeds <strong>Testing → Going second</strong> — practise breaking these.</div>
@@ -290,6 +300,42 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
           <ReadField label="Scouting notes" value={pb.notes} hint="— add your notes in the Decks tab" />
         </PanelSection>
       </div>
+    </div>
+  );
+}
+
+// Derived, zero-entry: their detected handtraps × your lines' beatsTraps.
+function LinesVsDeck({ opponentDeck, primaryDeck }) {
+  const traps = opponentHandtraps(opponentDeck);
+  if (!primaryDeck) return <div className="read-field is-empty">— pick your deck at the top first</div>;
+  if (!traps.length) return <div className="read-field is-empty">— no handtraps detected on their list yet (Decks → their Key cards → Extract)</div>;
+  const lines = linesVsTraps([primaryDeck.deckId], traps);
+  return (
+    <div className="lvd">
+      <div className="lvd-traps">
+        <span className="lvd-label">They play</span>
+        {traps.map((t) => <span key={t} className="lvd-trap" title={t}>{trapShort(t)}</span>)}
+      </div>
+      {!lines.length ? (
+        <div className="read-field is-empty">— no saved lines for {primaryDeck.name} yet (Combos tab)</div>
+      ) : (
+        <div className="lvd-lines">
+          {lines.map(({ c, idx, through, folds }) => {
+            const untagged = !(c.beatsTraps || []).length;
+            return (
+              <div key={(c.replayId || c.replayUrl || idx) + ""} className={"lvd-line" + (!untagged && folds.length === 0 ? " is-clean" : "")}>
+                <span className="lvd-line-name">{comboTitle(c)}</span>
+                {untagged ? <span className="lvd-verdict is-untagged">untagged — set “plays through” in Combos → ✎ Edit</span> : (
+                  <>
+                    {through.length > 0 && <span className="lvd-verdict is-ok">✓ through {through.map(trapShort).join(" · ")}</span>}
+                    {folds.length > 0 && <span className="lvd-verdict is-fold">✗ folds to {folds.map(trapShort).join(" · ")}</span>}
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -36,6 +36,7 @@ export function getPlaybook(m, deck) {
     prioritySecond: list(meth.vsPrioritySecond, m.prioritySecond),
     goodCards: rawGood.filter((c) => c && c.side !== "bad").map((c) => ({ name: c.name, notes: c.notes || c.reason || "" })),
     endboards: ebDeck || ebMatch,
+    ifThen: list(meth.vsIfThen),
     notes: txt(meth.vsNotes, m.freeformNotes),
   };
 }
@@ -133,6 +134,49 @@ export function StepView({ label, steps }) {
       {steps && steps.length
         ? <ol className="fmt-steps is-view">{steps.map((s, i) => <li key={i} className="fmt-step"><span className="fmt-step-text">{s}</span></li>)}</ol>
         : <div className="read-field is-empty">— no steps yet</div>}
+    </div>
+  );
+}
+
+// ── Mid-game "If / Then" calls: editable + read-only ────────────────
+// The decision tree you actually recall at the table: "they resolved
+// Fuwalos → pivot to the short line". Rows: { id, going, when, then }.
+const GOING_OPTS = [["any", "Either"], ["first", "Going 1st"], ["second", "Going 2nd"]];
+const goingBadge = (g) => (g === "first" ? "1st" : g === "second" ? "2nd" : "—");
+
+export function IfThenEditor({ rows, onChange }) {
+  const patch = (id, p) => onChange((rows || []).map((r) => (r.id === id ? { ...r, ...p } : r)));
+  const add = () => onChange([...(rows || []), { id: "it_" + rid(), going: "any", when: "", then: "" }]);
+  return (
+    <div className="ifthen">
+      {(rows || []).map((r) => (
+        <div className="ifthen-row" key={r.id}>
+          <Dropdown className="ifthen-going-dd" value={r.going || "any"} options={GOING_OPTS} onChange={(v) => patch(r.id, { going: v })} />
+          <span className="ifthen-word">If</span>
+          <input className="ifthen-input" defaultValue={r.when} placeholder="they resolve Fuwalos…"
+            onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => patch(r.id, { when: e.target.value })} />
+          <span className="ifthen-word is-then">→</span>
+          <input className="ifthen-input" defaultValue={r.then} placeholder="commit only the short line…"
+            onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => patch(r.id, { then: e.target.value })} />
+          <button type="button" className="fmt-chip-x" title="Remove" onClick={() => onChange(rows.filter((x) => x.id !== r.id))}>×</button>
+        </div>
+      ))}
+      <button type="button" className="fmt-add-btn" onClick={add}>+ Add a call</button>
+    </div>
+  );
+}
+
+export function IfThenView({ rows }) {
+  const real = (rows || []).filter((r) => has(r.when) || has(r.then));
+  if (!real.length) return <div className="read-field is-empty">— none yet (add them in Decks)</div>;
+  return (
+    <div className="ifthen is-view">
+      {real.map((r) => (
+        <div className="ifthen-row is-view" key={r.id}>
+          <span className={"ifthen-badge is-" + (r.going || "any")}>{goingBadge(r.going)}</span>
+          <span className="ifthen-text"><span className="ifthen-word">If</span> {r.when} <span className="ifthen-word is-then">→</span> {r.then}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -271,7 +315,12 @@ export function PlaybookEditor({ deck, save, cardPool }) {
       </div>
 
       <div className="pb-group">
-        <div className="pb-group-title">Their end boards <span className="pb-group-hint">— add the pieces, watch them land on the playmat</span></div>
+        <div className="pb-group-title">Mid-game calls — if / then</div>
+        <IfThenEditor rows={meth.vsIfThen || []} onChange={(r) => set("vsIfThen", r)} />
+      </div>
+
+      <div className="pb-group">
+        <div className="pb-group-title">Their end boards</div>
         <EndBoardsEditor boards={meth.endboards || []} onChange={(b) => set("endboards", b)} onHover={onHover} onPick={onPick} pool={cardPool} />
       </div>
 
@@ -282,7 +331,7 @@ export function PlaybookEditor({ deck, save, cardPool }) {
 
       <div className="pb-group">
         <div className="pb-group-title">Your notes / scouting vs this deck</div>
-        <RichNotes value={meth.vsNotes || ""} placeholder="Scouting notes, lines you've found, what to watch for. Type @ to mention a card."
+        <RichNotes value={meth.vsNotes || ""} placeholder="Scouting notes… @ for cards"
           onSave={(v) => set("vsNotes", v)} minHeight={90} />
       </div>
 
