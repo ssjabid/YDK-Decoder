@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { loadDecks } from "../lib/storage.js";
 import {
-  loadSavedCombos, VIEW_MODES, comboKey, comboTitle, comboOpeningHand,
+  loadSavedCombos, VIEW_MODES, comboKey, comboTitle, comboOpeningHand, comboCoverNames,
   comboEndboard, comboAllCards, comboDeckIds, comboBeatsTraps, COMMON_HANDTRAPS, trapShort,
   isCoreStep, stepCards, groupCombos, comboSearchHaystack,
   renameCombo, setComboDecks, setComboNotes, setComboOpenerSize, deleteCombo, updateCombo,
@@ -182,7 +182,7 @@ function Thumb({ name, onHover, onPick }) {
 }
 
 function ComboTile({ c, active, deckName, onClick }) {
-  const hand = comboOpeningHand(c).slice(0, 3);
+  const hand = comboCoverNames(c, 3);
   const steps = (c.steps || []).length;
   const mastery = masteryLabel(loadMastery()[comboKey(c, 0)]);
   return (
@@ -621,6 +621,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
   const origBoard = useMemo(() => comboEndboard(c), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [ebNames, setEbNames] = useState(origBoard.map((x) => x.name));
   const [traps, setTraps] = useState(comboBeatsTraps(c));
+  const [cover, setCover] = useState(c.coverCard || "");
   const [notes, setNotes] = useState(c.userNotes || "");
 
   const linkOpts = deckLinkOpts(decks, deckIds);
@@ -639,7 +640,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
   const save = () => {
     const keep = new Map(origBoard.map((x) => [x.name, x]));
     const endboard = ebNames.map((n) => keep.get(n) || n);
-    updateCombo(idx, { title, deckIds, openerSize, openingHand: hand, steps, endboard, beatsTraps: traps, notes });
+    updateCombo(idx, { title, deckIds, openerSize, openingHand: hand, coverCard: hand.includes(cover) ? cover : "", steps, endboard, beatsTraps: traps, notes });
     onSaved();
   };
 
@@ -691,7 +692,22 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
       </div>
 
       <section className="combo-block">
-        <div className="combo-block-label">Opening hand <span className="combo-block-hint">the cards you start with</span></div>
+        <div className="combo-block-label">
+          Opening hand <span className="combo-block-hint">the cards you start with</span>
+          {hand.length > 1 && (
+            <span className="combo-cover-pick">
+              {openerSize !== "" && Number(openerSize) < hand.length && (
+                <button type="button" className="combo-line-walk" title="Keep only the real opener (cover card first)"
+                  onClick={() => { const lead = hand.includes(cover) && cover ? cover : hand[0]; setHand([lead, ...hand.filter((n) => n !== lead)].slice(0, Number(openerSize))); }}>
+                  ✂ keep {openerSize}
+                </button>
+              )}
+              <span className="combo-cover-label">Cover</span>
+              <Dropdown className="combo-cover-dd" value={hand.includes(cover) ? cover : ""} placeholder="first card" align="right"
+                options={[["", "first card"], ...hand.map((n) => [n, n])]} onChange={setCover} ariaLabel="Cover card" />
+            </span>
+          )}
+        </div>
         <ChipRow items={hand} onChange={setHand} onHover={onHover} onPick={onPick} placeholder="Search an opener card…" />
       </section>
 

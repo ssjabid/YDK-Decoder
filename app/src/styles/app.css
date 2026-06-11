@@ -1341,10 +1341,16 @@
 .combo-detail-panel { min-width: 0; }
 .combo-detail { display: flex; flex-direction: column; gap: 16px; }
 .combo-detail-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-.combo-detail-title { font-size: 19px; font-weight: 600; flex: 1; cursor: pointer; min-width: 0; }
+/* Title hugs its text (ellipsized), replay sits right beside it, the spacer
+   pushes the action buttons to the right edge — no floating mid-bar pills. */
+.combo-detail-title { font-size: 19px; font-weight: 600; cursor: pointer; min-width: 0; max-width: 58%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .combo-detail-title:hover { color: var(--accent); }
-.combo-replay-link { font-size: 12px; color: var(--text-dim); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
-.combo-replay-link:hover { border-color: var(--accent); color: var(--accent); }
+.combo-replay-link {
+  font-size: 12.5px; font-weight: 600; line-height: 1.28; color: var(--text-dim); text-decoration: none;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 7px 13px; /* same metrics as .back-btn */
+  display: inline-flex; align-items: center; flex-shrink: 0;
+}
+.combo-replay-link:hover { border-color: var(--accent); color: var(--text); }
 .combo-meta-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .combo-meta-field { display: flex; flex-direction: column; gap: 5px; }
 .combo-meta-field > span:first-child { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
@@ -1426,6 +1432,16 @@
 .combo-tile-mastery { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; border-radius: 4px; padding: 1px 6px; }
 .combo-tile-mastery.is-shaky { color: var(--warning); border: 1px solid rgba(229,169,60,0.5); }
 .combo-tile-mastery.is-solid { color: var(--role-engine); border: 1px solid rgba(95,196,154,0.5); }
+
+/* One metric set for all segmented-control buttons (tabs inside panels) and
+   small bar actions, so rows read as one consistent family app-wide. */
+.combo-viewtoggle-btn, .combo-mode-btn, .bb-leg-btn, .theme-toggle-btn, .testing-mode-btn, .decks-role-btn { font-size: 12.5px; }
+.combo-viewtoggle-btn, .combo-mode-btn, .bb-leg-btn, .theme-toggle-btn { padding: 6px 14px; }
+
+/* cover-card picker in the editor's opening-hand header */
+.combo-cover-pick { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.combo-cover-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
+.combo-cover-dd .dd-trigger { font-size: 11.5px; padding: 4px 10px; max-width: 220px; }
 
 /* multi-deck links + wide meta fields (shared by detail / builder / editor) */
 .combo-detail-bar-spacer { flex: 1; }

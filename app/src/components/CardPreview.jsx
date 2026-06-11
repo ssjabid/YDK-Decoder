@@ -13,7 +13,18 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
   // that pinned it doesn't immediately close it.
   useEffect(() => {
     if (!pinned || !onClose) return;
-    const onDown = (e) => { if (!(e.target.closest && e.target.closest(".card-preview"))) onClose(); };
+    const onDown = (e) => {
+      if (e.target.closest && e.target.closest(".card-preview")) return;
+      // Swallow the follow-up click: without this, clicking another card while
+      // pinned closes the pin on mousedown and the click instantly RE-pins to
+      // that card — the second click "sticks". A pinned preview's next click,
+      // anywhere, should only dismiss.
+      const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); cleanup(); };
+      const cleanup = () => { document.removeEventListener("click", swallow, true); clearTimeout(tid); };
+      const tid = setTimeout(cleanup, 600); // safety: no click followed (drag etc.)
+      document.addEventListener("click", swallow, true);
+      onClose();
+    };
     const id = setTimeout(() => document.addEventListener("mousedown", onDown, true), 0);
     return () => { clearTimeout(id); document.removeEventListener("mousedown", onDown, true); };
   }, [pinned, onClose]);

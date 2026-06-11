@@ -98,6 +98,14 @@ export function comboOpeningHand(c) {
   return [...new Set(hand)];
 }
 
+// Cards for the tile/gallery art — the user-chosen cover first, then the
+// rest of the opener ("this combo IS the Elara combo" → Elara leads).
+export function comboCoverNames(c, n = 3) {
+  const hand = comboOpeningHand(c);
+  if (c.coverCard) return [c.coverCard, ...hand.filter((x) => x !== c.coverCard)].slice(0, n);
+  return hand.slice(0, n);
+}
+
 // Opener size for grouping (null = unknown).
 export function comboOpenerSize(c) {
   if (c.userOpenerSize != null) return c.userOpenerSize;
@@ -228,6 +236,7 @@ export function updateCombo(idx, patch) {
       c.userOpenerSize = (s === "" || s == null) ? null : Number(s);
     }
     if ("openingHand" in patch) c.openingHand = (patch.openingHand || []).filter(Boolean);
+    if ("coverCard" in patch) c.coverCard = patch.coverCard || "";
     if ("steps" in patch) c.steps = (patch.steps || []).map(normalizeStep);
     if ("endboard" in patch) c.endboard = (patch.endboard || []).filter(Boolean);
     if ("beatsTraps" in patch) c.beatsTraps = [...new Set((patch.beatsTraps || []).filter(Boolean))];

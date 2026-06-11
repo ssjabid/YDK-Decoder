@@ -8,6 +8,7 @@
 // ───────────────────────────────────────────────────────────────────
 import { loadCardCache, saveCardCache } from "./storage.js";
 import { slimCard } from "./ydk.js";
+import { aliasOf } from "./cardAliases.js";
 
 let _index = null;
 let _indexSize = -1;
@@ -33,7 +34,8 @@ export function nameIndex() {
 export function lookupCardByName(name) {
   const lc = String(name || "").toLowerCase();
   if (!lc) return null;
-  for (const e of nameIndex()) if (e.lc === lc) return e.card;
+  const alias = aliasOf(lc); // DuelingBook early name ⇄ official name
+  for (const e of nameIndex()) if (e.lc === lc || (alias && e.lc === alias)) return e.card;
   return null;
 }
 
@@ -66,7 +68,16 @@ export function resolveCardName(name) {
   if (_resolveInflight.has(n)) return _resolveInflight.get(n);
   const p = (async () => {
     try { await searchApi(n); } catch (_) { /* noop */ }
-    const ok = !!lookupCardByName(n);
+    let ok = !!lookupCardByName(n);
+    if (!ok) {
+      // DuelingBook early name? Ask the API for the official one — the alias
+      // in lookupCardByName then bridges back to this name.
+      const al = aliasOf(n.toLowerCase());
+      if (al) {
+        try { await searchApi(al); } catch (_) { /* noop */ }
+        ok = !!lookupCardByName(n);
+      }
+    }
     if (!ok) _resolveFailed.add(n);
     _resolveInflight.delete(n);
     return ok;
