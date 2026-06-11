@@ -112,7 +112,7 @@ export default function SettingsTab({ reload }) {
           <div className="stat-cell"><span className="stat-num">{stats.cards}</span><span className="stat-lbl">cached cards</span></div>
           <div className="stat-cell"><span className="stat-num">{fmtKB(stats.size)}</span><span className="stat-lbl">stored</span></div>
         </div>
-        <div className="settings-hint">Everything lives in this browser only. Back up regularly — clearing site data wipes it.</div>
+        <div className="settings-hint">Lives in this browser only — back up regularly.</div>
       </section>
 
       <section className="settings-section">
@@ -120,14 +120,14 @@ export default function SettingsTab({ reload }) {
         <div className="settings-row">
           <div>
             <div className="settings-label">Download a backup</div>
-            <div className="settings-hint">Saves a JSON of everything. Last backup: <strong>{fmtWhen(stats.lastBackup)}</strong>. Compatible with the original decoder app.</div>
+            <div className="settings-hint">One JSON of everything. Last: <strong>{fmtWhen(stats.lastBackup)}</strong>.</div>
           </div>
           <button type="button" className="btn-primary" onClick={onBackup}><Icon name="cards" size={16} /> Download backup</button>
         </div>
         <div className="settings-row">
           <div>
             <div className="settings-label">Restore from a backup</div>
-            <div className="settings-hint"><strong>Merge</strong> adds anything missing without touching what you have — the safe choice.</div>
+            <div className="settings-hint">Adds what’s missing, touches nothing else.</div>
           </div>
           <button type="button" className="btn-secondary" onClick={() => pickRestore("merge")}>Restore (merge)</button>
         </div>
@@ -138,7 +138,7 @@ export default function SettingsTab({ reload }) {
         <div className="settings-row">
           <div>
             <div className="settings-label">Load / refresh meta matchups</div>
-            <div className="settings-hint">Imports the bundled meta pack — the opponent decks + the pre-filled meta format. Re-run anytime to refresh to the latest bundled version.</div>
+            <div className="settings-hint">Opponent decks + the pre-filled meta format. Re-run anytime to refresh.</div>
           </div>
           <button type="button" className="btn-primary" onClick={onLoadMeta} disabled={busy}>
             {busy ? "Loading…" : <><Icon name="summon" size={16} /> Load meta decks</>}
@@ -153,7 +153,7 @@ export default function SettingsTab({ reload }) {
         <div className="settings-row">
           <div>
             <div className="settings-label">Clear card image cache</div>
-            <div className="settings-hint">Frees the most space. Card art + data re-download as you browse.</div>
+            <div className="settings-hint">Frees space; card data re-downloads as you browse.</div>
           </div>
           <button type="button" className="btn-secondary" onClick={onClearCache}>Clear cache</button>
         </div>

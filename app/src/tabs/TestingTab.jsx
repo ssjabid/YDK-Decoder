@@ -182,7 +182,7 @@ function Goldfish({ deck, oppDecks = [] }) {
                 <strong>{Math.round((100 * streak.hits) / streak.hands)}%</strong> consistency
                 <button type="button" className="link-btn" onClick={() => { resetPracticeStreak(deck.deckId); setStreak(null); }}>reset</button>
               </>
-            ) : "Shuffle a few hands to see this deck's opening consistency."}
+            ) : "Shuffle a few hands for a consistency read."}
           </div>
         </div>
         <button type="button" className="btn-primary" onClick={shuffle} disabled={!main.length}>
@@ -194,7 +194,7 @@ function Goldfish({ deck, oppDecks = [] }) {
         <section className="practice-panel">
           <div className="practice-panel-title">Opening hand</div>
           {!hand ? (
-            <div className="practice-empty">Click <strong>Shuffle &amp; draw 5</strong> to see what you'd open with.</div>
+            <div className="practice-empty">Shuffle to draw a hand.</div>
           ) : (
             <>
               <div className="hand-row">
@@ -233,7 +233,7 @@ function Goldfish({ deck, oppDecks = [] }) {
             </div>
           ) : null}
           {!hand ? (
-            <div className="practice-empty">Draw a hand to see which saved combos are live.</div>
+            <div className="practice-empty">Draw a hand first.</div>
           ) : !lines.length ? (
             <div className="practice-empty">
               No combos saved for <strong>{deck.name}</strong> yet.<br />
@@ -293,7 +293,7 @@ function ComboLine({ r, handNames, vsTraps, onHover, onPick }) {
       </div>
       {c.userOpenerSize != null && (c.openingHand || []).length > c.userOpenerSize && (
         <div className="combo-line-trim-hint" title="Matching requires every recorded opener card to be in your hand — extracted combos record the whole 5-card hand, so trim it down to the real opener.">
-          ✂ Marked {c.userOpenerSize}-card, but {(c.openingHand || []).length} opener cards are recorded — trim the opening hand in <strong>Combos → ✎ Edit</strong> for accurate matching.
+          ✂ {(c.openingHand || []).length} cards recorded for a {c.userOpenerSize}-card line — trim it in <strong>Combos → ✎ Edit</strong>.
         </div>
       )}
       {open && (
@@ -473,7 +473,7 @@ function BoardBreaker({ myDeck, dataVersion }) {
         <section className="bb-col">
           <div className="bb-col-title">Your hand — {activePlan ? activePlan.name : "game 1 (no side)"}</div>
           {!hand ? (
-            <div className="practice-empty">Shuffle a going-second hand to start the puzzle.</div>
+            <div className="practice-empty">Shuffle a hand to start.</div>
           ) : (
             <div className="hand-row">
               {hand.ids.map((id, idx) => {
@@ -496,9 +496,9 @@ function BoardBreaker({ myDeck, dataVersion }) {
             <span className="bb-gauge-stat"><strong>{handtraps}</strong> handtrap{handtraps === 1 ? "" : "s"}</span>
             <span className="bb-gauge-vs">vs</span>
             <span className="bb-gauge-stat is-dis"><strong>{disruptions}</strong> disruption{disruptions === 1 ? "" : "s"}</span>
-            <span className="bb-gauge-hint">— a rough gauge, not a verdict. Work out the actual line.</span>
+            <span className="bb-gauge-hint">— a gauge, not a verdict.</span>
           </div>
-          <div className="bb-assess-q">Can you break this board? Think it through, then record it:</div>
+          <div className="bb-assess-q">Can you break it? Record the call:</div>
           <div className="bb-assess-btns">
             <button type="button" className="bb-assess-btn is-break" onClick={() => assess("break")}>✓ Broke it</button>
             <button type="button" className="bb-assess-btn is-partial" onClick={() => assess("partial")}>~ Partial</button>

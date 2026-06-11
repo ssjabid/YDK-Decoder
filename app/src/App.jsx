@@ -121,7 +121,7 @@ export default function App() {
 
       {nudge && (
         <div className="backup-nudge">
-          <span className="backup-nudge-text">It's been a while since your last backup — your work lives only in this browser.</span>
+          <span className="backup-nudge-text">No recent backup — your work lives only in this browser.</span>
           <button type="button" className="btn-secondary backup-nudge-btn" onClick={() => { downloadBackup(); setNudge(false); }}>Back up now</button>
           <button type="button" className="link-btn" onClick={() => { writeLs(KEYS.backupNudgeSnooze, new Date(Date.now() + 86400e3).toISOString()); setNudge(false); }}>Remind me tomorrow</button>
         </div>

@@ -1,5 +1,18 @@
 # FABLE5 SUMMARY — what changed, what's better, what's left
 
+> **Round 2 (2026-06-11, Abid-approved):** six new sections shipped on top of
+> the audit fixes — §1 mid-game **If/Then playbook** (per matchup, 1st/2nd
+> tagged); §2 derived **"Your lines vs this deck"** intel (their detected
+> handtraps × your beatsTraps) + a Testing **"vs deck…"** preset; §3
+> starter-aware **"≈ likely playable"** matching + **⧉ Duplicate combo** +
+> insert-step; §4 **Opening odds** (exact hypergeometric deck health); §5
+> printable **matchup cheat sheet**; §6 **drill mastery** (got-it/fumbled →
+> shaky/solid badges, new `ydk_drill_mastery` key, included in backups); §7 a
+> **copy-trim pass** (shorter placeholders/hints/empty-states everywhere).
+> Each section verified live and committed separately. Lint note: the repo
+> has 59 pre-existing stylistic lint hits (unused `_`, mutation idioms) that
+> predate this work — left alone deliberately; build is clean.
+
 Run date: 2026-06-10. Companion to `FABLE5_FINDINGS.md` (the ranked audit).
 Four themed commits, every fix verified live in a browser before committing:
 

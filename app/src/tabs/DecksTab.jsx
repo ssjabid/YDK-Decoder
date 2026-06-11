@@ -241,7 +241,7 @@ function DeckPanel({ deck, onChanged }) {
 
       <PanelSection title="Notes — anything else about this deck" defaultOpen={false}>
         <RichNotes value={deck.notes || ""} onSave={(v) => { deck.notes = v; save(); }} minHeight={90}
-          placeholder="Build rationale, side-deck plans, things to remember. Type @ to mention a card." />
+          placeholder="Anything else… @ for cards" />
       </PanelSection>
 
       <PanelSection title="Combos for the active build" defaultOpen={false}>
@@ -493,7 +493,7 @@ function KeyCardRow({ deck, kc, save, force, cardFor, onHover, onPick }) {
           </label>
           <input className="deck-field-input is-single" defaultValue={kc.stopWith} placeholder="Stop it with… (e.g. Ash, Imperm)"
             onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => { kc.stopWith = e.target.value; save(); }} />
-          <AutosaveTextarea value={kc.notes || ""} placeholder="Notes — why it matters, how to play around it"
+          <AutosaveTextarea value={kc.notes || ""} placeholder="Why it matters…"
             onSave={(v) => { kc.notes = v; save(); }} />
         </div>
       )}

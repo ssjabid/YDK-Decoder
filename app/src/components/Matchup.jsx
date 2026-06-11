@@ -92,7 +92,7 @@ export function ReadField({ label, value, hint }) {
       </div>
       {present
         ? <div className="read-field" dangerouslySetInnerHTML={{ __html: normalizeNotesHtml(value) }} />
-        : <div className="read-field is-empty">{hint || "— not set yet (add it in the Decks tab)"}</div>}
+        : <div className="read-field is-empty">{hint || "— set in Decks"}</div>}
       {open && (
         <div className="rt-backdrop" onClick={() => setOpen(false)}>
           <div className="read-modal" onClick={(e) => e.stopPropagation()}>
@@ -119,7 +119,7 @@ export function StepEditor({ label, steps, onChange }) {
         ))}
       </ol>
       {adding ? (
-        <input className="fmt-add-input is-wide" autoFocus placeholder="A step, Enter to add"
+        <input className="fmt-add-input is-wide" autoFocus placeholder="Step, then Enter"
           onKeyDown={(e) => { if (e.key === "Enter") commit(e.target.value); else if (e.key === "Escape") setAdding(false); else e.stopPropagation(); }}
           onBlur={(e) => commit(e.target.value)} />
       ) : <button type="button" className="fmt-add-btn" onClick={() => setAdding(true)}>+ Add step</button>}
@@ -194,13 +194,13 @@ export function GoodCardsEditor({ cards, onChange, onHover, onPick }) {
             onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => setReason(i, e.target.value)} />
         </div>
       ))}
-      <CardPicker placeholder="Search a card that's good here…" onAdd={(name) => onChange([...(cards || []), { name, notes: "" }])} />
+      <CardPicker placeholder="Search any card…" onAdd={(name) => onChange([...(cards || []), { name, notes: "" }])} />
     </div>
   );
 }
 
 export function GoodCardsView({ cards, onHover, onPick }) {
-  if (!cards || !cards.length) return <div className="read-field is-empty">— none flagged yet (add them in the Decks tab)</div>;
+  if (!cards || !cards.length) return <div className="read-field is-empty">— none yet</div>;
   return (
     <div className="rg-list">
       {cards.map((c, i) => (
@@ -253,7 +253,7 @@ export function EndBoardsEditor({ boards, onChange, onHover, onPick, pool }) {
 }
 
 export function EndBoardsView({ boards, onHover, onPick }) {
-  if (!boards || !boards.length) return <div className="read-field is-empty">— no end board recorded yet (add it in the Decks tab)</div>;
+  if (!boards || !boards.length) return <div className="read-field is-empty">— none yet (build it in Decks)</div>;
   return (
     <div className="endboards is-view">
       {boards.map((b, bi) => (
@@ -285,7 +285,7 @@ function EditField({ label, value, onSave }) {
   return (
     <div className="drill-field">
       <div className="drill-label">{label}</div>
-      <RichNotes value={value || ""} placeholder="Type to add notes · @ to mention a card" onSave={onSave} />
+      <RichNotes value={value || ""} placeholder="Notes… @ for cards" onSave={onSave} />
     </div>
   );
 }

@@ -640,7 +640,7 @@ function RoundEditor({ t, format, deckNames, update, onDelete }) {
             </div>
             <label className="journal-rf jnf-grow">
               <span className="journal-rf-label">Any notes?</span>
-              <input className="fmt-add-input is-wide" defaultValue={r.notes} placeholder="how it went, what you'd change next time…"
+              <input className="fmt-add-input is-wide" defaultValue={r.notes} placeholder="notes…"
                 onKeyDown={(e) => e.stopPropagation()} onBlur={(e) => patchRound(r.roundId, (rr) => { rr.notes = e.target.value; })} />
             </label>
           </div>

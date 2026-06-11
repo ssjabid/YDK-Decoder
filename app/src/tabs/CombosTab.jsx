@@ -332,7 +332,7 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick, onDu
 
       <section className="combo-block">
         <div className="combo-block-label">Notes on this combo</div>
-        <RichNotes value={c.userNotes || ""} placeholder="Why this line, where it can brick, what to do through handtraps. Type @ to mention a card."
+        <RichNotes value={c.userNotes || ""} placeholder="Why this line, where it bricks · @ for cards"
           onSave={(v) => { setComboNotes(idx, v); }} minHeight={80} />
       </section>
     </div>
@@ -500,7 +500,7 @@ function ComboBuilder({ decks, onCancel, onCreate, onHover, onPick }) {
       </div>
       <div className="combo-meta-row">
         <div className="combo-meta-field combo-meta-field-wide">
-          <span>Linked decks <span className="combo-block-hint">link this line to every deck it works in</span></span>
+          <span>Linked decks <span className="combo-block-hint">one line, every variant</span></span>
           <div className="combo-deck-links">
             {linked.length
               ? linked.map((d) => (
@@ -528,7 +528,7 @@ function ComboBuilder({ decks, onCancel, onCreate, onHover, onPick }) {
       </section>
       <section className="combo-block">
         <div className="combo-block-label">Notes</div>
-        <RichNotes value={notes} onSave={setNotes} minHeight={70} placeholder="How the line goes, what to watch for. Type @ to mention a card." />
+        <RichNotes value={notes} onSave={setNotes} minHeight={70} placeholder="Notes… @ for cards" />
       </section>
     </div>
   );
@@ -660,7 +660,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
 
       <div className="combo-meta-row">
         <label className="combo-meta-field combo-meta-field-wide">
-          <span>Name <span className="combo-block-hint">call it whatever helps you remember it</span></span>
+          <span>Name</span>
           <input className="jnf-name" value={title} placeholder="e.g. 1-card Elara → full board"
             onKeyDown={(e) => e.stopPropagation()} onChange={(e) => setTitle(e.target.value)} />
         </label>
@@ -672,7 +672,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
 
       <div className="combo-meta-row">
         <div className="combo-meta-field combo-meta-field-wide">
-          <span>Linked decks <span className="combo-block-hint">link the same line to every deck variant it works in</span></span>
+          <span>Linked decks <span className="combo-block-hint">one line, every variant</span></span>
           <div className="combo-deck-links">
             {linked.length
               ? linked.map((d) => (
@@ -697,7 +697,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
 
       <section className="combo-block">
         <div className="combo-block-label">
-          Steps <span className="combo-block-hint">{steps.length} step{steps.length === 1 ? "" : "s"} · reorder with ↑↓, delete the draw noise, retext anything</span>
+          Steps <span className="combo-block-hint">{steps.length} · reorder ↑↓, + inserts, edit anything</span>
         </div>
         {!steps.length ? <div className="read-field is-empty">No steps yet. Add the first play below.</div> : (
           <ol className="combo-edit-steps">
@@ -733,7 +733,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
       </section>
 
       <section className="combo-block">
-        <div className="combo-block-label">Plays through <span className="combo-block-hint">handtraps this line still resolves through — drives the Testing "if they have…" filter</span></div>
+        <div className="combo-block-label">Plays through <span className="combo-block-hint">handtraps this line beats</span></div>
         <TrapPicker value={traps} onChange={setTraps} />
       </section>
 
@@ -746,7 +746,7 @@ function ComboEditor({ c, idx, decks, onCancel, onSaved, onHover, onPick }) {
 
       <section className="combo-block">
         <div className="combo-block-label">Notes on this combo</div>
-        <RichNotes value={notes} onSave={setNotes} minHeight={70} placeholder="Why this line, where it bricks, how to play through handtraps. Type @ to mention a card." />
+        <RichNotes value={notes} onSave={setNotes} minHeight={70} placeholder="Why this line, where it bricks · @ for cards" />
       </section>
 
       <div className="combo-editor-footer">
