@@ -13,6 +13,7 @@ import { getPlaybook, GamePlanView, EndBoardsView, GoodCardsView, ReadField, IfT
 import { getSidePlans, newPlan, planTotals } from "../lib/sidePlans.js";
 import { opponentHandtraps, linesVsTraps } from "../lib/matchupIntel.js";
 import { comboTitle, trapShort } from "../lib/combos.js";
+import { openCheatSheet } from "../lib/cheatSheet.js";
 import Icon from "../components/Icon.jsx";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
@@ -258,6 +259,12 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
         <h2 className="matchup-full-title">{name}</h2>
         <Dropdown className="tier-dd" value={m.tier || "tier1"} options={TIER_OPTIONS} align="right"
           ariaLabel="Tier" onChange={(v) => upd((x) => { x.tier = v; })} />
+        <button type="button" className="back-btn" title="One printable page for the table"
+          onClick={() => {
+            const rounds = (format.tournaments || []).flatMap((t) => t.rounds || []).filter((r) => r.opponentDeckId === m.opponentDeckId);
+            const w = rounds.filter((r) => r.result === "W").length, l = rounds.filter((r) => r.result === "L").length;
+            openCheatSheet({ oppName: name, tier: TIER_LABEL[m.tier] || "Tier 1", meth, pb, m, opponentDeck, primaryDeck, record: rounds.length ? `${w}-${l}` : null });
+          }}>⎙ Cheat sheet</button>
         <button type="button" className="back-btn is-danger" onClick={remove}>× Remove matchup</button>
       </div>
 
