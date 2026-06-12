@@ -262,7 +262,7 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick, onDu
       </div>
 
       <div className="combo-meta-row">
-        <label className="combo-meta-field combo-meta-field-wide">
+        <label className="combo-meta-field combo-meta-field-decks">
           <span>Decks</span>
           <DeckLinks c={c} idx={idx} decks={decks} onChange={onChange} />
         </label>

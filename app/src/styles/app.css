@@ -1845,3 +1845,48 @@ header.app-header { margin-bottom: 24px; }
   color: var(--accent);
   background: transparent;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   P3 · LAYOUT PATTERNS (UI_OVERHAUL_PLAN C1-C3)
+   One toolbar shape, one detail-header shape, no orphaned meta rows.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* C3 — detail headers: one recipe for Combos detail, Format breakdown and
+   the Deck panel: gap 12 · pb 12 · 1px rule · 19px/600 title. */
+.combo-detail-bar, .matchup-full-bar, .deck-panel-header {
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.matchup-full-bar, .deck-panel-header { margin-bottom: 16px; }
+.combo-detail-title, .matchup-full-title, .deck-panel-title {
+  font-size: 19px; font-weight: 600; min-width: 0;
+}
+.matchup-full-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deck-rename-input { font-size: 19px; }
+
+/* header action buttons join the md solid family */
+.deck-mini-btn, .format-act {
+  height: var(--ctl-md); padding-top: 0; padding-bottom: 0;
+  display: inline-flex; align-items: center;
+  font-size: 12.5px; font-weight: 600;
+  background: var(--bg-elevated); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md); color: var(--text-dim);
+}
+.deck-mini-btn:hover, .format-act:hover { border-color: var(--accent); color: var(--text); }
+.deck-mini-btn.is-danger, .format-act.is-danger { color: var(--role-stopper); }
+.deck-mini-btn.is-danger:hover, .format-act.is-danger:hover { border-color: var(--role-stopper); color: var(--role-stopper); background: rgba(196,95,95,0.1); }
+
+/* C1 — toolbars: context/summary left, actions right (Decks summary used
+   to float right of the buttons; now it leads and the actions trail). */
+.decks-summary { order: -1; margin-left: 0; margin-right: auto; }
+
+/* section list-heads sit on the panel-title size, not the page-title size */
+.format-listhead .format-title { font-size: 15px; }
+
+/* C2 — combo meta row: one left-aligned cluster, no dead middle. The
+   detail Decks field hugs its chips (the EDITOR's wide Name field keeps
+   stretching via combo-meta-field-wide). */
+.combo-meta-row { gap: 24px; }
+.combo-meta-field-decks { flex: 0 1 auto; min-width: 0; max-width: 640px; }
+.combo-meta-info { margin-left: 0; align-self: flex-end; padding-bottom: 9px; }
