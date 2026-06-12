@@ -14,7 +14,6 @@ import { getSidePlans, newPlan, planTotals } from "../lib/sidePlans.js";
 import { opponentHandtraps, linesVsTraps } from "../lib/matchupIntel.js";
 import { comboTitle, trapShort } from "../lib/combos.js";
 import { openCheatSheet } from "../lib/cheatSheet.js";
-import Icon from "../components/Icon.jsx";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
 const TIER_OPTIONS = [["tier1", "Tier 1"], ["tier2", "Tier 2"], ["rogue", "Rogue"]];
@@ -139,9 +138,9 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
             onChange={(v) => { setActiveFormatId(v); setSelectedMatchupId(null); bump(); }} />
           <button type="button" className="format-act" title="New format" onClick={() => newFormat(false)}>+ New</button>
           {format.matchups?.length ? <button type="button" className="format-act" title="New format cloning these matchups" onClick={() => newFormat(true)}>Clone</button> : null}
-          <button type="button" className="format-act" title="Rename" onClick={renameFormat}>✎</button>
-          <button type="button" className="format-act" title="Export this format to a file" onClick={exportFmt}>⤓</button>
-          <button type="button" className="format-act" title="Import a format from a file" onClick={() => fmtFileRef.current?.click()}>⤒</button>
+          <button type="button" className="format-act" title="Rename this format" onClick={renameFormat}>Rename</button>
+          <button type="button" className="format-act" title="Export this format to a file" onClick={exportFmt}>Export</button>
+          <button type="button" className="format-act" title="Import a format from a file" onClick={() => fmtFileRef.current?.click()}>Import</button>
           {formats.length > 1 && <button type="button" className="format-act is-danger" title="Delete format" onClick={deleteFormat}>×</button>}
         </div>
         <label className="format-primary">
@@ -173,7 +172,7 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
                 .sort((a, b) => (a.name || "").localeCompare(b.name || "")).map((d) => [d.deckId, d.name + (d.role === "matchup" ? "" : "  · my deck")]);
               return lib.length ? <Dropdown className="format-lib-dd" value="" placeholder="+ Add from library" options={lib} onChange={addFromLibrary} /> : null;
             })()}
-            <button type="button" className="btn-secondary format-addbtn" onClick={() => fileRef.current?.click()}><Icon name="swords" size={15} /> Add matchup (.ydk)</button>
+            <button type="button" className="btn-secondary format-addbtn" onClick={() => fileRef.current?.click()}>+ Add matchup (.ydk)</button>
           </div>
 
           {!matchups.length ? (
@@ -264,7 +263,7 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
             const rounds = (format.tournaments || []).flatMap((t) => t.rounds || []).filter((r) => r.opponentDeckId === m.opponentDeckId);
             const w = rounds.filter((r) => r.result === "W").length, l = rounds.filter((r) => r.result === "L").length;
             openCheatSheet({ oppName: name, tier: TIER_LABEL[m.tier] || "Tier 1", meth, pb, m, opponentDeck, primaryDeck, record: rounds.length ? `${w}-${l}` : null });
-          }}>⎙ Cheat sheet</button>
+          }}>Cheat sheet</button>
         <button type="button" className="back-btn is-danger" onClick={remove}>× Remove matchup</button>
       </div>
 

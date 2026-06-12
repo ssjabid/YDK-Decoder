@@ -303,7 +303,7 @@ export function PlaybookEditor({ deck, save, cardPool }) {
   return (
     <div className="playbook-editor" onMouseLeave={clear}>
       <div className="pb-group">
-        <div className="pb-group-title">Game plan — your plan vs this deck</div>
+        <div className="pb-group-title">Game plan — your plan vs them</div>
         <div className="dash-2up">
           <EditField label="Chokepoint — what to Ash / stop" value={meth.vsChokepoint} onSave={(v) => set("vsChokepoint", v)} />
           <EditField label="Going first vs them" value={meth.vsPlanFirst} onSave={(v) => set("vsPlanFirst", v)} />
@@ -330,7 +330,7 @@ export function PlaybookEditor({ deck, save, cardPool }) {
       </div>
 
       <div className="pb-group">
-        <div className="pb-group-title">Your notes / scouting vs this deck</div>
+        <div className="pb-group-title">Scouting notes</div>
         <RichNotes value={meth.vsNotes || ""} placeholder="Scouting notes… @ for cards"
           onSave={(v) => set("vsNotes", v)} minHeight={90} />
       </div>

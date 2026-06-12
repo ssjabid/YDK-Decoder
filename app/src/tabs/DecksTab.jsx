@@ -97,7 +97,7 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
           <Icon name="cards" size={16} /> {roleFilter === "matchup" ? "Import matchup deck (.ydk)" : "Import your deck (.ydk)"}
         </button>
         <button type="button" className="btn-secondary" onClick={onLoadMeta} disabled={busy}>
-          {busy ? "Loading…" : <><Icon name="summon" size={16} /> Load meta decks</>}
+          {busy ? "Loading…" : "Load meta decks"}
         </button>
         <span className="decks-summary">
           <strong>{counts.total}</strong> decks · <strong>{counts.primary}</strong> mine · <strong>{counts.matchup}</strong> matchup
@@ -201,7 +201,7 @@ function DeckPanel({ deck, onChanged }) {
         <span className="deck-panel-actions">
           <button type="button" className="deck-mini-btn" title="Re-classify this deck"
             onClick={async () => { if (await confirmModal({ title: `Convert "${deck.name}"?`, message: `Move it to your ${isMatchup ? "My decks" : "Matchup decks"} list.`, confirmText: "Convert" })) { convertDeckRole(deck); onChanged && onChanged(); } }}>
-            ↻ {isMatchup ? "→ My deck" : "→ Matchup"}
+            {isMatchup ? "→ My deck" : "→ Matchup"}
           </button>
           <button type="button" className="deck-mini-btn is-danger" title="Delete this deck"
             onClick={async () => { if (await confirmModal({ title: `Delete "${deck.name}"?`, message: "Combos linked to it become unassigned; formats lose it as primary.", confirmText: "Delete deck", danger: true })) { deleteDeck(deck.deckId); onChanged && onChanged(); } }}>
@@ -350,7 +350,7 @@ function MethodologySection({ deck, save, cardMap }) {
           Key ratios
           <button type="button" className="deck-inline-btn"
             onClick={() => { const h = buildKeyRatiosHtml(deck, cardMap); if (!h) { alertModal({ title: "Auto-fill unavailable", message: "The active build has no main-deck cards (or card data hasn't loaded yet)." }); return; } m.keyRatios = h; save(); }}>
-            ↺ Auto-fill from active build
+            Auto-fill from active build
           </button>
         </div>
         <RichNotes value={m.keyRatios || ""} placeholder="e.g. 3× Starter, 2× Extender, 3× Ash… or auto-fill above."
@@ -407,7 +407,7 @@ function KeyCardsSection({ deck, save, cardMap, force }) {
             : missing ? `${missing} cards need data — card images load on open`
             : "No key cards yet — click Extract to bucket the active build."}
         </span>
-        <button type="button" className="deck-inline-btn" onClick={doExtract}>{total ? "↻ Re-extract" : "Extract key cards"}</button>
+        <button type="button" className="deck-inline-btn" onClick={doExtract}>{total ? "Re-extract" : "Extract key cards"}</button>
       </div>
       <div className="key-cards-grid">
         {KEY_CARD_BUCKETS.map((cat) => (

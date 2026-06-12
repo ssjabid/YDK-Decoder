@@ -17,7 +17,6 @@ import EndBoardView from "../components/EndBoardView.jsx";
 import Dropdown from "../components/Dropdown.jsx";
 import CardPicker from "../components/CardPicker.jsx";
 import RichNotes from "../components/RichNotes.jsx";
-import Icon from "../components/Icon.jsx";
 
 const OPENER_OPTS = [["", "Auto"], [1, "1-card"], [2, "2-card"], [3, "3-card"], [4, "4-card"]];
 const fmtDate = (s) => (s ? String(s).slice(0, 10) : "");
@@ -118,7 +117,7 @@ export default function CombosTab({ dataVersion = 0, reload }) {
         <span className="combos-toolbar-spacer" />
         <button type="button" className="btn-primary" onClick={() => { setCreating(true); setSelKey(null); }}>+ New combo</button>
         <button type="button" className="btn-secondary" onClick={onPasteImport}>Paste JSON</button>
-        <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}><Icon name="summon" size={15} /> Import .json</button>
+        <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>Import .json</button>
       </div>
 
       {creating ? (
@@ -256,8 +255,8 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick, onDu
         <h2 className="combo-detail-title" title="Click to rename" onClick={rename}>{comboTitle(c)}</h2>
         {c.replayUrl && <a className="combo-replay-link" href={c.replayUrl} target="_blank" rel="noreferrer" title="Open the DuelingBook replay">↗ replay</a>}
         <span className="combo-detail-bar-spacer" />
-        <button type="button" className="back-btn" onClick={() => setEditing(true)}>✎ Edit</button>
-        <button type="button" className="back-btn" title="Copy this combo as a new variant line" onClick={onDuplicate}>⧉ Duplicate</button>
+        <button type="button" className="back-btn" onClick={() => setEditing(true)}>Edit</button>
+        <button type="button" className="back-btn" title="Copy this combo as a new variant line" onClick={onDuplicate}>Duplicate</button>
         <button type="button" className="back-btn is-danger" onClick={remove}>× Delete</button>
       </div>
 

@@ -1890,3 +1890,38 @@ header.app-header { margin-bottom: 24px; }
 .combo-meta-row { gap: 24px; }
 .combo-meta-field-decks { flex: 0 1 auto; min-width: 0; max-width: 640px; }
 .combo-meta-info { margin-left: 0; align-self: flex-end; padding-bottom: 9px; }
+
+/* ══ P4 · UI overhaul — content patterns (docs/UI_OVERHAUL_PLAN.md) ═════
+   B3 one empty-state voice · C5 one sidebar-tile spec. Same cascade-final
+   technique as P1–P3: equal-specificity-later-wins pins the shared look,
+   while each context's own rules keep placement (padding, centering). */
+
+/* B3 — every quiet "nothing here yet" line: one size (12.5 on the type
+   scale), one voice. `.placeholder` stays the single BIG empty state
+   (accent-edged card) for whole-tab emptiness. */
+.practice-empty, .decks-list-empty, .decks-content-empty, .deck-empty-hint,
+.eb-empty, .key-cards-empty, .rt-mention-empty, .sbp-sum-empty,
+.combo-sim-pile-empty, .dd-empty {
+  font-size: 12.5px; font-style: italic; color: var(--text-faint); line-height: 1.6;
+}
+.practice-empty strong, .decks-list-empty strong, .decks-content-empty strong,
+.deck-empty-hint strong { color: var(--text-dim); font-weight: 600; }
+
+/* C5 — one sidebar-tile spec (deck list + combo list): ghost at rest,
+   bg on hover, accent border + tint when selected — the same "you are
+   here" the segmented controls use. The role stripe (decks) and the art
+   stack (combos) stay as each list's identity; metrics are shared. */
+.deck-tile, .combo-tile {
+  background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-md); padding: 9px 11px;
+}
+.deck-tile { padding-left: 14px; } /* room for the role stripe */
+.deck-tile:hover, .combo-tile:hover { background: var(--bg-hover); border-color: transparent; }
+.deck-tile.active, .combo-tile.active,
+.deck-tile.active:hover, .combo-tile.active:hover { background: var(--accent-dim); border-color: var(--accent); }
+.deck-tile-name, .combo-tile-name { font-size: 13px; font-weight: 600; }
+.deck-tile-meta, .combo-tile-meta { font-size: 10.5px; gap: 8px; }
+.deck-tile-body, .combo-tile-body { gap: 3px; }
+
+/* P1 straggler caught by the P4 audit — the header gear joins the md scale */
+.app-gear { width: var(--ctl-md); height: var(--ctl-md); padding: 0; }
