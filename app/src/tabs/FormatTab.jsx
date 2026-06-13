@@ -14,6 +14,7 @@ import { getSidePlans, newPlan, planTotals } from "../lib/sidePlans.js";
 import { opponentHandtraps, linesVsTraps } from "../lib/matchupIntel.js";
 import { comboTitle, trapShort } from "../lib/combos.js";
 import { openCheatSheet } from "../lib/cheatSheet.js";
+import { registerEsc } from "../lib/escStack.js";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
 const TIER_OPTIONS = [["tier1", "Tier 1"], ["tier2", "Tier 2"], ["rogue", "Rogue"]];
@@ -226,6 +227,9 @@ function useMatchupUpdate(update, matchupId) {
 function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, update, onHover, onPick, onEditDeck, onBack, onRemove }) {
   const upd = useMatchupUpdate(update, m.matchupId);
   const [, forceRev] = useReducer((x) => x + 1, 0);
+  // Esc backs out to the matchup list (after any pinned preview is dismissed).
+  const onBackRef = useRef(onBack); onBackRef.current = onBack;
+  useEffect(() => registerEsc(() => onBackRef.current()), []);
   const name = (opponentDeck && opponentDeck.name) || deckNames[m.opponentDeckId] || "Unknown deck";
   const meth = (opponentDeck && opponentDeck.methodology) || {};
   const pb = getPlaybook(m, opponentDeck);

@@ -1,4 +1,4 @@
-import { Component, useEffect, useState } from "react";
+import { Component, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getStoredTheme, loadDecks, loadSavedCombos, KEYS, readLs, writeLs } from "./lib/storage.js";
 import { ensureMetaFresh, backfillPlaybookFromMatchups } from "./lib/metaPack.js";
 import { ingestComboFromUrl } from "./lib/combos.js";
@@ -61,6 +61,21 @@ export default function App() {
 
   // Jump to a deck in the Decks tab (used by Format's "Edit in Decks →").
   const goToDeck = (deckId) => { if (!deckId) return; setDeckJump((p) => ({ deckId, n: (p?.n || 0) + 1 })); setTab("decks"); };
+
+  // Per-tab scroll memory — switching tabs remounts <main key={tab}>, which
+  // used to drop you back at the top (or mid-scroll on a shorter tab). Save
+  // the outgoing tab's offset, restore the incoming tab's. (P5 · D3)
+  const scrollByTab = useRef({});
+  useLayoutEffect(() => {
+    window.scrollTo(0, scrollByTab.current[tab] || 0);
+    return () => { scrollByTab.current[tab] = window.scrollY; };
+  }, [tab]);
+
+  // The browser tab title says where you are — like the legacy app. (P5 · D5)
+  useEffect(() => {
+    const label = (TABS.find((t) => t.id === tab) || {}).label || "Settings";
+    document.title = `${label} · YDK Decoder`;
+  }, [tab]);
 
   useEffect(() => {
     const t = getStoredTheme();

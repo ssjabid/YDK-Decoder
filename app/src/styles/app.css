@@ -1925,3 +1925,16 @@ header.app-header { margin-bottom: 24px; }
 
 /* P1 straggler caught by the P4 audit — the header gear joins the md scale */
 .app-gear { width: var(--ctl-md); height: var(--ctl-md); padding: 0; }
+
+/* ══ P5 · UI overhaul — motion + wayfinding (docs/UI_OVERHAUL_PLAN.md) ════
+   D2 — the sidebar tiles join the app's one hover language: a 1px lift on
+   hover, same direction as the cards (which lift more). The blanket
+   reduced-motion guard above already flattens the transform. */
+.deck-tile, .combo-tile {
+  transition: background var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast);
+}
+.deck-tile:hover, .combo-tile:hover { transform: translateY(-1px); }
+.deck-tile:active, .combo-tile:active { transform: translateY(0); }
+
+/* D4 — the "/" hint inside the combo search reads as a key cap, not text */
+.combo-search-input::placeholder { color: var(--text-faint); }

@@ -44,6 +44,24 @@ export default function CombosTab({ dataVersion = 0, reload }) {
   const [creating, setCreating] = useState(false);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef(null);
+  const searchRef = useRef(null);
+
+  // "/" jumps to the combo search — the one quick way to find a line by name
+  // or card. Ignored while typing in a field or with a modal open.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = document.activeElement;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      if (document.querySelector(".modal-overlay")) return;
+      if (!searchRef.current) return;
+      e.preventDefault();
+      searchRef.current.focus();
+      searchRef.current.select();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const { combos, decks, deckNames } = useMemo(() => {
     const combos = loadSavedCombos();
@@ -107,7 +125,7 @@ export default function CombosTab({ dataVersion = 0, reload }) {
       <div className="combos-toolbar">
         <Dropdown className="combos-deck-dd" value={deckFilter} options={deckFilterOpts} onChange={setDeckFilter} ariaLabel="Filter by deck" />
         <div className="combo-search-wrap">
-          <input className="combo-search-input" placeholder="Search combos + cards…" value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
+          <input ref={searchRef} className="combo-search-input" placeholder="Search combos + cards…  ( / )" value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => { if (e.key === "Escape") { e.currentTarget.blur(); } e.stopPropagation(); }} />
           {search && <button type="button" className="combo-search-clear" onClick={() => setSearch("")}>×</button>}
         </div>
         <span className="combo-viewtoggle">

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { getImageUrls } from "../lib/ydk.js";
 import { classify, ROLE_COLORS } from "../lib/classify.js";
 import { getCardSummary } from "../lib/cardFx.js";
+import { registerEsc } from "../lib/escStack.js";
 
 // Floating card preview (large image + role chips + effect text). Shared by
 // CardsView and the Testing tab so hover/pin behaves identically everywhere.
@@ -26,7 +27,8 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
       onClose();
     };
     const id = setTimeout(() => document.addEventListener("mousedown", onDown, true), 0);
-    return () => { clearTimeout(id); document.removeEventListener("mousedown", onDown, true); };
+    const unEsc = registerEsc(onClose); // Esc dismisses a pinned preview (peels off first)
+    return () => { clearTimeout(id); document.removeEventListener("mousedown", onDown, true); unEsc(); };
   }, [pinned, onClose]);
 
   if (!card) return null;
