@@ -1,7 +1,7 @@
 # HANDOFF — YDK Decoder
 
 Snapshot of the project state for whoever picks this up next (including future-me).
-Last updated: **2026-06-10**.
+Last updated: **2026-06-13**.
 
 ---
 
@@ -35,13 +35,25 @@ app (`app/src/lib/storage.js`), so data carries across. Run: `cd app && npm run 
 - **Settings** (gear) — data overview, **backup/restore** (same JSON as legacy),
   theme, danger zone.
 
-**Recent fixes (this build):** key-card Boss bucket now buckets the Extra deck;
-per-key-card Category dropdown; combo multi-deck linking surfaces in Testing.
+**2026-06 — UI overhaul P1–P6 complete + Fable 5 feature pass.** The whole-app
+design system is enforced and measured: every boxed control is exactly
+26/32/40px, every segmented toggle computes one identical spec, headers/tiles/
+empty-states share one recipe each, plus one motion language, one Esc back-out
+order, per-tab scroll memory, `/`-to-search, and a context-aware title bar
+(`docs/UI_OVERHAUL_PLAN.md`, P1–P6 all ✅). Earlier in the pass: handtrap-
+resistance loop (tag lines that "play through" Fuwa/Droll/Imperm → Format
+breakdown intel → Testing preset), exact-hypergeometric opening odds, printable
+matchup cheat sheet, drill mastery, DuelingBook↔official card-name aliases.
+Functional machinery verified live on the real `abid_doomz_1.ydk` (import,
+roles, odds, combo CRUD, backup/restore, draw-a-hand) — see `docs/READY_CHECK.md`.
 
-**Open item:** serve the React build at `localhost:8000` (same origin as the
-extension target) so extension-extracted combos appear directly; narrow-viewport
-layout. Docs: `app/README.md` (React app), `docs/FABLE5_REVIEW_PROMPT.md`
-(review/level-up prompt), `docs/REACT_*` (test checklists).
+**The only untested-by-machine items left** are the 5 in **`docs/READY_CHECK.md`**
+— they need Abid's machine + the Chrome extension + his eyes on his own cards
+(serve at `localhost:8000/react/`, the extension→Combos handoff, his deck's
+cards all resolving, one real backup). That is the live to-do.
+
+Docs: `app/README.md` (React app), `docs/READY_CHECK.md` (the live checklist),
+`docs/UI_OVERHAUL_PLAN.md` (design system + P1–P6), `docs/FABLE5_REVIEW_PROMPT.md`.
 
 ---
 

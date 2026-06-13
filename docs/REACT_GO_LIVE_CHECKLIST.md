@@ -1,3 +1,7 @@
+> **⚠️ Superseded 2026-06-13 → use [`READY_CHECK.md`](READY_CHECK.md).** That's the
+> current 5-item list (UI overhaul P1–P6 done; functional machinery re-verified
+> live on the real DoomZ deck). This file is kept for history.
+
 # Go-live checklist — trimmed to what matters before you bulk-enter data
 
 Goal of this pass: get you confident enough to **add all your DoomZ combos** and

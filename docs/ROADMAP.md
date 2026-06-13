@@ -4,15 +4,27 @@
 > written for the legacy `decoder/ydk_decoder.html`. Its shipped/backlog items are
 > still useful context, but the active product is now the React + Vite build (see
 > `HANDOFF.md` → "Current build" and `docs/FABLE5_REVIEW_PROMPT.md`). Most "shipped"
-> features below were rebuilt in React with parity-plus; the live backlog now is:
-> serve the React build at `localhost:8000` (extension handoff), narrow/mobile
-> layout, spaced-repetition drilling, and per-combo mastery tracking.
+> features below were rebuilt in React with parity-plus. **As of 2026-06-13 the
+> UI overhaul (P1–P6) and the Fable 5 feature pass are complete and the live
+> backlog is essentially empty** — the only open item is the human-only
+> `docs/READY_CHECK.md` (serve at `localhost:8000/react/` + the extension
+> handoff). Remaining nice-to-haves: narrow/mobile layout, spaced-repetition
+> drilling.
 
 Status as of **2026-05-28** (legacy decoder).
 Read top to bottom. The "Shipped" section is what already works in the
 current build. The "In progress / next" section is the active queue.
 "Backlog" is everything that's been triaged but isn't being worked on yet.
 
+> **2026-06-13 — UI overhaul P1–P6 complete + ready-to-use check.** Six-phase
+> design-system overhaul shipped and measured (scale → identity → layout →
+> content → motion/wayfinding → proof audit): 0 off-scale controls app-wide,
+> one segmented spec, one header/tile/empty recipe, plus motion language, Esc
+> back-out, scroll memory, `/`-search, context title. Functional machinery
+> re-verified live on the real DoomZ deck. The remaining checklist is trimmed
+> to the 5 human-only items in `docs/READY_CHECK.md`. Details:
+> `docs/UI_OVERHAUL_PLAN.md`.
+>
 > **2026-05-28 — Audit pass 1 done.** A full autonomous audit fixed five real
 > bugs (the big one: restore was silently dropping the entire Format Planner)
 > plus a data-loss-class cross-reference gap on deck delete. All verified live.

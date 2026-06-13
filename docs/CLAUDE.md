@@ -90,8 +90,17 @@ review/level-up prompt see `docs/FABLE5_REVIEW_PROMPT.md`.
 - ✅ Visual refresh (Phase 6E) + archetype/type grouping for Key Ratios + sideboard pools (Phase 6F).
 
 ### What's broken or incomplete (current, small)
-- 🚧 **N1.5 end-to-end test not done.** The 6 reference DoomZ combos (`docs/DECK_CONTEXT.md`) haven't been re-extracted against the current build. Needs Abid physically driving the Chrome extension.
-- 🚧 **Phase 6E + 6F verification pending.** Abid has a test checklist to run (visual refresh, matchup collapsibles, save toast, Key Ratios grouping, sideboard ordering). Fix whatever fails.
+> **2026-06-13:** The React app's **UI overhaul (P1–P6) and the Fable 5 feature
+> pass are complete** — design system enforced and measured, functional
+> machinery re-verified live on the real DoomZ deck (import, roles, opening
+> odds, combo CRUD, backup/restore, draw-a-hand). The remaining verification is
+> trimmed to the **5 human-only items in `docs/READY_CHECK.md`** — that is the
+> single live checklist; the older `docs/REACT_*` / `TEST_CHECKLIST.md` /
+> `test-checklist.html` lists are superseded.
+- 🚧 **Extension → app handoff not yet exercised on this build.** Extracting a
+  combo from a DuelingBook replay into the React app served at `localhost:8000`
+  needs Abid driving the Chrome extension (READY_CHECK.md #3). The one
+  integration a sandbox can't test.
 - 🚧 **Images / API need localhost.** `py -m http.server 8000` is mandatory; CORS blocks YGOPRODeck on `file://`. Inline cache still works offline.
 - 🚧 **New BLZD cards use placeholder passcodes** (55555555, 77777777, …) because real API data didn't exist when the cache was written. On localhost the real API fills these at runtime — but cards too new for the API keep the placeholders (Bug 4 / ROADMAP B3.3).
 - 🚧 **Trap-Equip variant** (DoomZ Destruction GY-trigger equips from deck) isn't always captured — DB sometimes omits the equip event (see BUGS.md Bug 8 notes).

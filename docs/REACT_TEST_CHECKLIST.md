@@ -1,3 +1,7 @@
+> **⚠️ Superseded 2026-06-13 → use [`READY_CHECK.md`](READY_CHECK.md).** The full
+> mechanics below were all verified live; the current list is the 5 human-only
+> checks in READY_CHECK.md. This file is kept for history / deep reference.
+
 # YDK Decoder (React build) — Step-by-step test checklist
 
 How to run the app: from the project root, start a local server and open the
