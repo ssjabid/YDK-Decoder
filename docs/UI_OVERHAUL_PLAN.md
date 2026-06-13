@@ -121,7 +121,20 @@ one disabled treatment. One EmptyState component (one line + one action).
 | **P3** ✅ 2026-06-12 | C1–C3 shipped: one detail-header recipe (combo bar / matchup bar / deck panel header all compute pb 12 · title 19/600 · 1px rule; mini/act buttons joined the md family); Decks toolbar = summary left, actions right; combo meta row is one left cluster (measured gaps exactly 24px — dead middle gone); list-head titles snapped to the 15px panel size. | low | screens stop feeling "assembled" |
 | **P4** ✅ 2026-06-12 | B3 shipped as a cascade-final recipe, not a component (same visual outcome, zero churn): all ten quiet-empty classes compute 12.5px · italic · text-faint; `.placeholder` stays the one BIG empty. B4 icon policy: decorative glyphs dropped from secondaries (✎ ⧉ ↻ ↺ ⎙ + summon/swords SVGs); format-act cluster became words (+ New · Clone · Rename · Export · Import); KEPT by design — lg-primary icons, tab/modebar icons (all-or-none), semantic glyphs (← ↗ × ✓ ✗ ⚠ ≈ ◀ ▶ ✂ ★). C4 verified most-used-first everywhere; playbook editor titles now mirror the breakdown 1:1. C5 one sidebar-tile spec: deck + combo tiles ghost at rest, accent border + tint when active (same "you are here" as .seg), 13px name · 10.5px meta · 3px gap — measured byte-equal. Bonus: `.app-gear` straggler (34px) pinned to md. Height audit: 0 off-scale on all 4 tabs. | low | polish everywhere you look |
 | **P5** ✅ 2026-06-13 | D1/D2 — sidebar tiles join the one hover language (1px lift, transform in the transition; cards/cells already lift more); reduced-motion still flattens via the blanket guard. D3 — per-tab scroll memory: `<main key={tab}>` no longer dumps you at the top; a `useLayoutEffect` saves the outgoing tab's `scrollY` and restores the incoming one's (verified Format↔Combos: 400 ↔ 0). D4 — one Esc back-out order via a tiny LIFO `lib/escStack.js`: a pinned preview peels off before the matchup breakdown backs out; modals still own Esc (stack bails while `.modal-overlay` exists) and a focused field always keeps its own Esc. `/` focuses the combo search (only tab with one; placeholder shows the hint). D5 — browser-tab title reflects the tab ("Combos · YDK Decoder"). Verified live: Esc closes pinned preview, Esc backs out breakdown, `/` focuses + doesn't hijack typing, 0 off-scale, console clean. | low | the "melodic" feel |
-| **P6** | E1 full audit + straggler fixes | none | proof |
+| **P6** ✅ 2026-06-13 | E1 full-depth programmatic sweep at **1280 + 1000px** across every surface incl. the views that default-collapsed sections + the matchup-deck Playbook editor hid from P1–P5: Decks panel (all sections force-expanded), Combos list/detail/**editor (547 controls)**/gallery/builder, Format list/breakdown, Playbook editor, Testing (going first/second), Settings. Result: **0 off-scale controls anywhere**, one byte-identical segmented shape, console clean. Audit now distinguishes boxed controls (must hit 26/32/40) from glyph/text affordances (×, clear, links — unboxed, exempt) and inline-editable titles (transparent rename fields — exempt). **Two genuine stragglers fixed:** `.decklist-action` 28→26 (Builds row minis, base rule) and `.rg-reason` 28→32 ("really good here" reason field joins the md input family). | none | proof |
 
 Recommended cadence: P1+P2 together (they're the 80% of perceived quality),
 then P3; P4–P6 as a second pass after Abid has lived with it.
+
+---
+
+## ✅ Overhaul complete — 2026-06-13
+
+All six phases shipped and verified by measurement (not eyeball):
+**P1** scale · **P2** identity · **P3** layout · **P4** content patterns ·
+**P5** motion + wayfinding · **P6** proof. The whole-app invariant now holds:
+every boxed control is exactly 26/32/40px, every segmented control computes
+one byte-identical spec, headers/tiles/empties share one recipe each, and the
+app has one motion language, one Esc back-out order, per-tab scroll memory,
+`/`-to-search, and a context-aware title. Anything found from here is ordinary
+maintenance, not an overhaul phase — fold it into normal work.

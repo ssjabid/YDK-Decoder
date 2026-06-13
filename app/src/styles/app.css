@@ -696,7 +696,7 @@
 .decklist-actions { display: flex; gap: 4px; }
 .decklist-action {
   background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  color: var(--text-dim); cursor: pointer; font-size: 13px; width: 28px; height: 28px; line-height: 1;
+  color: var(--text-dim); cursor: pointer; font-size: 13px; width: var(--ctl-sm); height: var(--ctl-sm); line-height: 1;
 }
 .decklist-action:hover { border-color: var(--accent); color: var(--accent); }
 .decklist-add { display: flex; gap: 8px; }
@@ -1938,3 +1938,11 @@ header.app-header { margin-bottom: 24px; }
 
 /* D4 — the "/" hint inside the combo search reads as a key cap, not text */
 .combo-search-input::placeholder { color: var(--text-faint); }
+
+/* ══ P6 · UI overhaul — final full-depth audit straggler fixes ═════════
+   Surfaced only when the always-collapsed sections (Builds) and the
+   matchup-deck Playbook editor were force-expanded — surfaces the P1–P5
+   sweeps never reached. (.decklist-action 28→26 was fixed at its base rule.)
+   The "cards that are really good here" reason field was an odd 28px filled
+   input; it joins the md input family like every other inline editor field. */
+.rg-reason { height: var(--ctl-md); padding-top: 0; padding-bottom: 0; font-size: 12.5px; }
