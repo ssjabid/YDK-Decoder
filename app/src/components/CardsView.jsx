@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchCards, getImageUrls, countCopies } from "../lib/ydk.js";
-import { classify, pickPrimaryRole, ROLE_COLORS, groupByFrame, groupExtraByType } from "../lib/classify.js";
+import { groupByFrame, groupExtraByType } from "../lib/classify.js";
 import CardPreview from "./CardPreview.jsx";
 
 // Renders a deck's main/extra/side, grouped + sorted like the original:
 // Monsters/Spells/Traps for main+side, by Extra type for extra. Each tile
-// gets a role-colored stripe + a hover preview (image + effect).
+// has a hover preview (image + effect).
 export default function CardsView({ deck }) {
   const ids = useMemo(() => ({
     main: deck.main || [],
@@ -75,18 +75,14 @@ function CardTile({ entry, onHover, onPick }) {
   const [urlIdx, setUrlIdx] = useState(0);
   const name = card?.name || `#${id}`;
   const src = urls[urlIdx];
-  const role = card ? pickPrimaryRole(classify(card).roles) : "Engine";
-  const stripe = ROLE_COLORS[role] || "var(--role-engine)";
 
   return (
     <div
       className="card-tile"
       title={name}
-      style={{ "--stripe": stripe }}
       onMouseEnter={(e) => card && onHover({ card, rect: e.currentTarget.getBoundingClientRect() })}
       onClick={(e) => card && onPick(card, e.currentTarget.getBoundingClientRect())}
     >
-      <span className="card-tile-stripe" />
       {src ? (
         <img src={src} alt={name} loading="lazy"
           onError={() => setUrlIdx((i) => (i + 1 < urls.length ? i + 1 : i))} />

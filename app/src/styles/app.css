@@ -242,10 +242,6 @@
 .deck-group-label:first-child { padding-top: 4px; }
 
 /* ── Card tile role accent (slim line at the foot, not a banner over art) ── */
-.card-tile-stripe {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
-  background: var(--stripe, var(--role-engine)); z-index: 3;
-}
 .card-tile { cursor: pointer; }
 .cards-subgroup { margin-bottom: 14px; }
 .cards-subgroup-label {
@@ -784,8 +780,11 @@
 
 /* Sidebar filter — role-tinted active (green = mine, pink = matchup) + equal halves */
 .decks-role-btn { flex: 1; }
-.decks-role-btn.active[data-role="primary"] { background: rgba(95,196,154,0.18); color: var(--role-engine); }
-.decks-role-btn.active[data-role="matchup"] { background: rgba(196,95,122,0.18); color: var(--role-handtrap); }
+/* Active filter matches its own colour — green for My decks, pink for Matchup —
+   instead of inheriting the generic orange ring (the higher specificity here
+   overrides the shared .seg active box-shadow). */
+.decks-role-btn.active[data-role="primary"] { background: rgba(95,196,154,0.18); color: var(--role-engine); box-shadow: inset 0 0 0 1px rgba(95,196,154,0.45); }
+.decks-role-btn.active[data-role="matchup"] { background: rgba(196,95,122,0.18); color: var(--role-handtrap); box-shadow: inset 0 0 0 1px rgba(196,95,122,0.45); }
 
 /* Toolbar — equal-size Import / Load buttons (height comes from the scale) */
 .decks-toolbar .btn-primary,
@@ -1946,3 +1945,15 @@ header.app-header { margin-bottom: 24px; }
    The "cards that are really good here" reason field was an odd 28px filled
    input; it joins the md input family like every other inline editor field. */
 .rg-reason { height: var(--ctl-md); padding-top: 0; padding-bottom: 0; font-size: 12.5px; }
+
+/* ── Visual fixes 2026-06-21 ──────────────────────────────────────────
+   A selected deck tile highlights in ITS OWN colour — green for a "My deck",
+   pink for a Matchup deck — instead of a clashing orange. The colour stripe
+   already widens to 4px when active; this matches the border + tint to it.
+   Combo tiles have no role colour, so they keep the accent (set in P5). */
+.deck-tile.active, .deck-tile.active:hover {
+  background: rgba(95,196,154,0.12); border-color: rgba(95,196,154,0.55);
+}
+.deck-tile.is-matchup.active, .deck-tile.is-matchup.active:hover {
+  background: rgba(196,95,122,0.12); border-color: rgba(196,95,122,0.55);
+}
