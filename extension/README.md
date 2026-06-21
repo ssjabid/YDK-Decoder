@@ -18,17 +18,22 @@ You should see **YDK Decoder — Replay Extractor v1.0** appear in your extensio
 
 Click the puzzle-piece icon in Chrome's toolbar → pin **YDK Decoder**. The accent-colored icon stays visible so you can click it anytime.
 
-### 3. Start the local server
+### 3. Build + start the local server
 
-In Terminal, go to the folder where `ydk_decoder.html` lives, then:
+"Open in YDK Decoder" now opens the **React app** at `localhost:8000/react/`
+(not the legacy single-file decoder). Build it once, then serve the repo root:
 
 ```
-python3 -m http.server 8000
+cd app
+npm run build:8000        # outputs the app to ../react/
+cd ..
+py -m http.server 8000    # (macOS/Linux: python3 -m http.server 8000)
 ```
 
-(On Windows: `py -m http.server 8000`)
-
-Leave it running. This lets "Open in YDK Decoder" work.
+Leave the server running. The extension hands combos to `localhost:8000/react/`,
+which shares that origin — so extracted combos land directly in the app's
+**Combos** tab. (The old `decoder/ydk_decoder.html` still exists but is no
+longer the hand-off target.)
 
 ## How to use
 

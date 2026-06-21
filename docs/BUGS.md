@@ -6,6 +6,30 @@ batch-fix during the next pass.
 
 ---
 
+## ✅ Extension → React app handoff (verified live 2026-06-21)
+
+- ✅ **Extension opened the legacy decoder, not the React app.** Both
+  `extension/background/service-worker.js` and `extension/popup/popup.js`
+  hardcoded `DECODER_URL = http://localhost:8000/decoder/ydk_decoder.html`.
+  Since Abid now works in the React app, Extract → "Open in YDK Decoder" opened
+  the old single-file decoder (and, when nothing was served at :8000, fell back
+  to cramming the whole combo into a giant `?combo=` URL that failed to load —
+  the "weird link"). **Fix:** both constants now point at
+  `http://localhost:8000/react/`. The React app shares that origin, so the SW's
+  `localStorage` injection + `ydk:combo-injected` event reach it (App.jsx
+  already listens), and the `?combo=` fallback hits the React app's
+  `ingestComboFromUrl`. *Verified: the real pasted v3 payload decodes + imports
+  into the React app (added 1, renders steps).* **Requires** the React build
+  served at :8000 (`npm run build:8000` → `py -m http.server 8000`) and an
+  extension reload at `chrome://extensions/`.
+- ✅ **Combo named after the wrong card.** `deriveComboName()` named every combo
+  after its first Normal Summon, so every DoomZ line that funnels into Elara
+  collided on "DoomZ VII Seven - Elara". Now it names after the **starter** —
+  the first opening-hand card that's actually played (Activate/Normal/Special
+  Summon), falling back to first-play-of-any-card, then the old behaviour.
+  *Verified: the DoomZ Change line now names "DoomZ Change", not "…Elara".*
+  (In `service-worker.js`, NOT the protected `combo-import-helper.js`.)
+
 ## ✅ Phase 6O fixes (verified live 2026-05-30)
 
 - ✅ **Role-recovery banner false positive.** After importing the meta pack,

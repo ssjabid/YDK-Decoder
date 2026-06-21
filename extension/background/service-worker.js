@@ -51,7 +51,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Open a combo in the decoder — P0.4
 // Runs in the service worker so it survives popup close.
 // ============================================================
-const DECODER_URL = 'http://localhost:8000/decoder/ydk_decoder.html';
+// The active app is the React build served at localhost:8000/react/ (same
+// origin as this extension's localStorage injection). The legacy single-file
+// decoder at /decoder/ydk_decoder.html still exists but is no longer where
+// Abid works — point the hand-off at the React app. Requires the React build
+// to be served at :8000 (npm run build:8000, then py -m http.server 8000).
+const DECODER_URL = 'http://localhost:8000/react/';
 
 async function openInDecoder(combo) {
   if (!combo) {
@@ -466,15 +471,29 @@ function detectAction(text) {
 }
 
 function deriveComboName(openingHand, steps) {
-  // Best heuristic: first Normal Summon = combo starter
+  // Name the combo after the STARTER, not the first Normal Summon — many DoomZ
+  // lines funnel into the same NS (Elara), which made every combo collide on
+  // one name. The starter is the first card actually *played*; best of all is
+  // the first opening-hand card that's played (the true "1-card starter").
+  const PLAY = new Set(['Activate', 'Normal Summon', 'Special Summon']);
+  const hand = new Set(openingHand || []);
+
+  // 1) First opening-hand card that gets activated/summoned — the real opener.
+  for (const s of steps) {
+    if (PLAY.has(s.action) && s.cards) {
+      const fromHand = s.cards.find(c => hand.has(c));
+      if (fromHand) return fromHand;
+    }
+  }
+  // 2) Otherwise the first real play of any card (started off a searched piece).
+  for (const s of steps) {
+    if (PLAY.has(s.action) && s.cards && s.cards.length > 0) return s.cards[0];
+  }
+  // 3) Legacy fallback: first Normal Summon.
   const firstNS = steps.find(s => s.action === 'Normal Summon' && s.cards);
-  if (firstNS && firstNS.cards.length > 0) {
-    return firstNS.cards[0];
-  }
-  // Fallback: first card in opening hand
-  if (openingHand && openingHand.length > 0) {
-    return `Opening: ${openingHand[0]}`;
-  }
+  if (firstNS && firstNS.cards.length > 0) return firstNS.cards[0];
+  // 4) Last resort: first card in opening hand.
+  if (openingHand && openingHand.length > 0) return `Opening: ${openingHand[0]}`;
   return 'Unnamed combo';
 }
 

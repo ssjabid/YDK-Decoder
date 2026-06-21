@@ -208,7 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // new tab, so any async work started here would be terminated mid-flight.
   // The service worker persists, so it owns the open + inject flow.
   // ============================================================
-  const DECODER_URL = 'http://localhost:8000/decoder/ydk_decoder.html';
+  // Hand off to the React app served at localhost:8000/react/ (same origin as
+  // the SW's localStorage injection), not the legacy single-file decoder.
+  const DECODER_URL = 'http://localhost:8000/react/';
 
   btnOpenDecoder.addEventListener('click', async () => {
     if (!latestCombo) return;

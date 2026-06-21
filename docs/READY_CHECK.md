@@ -36,12 +36,21 @@ Decks → import `abid_doomz_1.ydk` (if it isn't already there) → open it →
 ---
 
 ### 3. The extension hands a combo off  (~3 min)  ← the big one
-With the app served at `localhost:8000` (step 1): open a DuelingBook replay,
-run the YDK Decoder extension, click **Extract**.
-- [ ] The combo appears in the **Combos** tab.
+**One-time first:** at `chrome://extensions/`, click the **reload** icon on the
+YDK Decoder card (picks up the 2026-06-21 fix that points the extension at the
+React app instead of the old decoder).
 
-> Why you: I can't drive Chrome + DuelingBook. This is the one integration
-> that's never been tested on this build — it matters most.
+Then, with the app served at `localhost:8000` (step 1): open a DuelingBook
+replay, run the extension, click **Extract** → **Open in YDK Decoder**.
+- [ ] A `localhost:8000/react/` tab opens and the combo appears in **Combos**.
+- [ ] It's named after its **starter** (e.g. *DoomZ Change*), not always the
+  same end-monster.
+
+> Why you: I can't drive Chrome + DuelingBook — this needs a real replay. Fixed +
+> verified the app side on 2026-06-21 (the extension now targets
+> `localhost:8000/react/`; the real combo decodes + imports correctly). If the
+> tab opens but stays empty, step 1 almost certainly isn't running — the React
+> build must be served at :8000 for the extension to reach it.
 
 ---
 
