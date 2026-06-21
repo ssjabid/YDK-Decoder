@@ -94,7 +94,6 @@ function HandCard({ id, name, card, onHover, onPick, tagClass, tagLabel, role })
       ) : (
         <div className="hand-card-noimg">{name}</div>
       )}
-      <div className="hand-card-name">{name}</div>
       {tagLabel ? <span className={"hand-card-tag " + (tagClass || "")}>{tagLabel}</span>
         : role ? <span className="hand-card-tag is-role" style={{ color: stripe, borderColor: stripe }}>{role}</span> : null}
     </div>

@@ -193,7 +193,6 @@ function Thumb({ name, onHover, onPick }) {
       onMouseLeave={() => onHover && onHover(null)}
       onClick={(e) => { e.stopPropagation(); onPick && onPick(c, e.currentTarget.getBoundingClientRect()); }}>
       {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : <span className="combo-thumb-ph">{name[0]}</span>}
-      <span className="combo-thumb-name">{name}</span>
     </span>
   );
 }

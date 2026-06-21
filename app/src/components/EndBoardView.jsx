@@ -99,7 +99,6 @@ function Pill({ slot, onHover, onPick }) {
       <span className="eb-pill-thumb">
         {urls.length ? <img src={urls[0]} alt="" loading="lazy" /> : <span className="eb-pill-ph">{slot.name[0]}</span>}
       </span>
-      <span className="eb-pill-name">{slot.name}</span>
     </span>
   );
 }

@@ -90,7 +90,6 @@ function CardTile({ entry, onHover, onPick }) {
         <div className="card-tile-noimg">{name}</div>
       )}
       {qty > 1 && <span className="card-tile-qty">×{qty}</span>}
-      <span className="card-tile-name">{name}</span>
     </div>
   );
 }
