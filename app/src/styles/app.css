@@ -867,7 +867,13 @@
   background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md);
   padding: 10px 12px; margin-bottom: 16px;
 }
-.format-bar-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.format-bar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Format actions "⋯" menu — compact icon-style trigger, no dropdown caret. */
+.format-menu-dd .dd-trigger { min-width: var(--ctl-md); padding: 0 12px; justify-content: center; }
+.format-menu-dd .dd-value { font-size: 19px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); }
+.format-menu-dd .dd-caret { display: none; }
+.format-menu-dd .dd-trigger:hover { border-color: var(--accent); }
+.format-menu-dd .dd-trigger:hover .dd-value { color: var(--text); }
 .format-picker {
   background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
   color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 10px; max-width: 230px;

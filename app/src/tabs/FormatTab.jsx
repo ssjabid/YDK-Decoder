@@ -139,12 +139,26 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
           <Dropdown className="format-picker-dd" value={format.formatId}
             options={formats.map((f) => [f.formatId, f.name])}
             onChange={(v) => { setActiveFormatId(v); setSelectedMatchupId(null); bump(); }} />
-          <button type="button" className="format-act" title="New format" onClick={() => newFormat(false)}>+ New</button>
-          {format.matchups?.length ? <button type="button" className="format-act" title="New format cloning these matchups" onClick={() => newFormat(true)}>Clone</button> : null}
-          <button type="button" className="format-act" title="Rename this format" onClick={renameFormat}>Rename</button>
-          <button type="button" className="format-act" title="Export this format to a file" onClick={exportFmt}>Export</button>
-          <button type="button" className="format-act" title="Import a format from a file" onClick={() => fmtFileRef.current?.click()}>Import</button>
-          {formats.length > 1 && <button type="button" className="format-act is-danger" title="Delete format" onClick={deleteFormat}>×</button>}
+          {/* All the format actions live in one "⋯" menu instead of a cluttered
+              row of buttons. Pick an action → its dialog opens. */}
+          <Dropdown className="format-menu-dd" value="" align="right"
+            placeholder="⋯" ariaLabel="Format actions" title="Format actions"
+            options={[
+              ["new", "+ New format"],
+              ...(format.matchups?.length ? [["clone", "Clone this format"]] : []),
+              ["rename", "Rename format"],
+              ["export", "Export to file"],
+              ["import", "Import from file"],
+              ...(formats.length > 1 ? [["delete", "Delete format"]] : []),
+            ]}
+            onChange={(v) => {
+              if (v === "new") newFormat(false);
+              else if (v === "clone") newFormat(true);
+              else if (v === "rename") renameFormat();
+              else if (v === "export") exportFmt();
+              else if (v === "import") fmtFileRef.current?.click();
+              else if (v === "delete") deleteFormat();
+            }} />
         </div>
         <label className="format-primary">
           <span>Your deck</span>
