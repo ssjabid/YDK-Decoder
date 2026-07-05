@@ -8,13 +8,17 @@ This is a plan, not code yet. It answers the three real questions (how to packag
 it, how to sync it, one repo or two), lays out a phased roadmap, and is honest
 about what needs *you* (accounts, hardware) vs what an AI can build.
 
-> **Progress (2026-06-21):** Building the **no-login** version (data moves by
-> export/import, not sync). Done + pushed: **M0** phone-tuning (0 horizontal
-> overflow at 375px on every screen; desktop untouched — all rules inside
-> `@media (max-width:640px)`), and **M1** PWA (manifest + on-brand icons +
-> offline service worker, PROD-only so dev is unaffected) + a **GitHub Pages
-> deploy workflow**. Next: Abid enables Pages (one click), then real
-> on-device install + export/import test. M2 (account/sync) stays deferred.
+> **Progress (2026-06-21):** The **no-login** mobile app is essentially
+> complete — live on GitHub Pages, installable, and running on Abid's phone.
+> Shipped: **M0** phone-tuning (0 horizontal overflow on every screen; desktop
+> untouched, all rules in `@media (max-width:640px)`); **M1** PWA (manifest +
+> on-brand card/summon-burst icon + offline SW, PROD-only) + GitHub Pages
+> deploy; **mobile list→detail→back navigation** for Decks & Combos (the big
+> UX fix — one pane at a time on a phone, side-by-side on desktop); plus mobile
+> bug fixes (card preview → bottom sheet, tap-again-to-dismiss via pointerdown,
+> equal toolbar button widths). Data still moves by **export/import**. The only
+> remaining phase is **M2 (account + sync)** — deliberately deferred until Abid
+> wants it.
 
 ---
 
