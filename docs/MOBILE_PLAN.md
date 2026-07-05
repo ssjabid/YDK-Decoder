@@ -8,6 +8,14 @@ This is a plan, not code yet. It answers the three real questions (how to packag
 it, how to sync it, one repo or two), lays out a phased roadmap, and is honest
 about what needs *you* (accounts, hardware) vs what an AI can build.
 
+> **Progress (2026-06-21):** Building the **no-login** version (data moves by
+> export/import, not sync). Done + pushed: **M0** phone-tuning (0 horizontal
+> overflow at 375px on every screen; desktop untouched — all rules inside
+> `@media (max-width:640px)`), and **M1** PWA (manifest + on-brand icons +
+> offline service worker, PROD-only so dev is unaffected) + a **GitHub Pages
+> deploy workflow**. Next: Abid enables Pages (one click), then real
+> on-device install + export/import test. M2 (account/sync) stays deferred.
+
 ---
 
 ## TL;DR — the recommendation

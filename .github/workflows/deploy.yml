@@ -1,0 +1,51 @@
+# Builds the React app and publishes it to GitHub Pages on every push to main.
+# The app uses base:"./" (relative paths), so it works fine at the project-site
+# subpath https://<user>.github.io/YDK-Decoder/.
+#
+# One-time setup (Abid): repo Settings → Pages → "Build and deployment" →
+# Source = "GitHub Actions". After that, every push auto-deploys.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install
+        run: npm ci
+        working-directory: app
+      - name: Build
+        run: npm run build
+        working-directory: app
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
