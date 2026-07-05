@@ -253,7 +253,17 @@
   animation: preview-in 120ms ease-out;
 }
 @keyframes preview-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.card-preview.is-pinned { pointer-events: auto; cursor: pointer; box-shadow: 0 0 0 1px var(--accent), var(--shadow-lg); }
+.card-preview.is-pinned { pointer-events: auto; box-shadow: 0 0 0 1px var(--accent), var(--shadow-lg); }
+/* Explicit close button (shown when pinned) — clearer than "tap somewhere". */
+.card-preview-close {
+  position: absolute; top: 8px; right: 8px; z-index: 3;
+  width: 30px; height: 30px; border-radius: 999px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(8,8,10,0.72); border: 1px solid var(--border-strong);
+  color: var(--text); font-size: 20px; line-height: 1; cursor: pointer;
+}
+.card-preview-close:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent); }
+.card-preview-backdrop { display: none; } /* desktop: none; mobile: dimmed tap-to-close (media query) */
 .card-preview-img { width: 178px; height: 260px; object-fit: contain; border-radius: 6px; flex-shrink: 0; align-self: flex-start; box-shadow: var(--shadow-sm); }
 .card-preview-body { min-width: 0; flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
 .card-preview-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
@@ -2050,15 +2060,25 @@ header.app-header { margin-bottom: 24px; }
   /* Card preview: the desktop 430px side-panel runs off a phone screen.
      Turn it into a bottom sheet that spans the width and fits. The inline
      position (top/left/right) the component sets is overridden with
-     !important; tap outside to dismiss (it's always pinned on touch). */
+     !important. Close it with the ✕, a tap on the dimmed backdrop, or the
+     hardware back gesture — no more fiddling. */
   .card-preview {
-    left: 10px !important;
-    right: 10px !important;
+    left: 8px !important;
+    right: 8px !important;
     top: auto !important;
-    bottom: 10px !important;
+    bottom: 8px !important;
     width: auto !important;
     height: auto !important;
-    max-height: 66vh;
+    max-height: 68vh;
+    border-radius: var(--radius-lg);
+    padding-top: 34px; /* room for the close button */
   }
   .card-preview-img { width: 116px; height: 170px; }
+  .card-preview-close { width: 34px; height: 34px; top: 8px; right: 8px; }
+  /* dimmed tap-to-close layer behind the sheet */
+  .card-preview-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 49;
+    background: rgba(0,0,0,0.55); animation: fade-in 140ms ease;
+  }
 }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }

@@ -47,8 +47,14 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
   const fullText = (card.desc || "").trim() || cls.stripped[0] || "(no effect text)";
   const summary = getCardSummary(card.name);
   return (
-    <div className={"card-preview" + (pinned ? " is-pinned" : "")} style={style}
-      onClick={pinned && onClose ? onClose : undefined}>
+    <>
+      {/* Dimmed tap-to-close backdrop — only visible on phones (CSS); on
+          desktop the preview is a light floating panel with no backdrop. */}
+      {pinned && onClose && <div className="card-preview-backdrop" onClick={onClose} />}
+      <div className={"card-preview" + (pinned ? " is-pinned" : "")} style={style}>
+      {pinned && onClose && (
+        <button type="button" className="card-preview-close" onClick={onClose} aria-label="Close">×</button>
+      )}
       {urls[0] && <img className="card-preview-img" src={urls[0]} alt="" />}
       <div className="card-preview-body">
         <div className="card-preview-name">{card.name}</div>
@@ -71,6 +77,7 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
         )}
         <div className="card-preview-text">{fullText}</div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
