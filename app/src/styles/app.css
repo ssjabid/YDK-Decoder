@@ -1995,11 +1995,16 @@ header.app-header { margin-bottom: 24px; }
   .tab, .tab.tab-icon { flex: 1; justify-content: center; padding: 10px 4px; gap: 5px; font-size: 12px; }
   .tab .tab-label { font-size: 12px; }
 
-  /* Toolbars: let the wide primary buttons share the row instead of forcing
-     a min-width that could overflow. */
-  .decks-toolbar .btn-primary, .decks-toolbar .btn-secondary { min-width: 0; flex: 1 1 auto; }
+  /* Toolbars: the primary/secondary buttons share the row as EQUAL widths
+     (flex-basis 0 → same size, not content-sized) so they line up cleanly. */
+  .decks-toolbar .btn-primary, .decks-toolbar .btn-secondary,
+  .combos-toolbar .btn-primary, .combos-toolbar .btn-secondary { min-width: 0; flex: 1 1 0; }
   .decks-toolbar, .combos-toolbar, .format-bar, .format-bar-left { gap: 8px; }
   .decks-summary { flex-basis: 100%; }
+  /* The combo toolbar's filter + view toggle each take a full row so they
+     don't get crushed next to the action buttons. */
+  .combos-deck-dd, .combos-deck-dd .dd-trigger { width: 100%; }
+  .combo-search-wrap { flex-basis: 100%; }
 
   /* The stacked master/detail lists get a sensible max height so you don't
      scroll past 18 decks to reach the panel below. */

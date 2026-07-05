@@ -16,9 +16,9 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
     if (!pinned || !onClose) return;
     const onDown = (e) => {
       if (e.target.closest && e.target.closest(".card-preview")) return;
-      // Swallow the follow-up click: without this, clicking another card while
-      // pinned closes the pin on mousedown and the click instantly RE-pins to
-      // that card — the second click "sticks". A pinned preview's next click,
+      // Swallow the follow-up click: without this, tapping another card while
+      // pinned closes the pin on pointerdown and the click instantly RE-pins to
+      // that card — the second tap "sticks". A pinned preview's next tap,
       // anywhere, should only dismiss.
       const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); cleanup(); };
       const cleanup = () => { document.removeEventListener("click", swallow, true); clearTimeout(tid); };
@@ -26,9 +26,11 @@ export default function CardPreview({ card, rect, pinned, onClose }) {
       document.addEventListener("click", swallow, true);
       onClose();
     };
-    const id = setTimeout(() => document.addEventListener("mousedown", onDown, true), 0);
+    // pointerdown, not mousedown — fires for touch too, so "tap the card again
+    // to close" works on phones (mousedown is unreliable on touch screens).
+    const id = setTimeout(() => document.addEventListener("pointerdown", onDown, true), 0);
     const unEsc = registerEsc(onClose); // Esc dismisses a pinned preview (peels off first)
-    return () => { clearTimeout(id); document.removeEventListener("mousedown", onDown, true); unEsc(); };
+    return () => { clearTimeout(id); document.removeEventListener("pointerdown", onDown, true); unEsc(); };
   }, [pinned, onClose]);
 
   if (!card) return null;
