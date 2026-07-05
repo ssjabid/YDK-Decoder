@@ -2018,4 +2018,19 @@ header.app-header { margin-bottom: 24px; }
   .testing-modebar { flex-wrap: wrap; }
   .testing-deck-field { flex-basis: 100%; min-width: 0; }
   .testing-deck-dd, .testing-deck-dd .dd-trigger { width: 100%; max-width: 100%; }
+
+  /* Card preview: the desktop 430px side-panel runs off a phone screen.
+     Turn it into a bottom sheet that spans the width and fits. The inline
+     position (top/left/right) the component sets is overridden with
+     !important; tap outside to dismiss (it's always pinned on touch). */
+  .card-preview {
+    left: 10px !important;
+    right: 10px !important;
+    top: auto !important;
+    bottom: 10px !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: 66vh;
+  }
+  .card-preview-img { width: 116px; height: 170px; }
 }
