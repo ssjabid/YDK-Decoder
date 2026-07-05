@@ -1982,6 +1982,11 @@ header.app-header { margin-bottom: 24px; }
    chrome for a phone, makes the tab bar fit instead of scrolling the page
    sideways, and keeps wide content (the end-board playmat) scrolling inside
    its own box rather than pushing the page. (Mobile pass — M0) */
+
+/* The mobile list↔detail back button is hidden everywhere except the mobile
+   detail pane (shown via the rule inside the media query below). */
+.mobile-pane-back { display: none; }
+
 @media (max-width: 640px) {
   body { padding: 14px 12px 44px; }
   .app-header { padding-bottom: 14px; margin-bottom: 16px; gap: 10px; }
@@ -2006,9 +2011,22 @@ header.app-header { margin-bottom: 24px; }
   .combos-deck-dd, .combos-deck-dd .dd-trigger { width: 100%; }
   .combo-search-wrap { flex-basis: 100%; }
 
-  /* The stacked master/detail lists get a sensible max height so you don't
-     scroll past 18 decks to reach the panel below. */
-  .decks-sidebar, .combos-sidebar { max-height: 46vh; overflow-y: auto; }
+  /* Mobile master/detail: show ONE pane at a time — the list, or the tapped
+     item's detail with a back button — like a native app (instead of the
+     detail hiding below a long list). The mobile-list/-detail class is set in
+     JS; on desktop it's inert because these rules only exist below 640px. */
+  .decks-layout.mobile-list .deck-panel,
+  .combos-layout.mobile-list .combo-detail-panel { display: none; }
+  .decks-layout.mobile-detail .decks-sidebar,
+  .combos-layout.mobile-detail .combos-sidebar { display: none; }
+  .decks-layout.mobile-detail .mobile-pane-back,
+  .combos-layout.mobile-detail .mobile-pane-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: var(--ctl-md); padding: 0 14px; margin-bottom: 14px;
+    background: var(--bg-elevated); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md); color: var(--text); font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
 
   /* End-board playmat: 5 fixed zones are too tight to crush into 375px —
      scroll it inside its own container (page never scrolls sideways). */

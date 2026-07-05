@@ -43,6 +43,9 @@ export default function CombosTab({ dataVersion = 0, reload }) {
   const [galleryView, setGalleryView] = useState(false);
   const [creating, setCreating] = useState(false);
   const [preview, setPreview] = useState(null);
+  // Mobile: show the combo list or the selected combo's detail (CSS gates it
+  // to ≤640px; inert on desktop where both show side-by-side).
+  const [mobileDetail, setMobileDetail] = useState(false);
   const fileRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -140,7 +143,7 @@ export default function CombosTab({ dataVersion = 0, reload }) {
 
       {creating ? (
         <ComboBuilder decks={decks} onCancel={() => setCreating(false)}
-          onCreate={(form) => { const key = addManualCombo(form); setCreating(false); setGalleryView(false); setSelKey(key); refresh(); }}
+          onCreate={(form) => { const key = addManualCombo(form); setCreating(false); setGalleryView(false); setSelKey(key); setMobileDetail(true); refresh(); }}
           onHover={onHover} onPick={onPick} />
       ) : !combos.length ? (
         <div className="placeholder">
@@ -152,9 +155,9 @@ export default function CombosTab({ dataVersion = 0, reload }) {
         !allVisible.length
           ? <div className="decks-list-empty">No combos match{q ? ` "${search}"` : ""}{deckFilter !== "all" ? " for this deck" : ""}.</div>
           : <ComboGallery groups={groups} deckNames={deckNames} onHover={onHover} onPick={onPick}
-              onOpen={(key) => { setGalleryView(false); setSelKey(key); }} />
+              onOpen={(key) => { setGalleryView(false); setSelKey(key); setMobileDetail(true); }} />
       ) : (
-        <div className="combos-layout">
+        <div className={"combos-layout" + (mobileDetail ? " mobile-detail" : " mobile-list")}>
           <aside className="combos-sidebar">
             {!allVisible.length ? (
               <div className="decks-list-empty">No combos match{q ? ` "${search}"` : ""}{deckFilter !== "all" ? " for this deck" : ""}.</div>
@@ -163,13 +166,14 @@ export default function CombosTab({ dataVersion = 0, reload }) {
                 <div className="combo-picker-group-header">{g.bucket} <span className="count">{g.items.length}</span></div>
                 {g.items.map(({ c, i }) => (
                   <ComboTile key={comboKey(c, i)} c={c} active={selected && comboKey(selected.c, selected.i) === comboKey(c, i)}
-                    deckName={deckLabel(c, deckNames)} onClick={() => setSelKey(comboKey(c, i))} />
+                    deckName={deckLabel(c, deckNames)} onClick={() => { setSelKey(comboKey(c, i)); setMobileDetail(true); }} />
                 ))}
               </div>
             ))}
           </aside>
 
           <section className="combo-detail-panel">
+            <button type="button" className="mobile-pane-back" onClick={() => setMobileDetail(false)}>← All combos</button>
             {selected
               ? <ComboDetail key={comboKey(selected.c, selected.i)} c={selected.c} idx={selected.i} decks={decks} deckNames={deckNames}
                   onChange={refresh} onHover={onHover} onPick={onPick}

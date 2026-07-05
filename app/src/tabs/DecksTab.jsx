@@ -33,6 +33,10 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
   const [localRev, bumpLocal] = useReducer((x) => x + 1, 0);
   const [selectedId, setSelectedId] = useState(getActiveDeckId());
   const [busy, setBusy] = useState(false);
+  // Mobile: which pane is showing — the deck list or the selected deck's
+  // detail. On desktop both show side-by-side and this class is inert (CSS
+  // only acts on it below 640px). Starts on the list so you see it first.
+  const [mobileDetail, setMobileDetail] = useState(false);
   const fileRef = useRef(null);
 
   const decks = useMemo(() => loadDecks(), [dataVersion, localRev]);
@@ -51,7 +55,7 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
     if (selected && selected.deckId !== selectedId) setSelectedId(selected.deckId);
   }, [selected, selectedId]);
 
-  const pickDeck = (d) => { setSelectedId(d.deckId); setActiveDeckId(d.deckId); };
+  const pickDeck = (d) => { setSelectedId(d.deckId); setActiveDeckId(d.deckId); setMobileDetail(true); };
 
   // Cross-tab jump (Format "Edit in Decks →"): switch filter + select the deck.
   useEffect(() => {
@@ -61,6 +65,7 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
     setRoleFilter(d.role === "matchup" ? "matchup" : "primary");
     setSelectedId(jump.deckId);
     setActiveDeckId(jump.deckId);
+    setMobileDetail(true); // arriving from Format → open the deck's detail
   }, [jump && jump.n]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onImportFile = async (e) => {
@@ -110,7 +115,7 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
           <strong> Load meta decks</strong> to pull in the bundled opponents.
         </div>
       ) : (
-        <div className="decks-layout">
+        <div className={"decks-layout" + (mobileDetail ? " mobile-detail" : " mobile-list")}>
           <aside className="decks-sidebar">
             <div className="decks-role-filter">
               <button type="button" data-role="primary" className={"decks-role-btn" + (roleFilter === "primary" ? " active" : "")} onClick={() => setRoleFilter("primary")}>My decks</button>
@@ -126,6 +131,7 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
           </aside>
 
           <section className="deck-panel">
+            <button type="button" className="mobile-pane-back" onClick={() => setMobileDetail(false)}>← All decks</button>
             {selected
               ? <DeckPanel key={selected.deckId} deck={ensureDeckShape(selected)} onChanged={() => { bumpLocal(); reload && reload(); }} onSelect={setSelectedId} />
               : <div className="decks-content-empty">Pick a deck from the left.</div>}
