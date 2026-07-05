@@ -2000,16 +2000,19 @@ header.app-header { margin-bottom: 24px; }
   .tab, .tab.tab-icon { flex: 1; justify-content: center; padding: 10px 4px; gap: 5px; font-size: 12px; }
   .tab .tab-label { font-size: 12px; }
 
-  /* Toolbars: the primary/secondary buttons share the row as EQUAL widths
-     (flex-basis 0 → same size, not content-sized) so they line up cleanly. */
-  .decks-toolbar .btn-primary, .decks-toolbar .btn-secondary,
-  .combos-toolbar .btn-primary, .combos-toolbar .btn-secondary { min-width: 0; flex: 1 1 0; }
   .decks-toolbar, .combos-toolbar, .format-bar, .format-bar-left { gap: 8px; }
   .decks-summary { flex-basis: 100%; }
-  /* The combo toolbar's filter + view toggle each take a full row so they
-     don't get crushed next to the action buttons. */
+  /* Decks toolbar: two FULL-WIDTH stacked buttons so the long labels
+     ("Import your deck (.ydk)") fit on one line and match heights. */
+  .decks-toolbar .btn-primary, .decks-toolbar .btn-secondary { flex: 1 1 100%; min-width: 0; }
+  /* Combos toolbar: filter, search and the List|Gallery toggle each take a
+     full row; the 3 action buttons then share one row as equal thirds with
+     nowrap, so "Import .json" can't wrap or get cut off. */
   .combos-deck-dd, .combos-deck-dd .dd-trigger { width: 100%; }
   .combo-search-wrap { flex-basis: 100%; }
+  .combo-viewtoggle { flex-basis: 100%; }
+  .combos-toolbar-spacer { display: none; }
+  .combos-toolbar .btn-primary, .combos-toolbar .btn-secondary { flex: 1 1 0; min-width: 0; white-space: nowrap; }
 
   /* Mobile master/detail: show ONE pane at a time — the list, or the tapped
      item's detail with a back button — like a native app (instead of the
@@ -2037,8 +2040,10 @@ header.app-header { margin-bottom: 24px; }
   .cards-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
 
   /* Testing mode bar wraps (mode toggle on one line, deck picker full-width
-     below) instead of running its 210px deck dropdown off the edge. */
-  .testing-modebar { flex-wrap: wrap; }
+     below). It's styled as a segmented control with a FIXED 32px height, so
+     the wrapped deck picker used to overflow and overlap the Goldfish header
+     — height:auto lets the bar grow to contain both rows. */
+  .testing-modebar { flex-wrap: wrap; height: auto; row-gap: 8px; padding: 6px; }
   .testing-deck-field { flex-basis: 100%; min-width: 0; }
   .testing-deck-dd, .testing-deck-dd .dd-trigger { width: 100%; max-width: 100%; }
 
