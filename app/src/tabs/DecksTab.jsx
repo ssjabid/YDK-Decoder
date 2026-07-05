@@ -147,9 +147,13 @@ function DeckTile({ deck, active, onClick }) {
   const dl = getDeckPrimaryDecklist(deck);
   const c = (dl && dl.counts) || deck.counts || { main: 0, extra: 0, side: 0 };
   const builds = Array.isArray(deck.decklists) ? deck.decklists.length : 1;
+  // Deck "face" card: the one you picked, else the first main-deck card.
+  const coverId = deck.coverCard ? lookupCardByName(deck.coverCard)?.id : (dl.main && dl.main[0]);
+  const coverUrl = coverId ? getImageUrls(coverId)[0] : null;
   return (
     <button type="button" className={"deck-tile" + (active ? " active" : "") + (isMatchup ? " is-matchup" : "")} onClick={onClick}>
       <span className="deck-tile-stripe" />
+      {coverUrl && <span className="deck-tile-cover"><img src={coverUrl} alt="" loading="lazy" /></span>}
       <span className="deck-tile-body">
         <span className="deck-tile-name">{deck.name || "Untitled deck"}</span>
         <span className="deck-tile-meta">
@@ -215,6 +219,13 @@ function DeckPanel({ deck, onChanged }) {
           </button>
         </span>
       </div>
+
+      <label className="deck-cover-row">
+        <span className="deck-cover-label">Deck cover</span>
+        <Dropdown className="deck-cover-dd" value={deck.coverCard || ""} placeholder="First main-deck card"
+          options={deckCardPool.map((n) => [n, n])}
+          onChange={(v) => { deck.coverCard = v || null; save(); }} ariaLabel="Pick a card as this deck's cover" />
+      </label>
 
       <PanelSection title="Decklist — the cards" defaultOpen={true}>
         <CardsView deck={deck} />
