@@ -18,6 +18,8 @@ import { registerEsc } from "../lib/escStack.js";
 
 const TIER_LABEL = { tier1: "Tier 1", tier2: "Tier 2", rogue: "Rogue" };
 const TIER_OPTIONS = [["tier1", "Tier 1"], ["tier2", "Tier 2"], ["rogue", "Rogue"]];
+const TIER_ORDER = ["tier1", "tier2", "rogue"];
+const tierOf = (m) => (TIER_ORDER.includes(m.tier) ? m.tier : "tier1");
 const TOURNAMENT_TYPES = [
   ["Locals", "Weekly store tournament"],
   ["OTS", "Official Tournament Store event"],
@@ -169,26 +171,51 @@ export default function FormatTab({ dataVersion = 0, onEditDeck }) {
             <span className="format-sub">{matchups.length} matchup decks{primaryDeck ? ` · testing ${primaryDeck.name}` : " · pick your deck above"}</span>
             {(() => {
               const existing = new Set((format.matchups || []).map((mm) => mm.opponentDeckId));
-              const lib = decks.filter((d) => !existing.has(d.deckId) && d.deckId !== format.primaryDeckId)
-                .sort((a, b) => (a.name || "").localeCompare(b.name || "")).map((d) => [d.deckId, d.name + (d.role === "matchup" ? "" : "  · my deck")]);
-              return lib.length ? <Dropdown className="format-lib-dd" value="" placeholder="+ Add from library" options={lib} onChange={addFromLibrary} /> : null;
+              const addable = decks.filter((d) => !existing.has(d.deckId) && d.deckId !== format.primaryDeckId)
+                .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+              const oppDecks = addable.filter((d) => d.role === "matchup");
+              const myDecks = addable.filter((d) => d.role !== "matchup");
+              const opts = [
+                ...(oppDecks.length ? [{ heading: "Matchup decks" }, ...oppDecks.map((d) => [d.deckId, d.name])] : []),
+                ...(myDecks.length ? [{ heading: "Your decks — add as matchup" }, ...myDecks.map((d) => [d.deckId, d.name])] : []),
+              ];
+              // Always visible so it's clear you can add from your library — disabled
+              // (with an explanatory label) when every deck is already a matchup here.
+              return (
+                <Dropdown className="format-lib-dd" value="" align="right" disabled={!addable.length}
+                  placeholder={addable.length ? "+ Add from your decks" : "✓ All your decks added"}
+                  options={opts} onChange={addFromLibrary} ariaLabel="Add a matchup from your decks" />
+              );
             })()}
-            <button type="button" className="btn-secondary format-addbtn" onClick={() => fileRef.current?.click()}>+ Add matchup (.ydk)</button>
+            <button type="button" className="btn-secondary format-addbtn" onClick={() => fileRef.current?.click()}>Import .ydk</button>
           </div>
 
           {!matchups.length ? (
-            <div className="placeholder">No matchup decks yet. <strong>Add matchup (.ydk)</strong> or load the meta pack from the Decks tab.</div>
+            <div className="placeholder">No matchup decks yet — <strong>Add from your decks</strong> above, <strong>Import .ydk</strong>, or load the meta pack from the Decks tab.</div>
           ) : (
-            <div className="matchup-grid">
-              {matchups.map((m) => {
-                const name = deckNames[m.opponentDeckId] || "Unknown deck";
+            <div className="matchup-tiers">
+              {TIER_ORDER.map((tier) => {
+                const group = matchups.filter((m) => tierOf(m) === tier);
+                if (!group.length) return null;
                 return (
-                  <button key={m.matchupId} type="button" className={"matchup-cell tier-" + (m.tier || "tier1")} onClick={() => setSelectedMatchupId(m.matchupId)}>
-                    <span className={"matchup-tier tier-" + (m.tier || "tier1")}>{TIER_LABEL[m.tier] || "Tier 1"}</span>
-                    <span className="matchup-cell-name">{name}</span>
-                    {m.howTheyWin && <span className="matchup-cell-how">{m.howTheyWin}</span>}
-                    <span className="matchup-cell-open">Open breakdown →</span>
-                  </button>
+                  <section key={tier} className={"matchup-tier-section tier-" + tier}>
+                    <div className="matchup-tier-head">
+                      <span className="matchup-tier-head-label">{TIER_LABEL[tier]}</span>
+                      <span className="matchup-tier-head-count">{group.length} deck{group.length === 1 ? "" : "s"}</span>
+                    </div>
+                    <div className="matchup-grid">
+                      {group.map((m) => {
+                        const name = deckNames[m.opponentDeckId] || "Unknown deck";
+                        return (
+                          <button key={m.matchupId} type="button" className={"matchup-cell tier-" + tier} onClick={() => setSelectedMatchupId(m.matchupId)}>
+                            <span className="matchup-cell-name">{name}</span>
+                            {m.howTheyWin && <span className="matchup-cell-how">{m.howTheyWin}</span>}
+                            <span className="matchup-cell-open">Open breakdown →</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
                 );
               })}
             </div>

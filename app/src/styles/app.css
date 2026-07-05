@@ -1959,3 +1959,19 @@ header.app-header { margin-bottom: 24px; }
 .matchup-cell-how { font-size: 12.5px; line-height: 1.62; }
 .matchup-cell-open { margin-top: 8px; font-size: 11px; }
 .matchup-cell:hover { transform: translateY(-3px); }
+
+/* Matchups partitioned into Tier 1 / Tier 2 / Rogue — each its own titled
+   section, generous space between them, so the page reads as clear bands
+   instead of one clustered wall of cards. */
+.matchup-tiers { display: flex; flex-direction: column; gap: 30px; }
+.matchup-tier-head {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.matchup-tier-head-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+.matchup-tier-head-count { font-size: 11px; color: var(--text-faint); font-weight: 500; }
+.matchup-tier-section.tier-tier1 .matchup-tier-head-label { color: var(--role-handtrap); }
+.matchup-tier-section.tier-tier1 .matchup-tier-head { border-bottom-color: rgba(196,95,122,0.32); }
+.matchup-tier-section.tier-tier2 .matchup-tier-head-label { color: var(--warning); }
+.matchup-tier-section.tier-tier2 .matchup-tier-head { border-bottom-color: rgba(229,169,60,0.32); }
+.matchup-tier-section.tier-rogue .matchup-tier-head-label { color: var(--text-dim); }
