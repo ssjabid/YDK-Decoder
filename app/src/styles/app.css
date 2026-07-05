@@ -2088,3 +2088,34 @@ header.app-header { margin-bottom: 24px; }
   }
 }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Launch splash — a quick branded intro (two cards fan out, wordmark
+   fades in, then dissolves). Shown once per session. ───────────────────── */
+.splash {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;
+  background: radial-gradient(circle at 50% 40%, #17131a 0%, #08080a 70%);
+  transition: opacity 380ms ease;
+}
+.splash.is-hiding { opacity: 0; pointer-events: none; }
+.splash-mark { position: relative; width: 96px; height: 132px; }
+.splash-card {
+  position: absolute; left: 50%; top: 50%; width: 80px; height: 112px;
+  margin: -56px 0 0 -40px; border-radius: 11px;
+}
+.splash-card-back { background: #a83f27; animation: splash-back 720ms cubic-bezier(0.2,0.7,0.3,1) both; }
+.splash-card-front {
+  background: linear-gradient(145deg, #f0714f, #e0512f);
+  box-shadow: 0 10px 28px rgba(229,91,60,0.38);
+  animation: splash-front 720ms cubic-bezier(0.2,0.7,0.3,1) both;
+}
+@keyframes splash-back  { from { transform: rotate(0) translateY(14px); opacity: 0; } to { transform: rotate(-13deg) translateX(-15px); opacity: 1; } }
+@keyframes splash-front { from { transform: rotate(0) translateY(14px) scale(0.9); opacity: 0; } to { transform: rotate(7deg) translateX(11px); opacity: 1; } }
+.splash-word { font-size: 23px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); opacity: 0; animation: splash-word 460ms ease 360ms both; }
+.splash-word .accent { color: var(--accent); }
+@keyframes splash-word { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .splash-card, .splash-word { animation: none; opacity: 1; }
+  .splash-card-back { transform: rotate(-13deg) translateX(-15px); }
+  .splash-card-front { transform: rotate(7deg) translateX(11px); }
+}

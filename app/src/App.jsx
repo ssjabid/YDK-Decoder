@@ -9,6 +9,7 @@ import FormatTab from "./tabs/FormatTab.jsx";
 import CombosTab from "./tabs/CombosTab.jsx";
 import TestingTab from "./tabs/TestingTab.jsx";
 import ModalHost from "./components/ModalHost.jsx";
+import Splash from "./components/Splash.jsx";
 import Icon from "./components/Icon.jsx";
 
 const TABS = [
@@ -128,6 +129,7 @@ export default function App() {
         </TabErrorBoundary>
       </main>
       <ModalHost />
+      <Splash />
     </div>
   );
 }
