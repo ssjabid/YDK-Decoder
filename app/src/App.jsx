@@ -1,9 +1,8 @@
 import { Component, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { getStoredTheme, loadDecks, loadSavedCombos, KEYS, readLs, writeLs } from "./lib/storage.js";
+import { getStoredTheme } from "./lib/storage.js";
 import { ensureMetaFresh, backfillPlaybookFromMatchups } from "./lib/metaPack.js";
 import { ingestComboFromUrl } from "./lib/combos.js";
 import { slimCardCache } from "./lib/ydk.js";
-import { downloadBackup, lastBackupAt } from "./lib/backup.js";
 import DecksTab from "./tabs/DecksTab.jsx";
 import SettingsTab from "./tabs/SettingsTab.jsx";
 import FormatTab from "./tabs/FormatTab.jsx";
@@ -39,18 +38,6 @@ class TabErrorBoundary extends Component {
     }
     return this.props.children;
   }
-}
-
-// Backup nudge — real user data + no backup in 7 days (and not snoozed).
-function backupNudgeDue() {
-  try {
-    const hasData = loadSavedCombos().length > 0 || loadDecks().some((d) => (d.role || "primary") !== "matchup");
-    if (!hasData) return false;
-    const snooze = readLs(KEYS.backupNudgeSnooze);
-    if (snooze && Date.parse(snooze) > Date.now()) return false;
-    const last = lastBackupAt();
-    return !last || Date.now() - Date.parse(last) > 7 * 86400e3;
-  } catch { return false; }
 }
 
 export default function App() {
@@ -91,9 +78,6 @@ export default function App() {
     return () => { alive = false; };
   }, []);
 
-  const [nudge, setNudge] = useState(false);
-  useEffect(() => { setNudge(backupNudgeDue()); }, [dataVersion]);
-
   useEffect(() => {
     const onInjected = () => reload();
     window.addEventListener("ydk:combo-injected", onInjected);
@@ -133,14 +117,6 @@ export default function App() {
           </button>
         ))}
       </nav>
-
-      {nudge && (
-        <div className="backup-nudge">
-          <span className="backup-nudge-text">No recent backup — your work lives only in this browser.</span>
-          <button type="button" className="btn-secondary backup-nudge-btn" onClick={() => { downloadBackup(); setNudge(false); }}>Back up now</button>
-          <button type="button" className="link-btn" onClick={() => { writeLs(KEYS.backupNudgeSnooze, new Date(Date.now() + 86400e3).toISOString()); setNudge(false); }}>Remind me tomorrow</button>
-        </div>
-      )}
 
       <main key={tab} className="tab-content">
         <TabErrorBoundary resetKey={tab + ":" + dataVersion} onReset={() => { setTab("decks"); reload(); }}>

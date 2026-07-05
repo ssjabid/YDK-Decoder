@@ -1941,3 +1941,21 @@ header.app-header { margin-bottom: 24px; }
 .deck-tile.is-matchup.active, .deck-tile.is-matchup.active:hover {
   background: rgba(196,95,122,0.12); border-color: rgba(196,95,122,0.55);
 }
+
+/* ── Format page — looser, fresher layout 2026-06-21 ──────────────────
+   The tier-list felt cramped ("tight, everything together"). Add air:
+   more room in the top bar, a clear gap before the grid, and roomier,
+   calmer matchup cards (bigger padding, larger radius, more line-height). */
+.format-bar { padding: 14px 18px; margin-bottom: 24px; gap: 16px; }
+.format-bar-left { gap: 8px; }
+.format-listhead { margin-bottom: 20px; gap: 14px; padding-bottom: 4px; }
+
+.matchup-grid { gap: 18px; }
+.matchup-cell {
+  gap: 12px; padding: 20px 20px 18px; border-radius: var(--radius-lg);
+}
+.matchup-cell .matchup-tier { font-size: 9.5px; padding: 3px 9px; margin-bottom: 2px; }
+.matchup-cell-name { font-size: 16px; letter-spacing: -0.01em; }
+.matchup-cell-how { font-size: 12.5px; line-height: 1.62; }
+.matchup-cell-open { margin-top: 8px; font-size: 11px; }
+.matchup-cell:hover { transform: translateY(-3px); }
