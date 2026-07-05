@@ -1975,3 +1975,47 @@ header.app-header { margin-bottom: 24px; }
 .matchup-tier-section.tier-tier2 .matchup-tier-head-label { color: var(--warning); }
 .matchup-tier-section.tier-tier2 .matchup-tier-head { border-bottom-color: rgba(229,169,60,0.32); }
 .matchup-tier-section.tier-rogue .matchup-tier-head-label { color: var(--text-dim); }
+
+/* ═══ Mobile / phone tuning (≤640px) — desktop layout untouched ═══════════
+   The two-column layouts already collapse to one column at their own
+   breakpoints (Decks/Combos/Testing/matchups). This layer just tightens the
+   chrome for a phone, makes the tab bar fit instead of scrolling the page
+   sideways, and keeps wide content (the end-board playmat) scrolling inside
+   its own box rather than pushing the page. (Mobile pass — M0) */
+@media (max-width: 640px) {
+  body { padding: 14px 12px 44px; }
+  .app-header { padding-bottom: 14px; margin-bottom: 16px; gap: 10px; }
+  .app-header h1 { font-size: 17px; }
+  .subtitle { font-size: 11.5px; }
+  .build-badge { display: none; }
+
+  /* Tab bar fills the width evenly (an app-style nav) instead of running
+     off the right edge — this was the sole cause of the sideways scroll. */
+  .tabs { gap: 2px; padding: 0; margin-bottom: 20px; }
+  .tab, .tab.tab-icon { flex: 1; justify-content: center; padding: 10px 4px; gap: 5px; font-size: 12px; }
+  .tab .tab-label { font-size: 12px; }
+
+  /* Toolbars: let the wide primary buttons share the row instead of forcing
+     a min-width that could overflow. */
+  .decks-toolbar .btn-primary, .decks-toolbar .btn-secondary { min-width: 0; flex: 1 1 auto; }
+  .decks-toolbar, .combos-toolbar, .format-bar, .format-bar-left { gap: 8px; }
+  .decks-summary { flex-basis: 100%; }
+
+  /* The stacked master/detail lists get a sensible max height so you don't
+     scroll past 18 decks to reach the panel below. */
+  .decks-sidebar, .combos-sidebar { max-height: 46vh; overflow-y: auto; }
+
+  /* End-board playmat: 5 fixed zones are too tight to crush into 375px —
+     scroll it inside its own container (page never scrolls sideways). */
+  .eb { overflow-x: auto; }
+  .eb-grid { min-width: 470px; }
+
+  /* Card decklist grid: a couple more per row is plenty on a phone. */
+  .cards-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+
+  /* Testing mode bar wraps (mode toggle on one line, deck picker full-width
+     below) instead of running its 210px deck dropdown off the edge. */
+  .testing-modebar { flex-wrap: wrap; }
+  .testing-deck-field { flex-basis: 100%; min-width: 0; }
+  .testing-deck-dd, .testing-deck-dd .dd-trigger { width: 100%; max-width: 100%; }
+}
