@@ -101,10 +101,14 @@ export default function SettingsTab({ reload }) {
     finally { setBusy(false); }
   };
 
-  const onBackup = () => {
+  // Confirm before + a LOUD completion modal after (Abid: the quiet status
+  // line wasn't enough certainty for the data-critical actions).
+  const onBackup = async () => {
+    if (!(await confirmModal({ title: "Download a backup?", message: "Saves ONE JSON file of everything — decks, combos, formats, testing sessions + settings — to your Downloads.", confirmText: "Download backup" }))) return;
     const c = downloadBackup();
     setStatus({ ok: true, msg: `Backup saved: ${c.decks} decks · ${c.combos} combos · ${c.cachedCards} cards.` });
     bump();
+    alertModal({ title: "Backup downloaded ✓", message: `${c.decks} decks · ${c.combos} combos · ${c.cachedCards} cached cards saved. Keep the file somewhere safe.` });
   };
 
   const pickRestore = (mode) => { restoreMode.current = mode; fileRef.current?.click(); };
@@ -118,15 +122,26 @@ export default function SettingsTab({ reload }) {
     catch { alertModal({ title: "Not valid JSON", message: "That file couldn't be parsed as a backup." }); return; }
     try {
       if (restoreMode.current === "replace") {
-        const ok = await confirmModal({ title: "Replace ALL data?", message: "This wipes your current decks, combos, formats + settings and replaces them with the backup. A safety snapshot of what you have now is kept, so you can undo once if the file turns out to be wrong.", confirmText: "Replace everything", danger: true });
+        const ok = await confirmModal({ title: "Replace ALL data?", message: `This wipes your current decks, combos, formats + settings and replaces them with "${file.name}". A safety snapshot of what you have now is kept, so you can undo once if the file turns out to be wrong.`, confirmText: "Replace everything", danger: true });
         if (!ok) return;
         const c = restoreReplace(json);
         setStatus({ ok: true, msg: `Replaced all data from backup (${c.decks || 0} decks · ${c.combos || 0} combos). Wrong file? Use “Undo replace” below.` });
+        reload && reload();
+        alertModal({ title: "Replace complete ✓", message: `Your data is now exactly what "${file.name}" contained (${c.decks || 0} decks · ${c.combos || 0} combos). Wrong file? Settings → Danger zone → Undo replace.` });
       } else {
+        const ok = await confirmModal({ title: `Merge "${file.name}" into your data?`, message: "Adds anything the backup has that you don't — decks, combos, formats, sessions. Never overwrites or deletes what's already here.", confirmText: "Merge backup" });
+        if (!ok) return;
         const a = restoreMerge(json);
         setStatus({ ok: true, msg: `Merged backup: +${a.decks} decks · +${a.combos} combos · +${a.formats} formats · +${a.cards} cards.` });
+        reload && reload();
+        const added = a.decks + a.combos + a.formats + (a.sessions || 0) + a.cards;
+        alertModal({
+          title: "Restore complete ✓",
+          message: added
+            ? `Added from "${file.name}": ${a.decks} decks · ${a.combos} combos · ${a.formats} formats · ${a.sessions || 0} sessions · ${a.cards} cached cards.`
+            : `Nothing new to add — everything in "${file.name}" was already here. Your data is untouched.`,
+        });
       }
-      reload && reload();
     } catch (err) { alertModal({ title: "Couldn't restore", message: err.message }); }
   };
 
