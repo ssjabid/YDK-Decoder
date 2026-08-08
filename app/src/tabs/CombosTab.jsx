@@ -283,9 +283,12 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick, onDu
         <h2 className="combo-detail-title" title="Click to rename" onClick={rename}>{comboTitle(c)}</h2>
         {c.replayUrl && <a className="combo-replay-link" href={c.replayUrl} target="_blank" rel="noreferrer" title="Open the DuelingBook replay">↗ replay</a>}
         <span className="combo-detail-bar-spacer" />
+        {/* Edit is THE action here and stays a real button; the rest collapses
+            behind ⋯ so the bar reads title → edit, nothing else shouting. */}
         <button type="button" className="back-btn" onClick={() => setEditing(true)}>Edit</button>
-        <button type="button" className="back-btn" title="Copy this combo as a new variant line" onClick={onDuplicate}>Duplicate</button>
-        <button type="button" className="back-btn is-danger" onClick={remove}>× Delete</button>
+        <Dropdown className="menu-dd" value="" align="right" placeholder="⋯" ariaLabel="Combo actions" title="Combo actions"
+          options={[["rename", "Rename combo"], ["duplicate", "Duplicate combo"], ["delete", "Delete combo"]]}
+          onChange={(v) => { if (v === "rename") rename(); else if (v === "duplicate") onDuplicate(); else if (v === "delete") remove(); }} />
       </div>
 
       <div className="combo-meta-row">

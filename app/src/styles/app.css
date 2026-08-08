@@ -872,11 +872,14 @@
 }
 .format-bar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 /* Format actions "⋯" menu — compact icon-style trigger, no dropdown caret. */
-.format-menu-dd .dd-trigger { min-width: var(--ctl-md); padding: 0 12px; justify-content: center; }
-.format-menu-dd .dd-value { font-size: 19px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); }
-.format-menu-dd .dd-caret { display: none; }
-.format-menu-dd .dd-trigger:hover { border-color: var(--accent); }
-.format-menu-dd .dd-trigger:hover .dd-value { color: var(--text); }
+/* Reusable "⋯" action menu — secondary actions collapse behind one glyph
+   button so surfaces stay read-first. Format had it first; Decks, Combos and
+   the game log share the exact same spec via .menu-dd. */
+.format-menu-dd .dd-trigger, .menu-dd .dd-trigger { min-width: var(--ctl-md); padding: 0 12px; justify-content: center; }
+.format-menu-dd .dd-value, .menu-dd .dd-value { font-size: 19px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); }
+.format-menu-dd .dd-caret, .menu-dd .dd-caret { display: none; }
+.format-menu-dd .dd-trigger:hover, .menu-dd .dd-trigger:hover { border-color: var(--accent); }
+.format-menu-dd .dd-trigger:hover .dd-value, .menu-dd .dd-trigger:hover .dd-value { color: var(--text); }
 .format-picker {
   background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
   color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 10px; max-width: 230px;
@@ -1918,7 +1921,7 @@ header.app-header { margin-bottom: 24px; }
   background: transparent; border: 1px solid transparent;
   border-radius: var(--radius-md); padding: 9px 11px;
 }
-.deck-tile { padding-left: 14px; } /* room for the role stripe */
+.deck-tile { padding-left: 11px; } /* symmetric — the role stripe this padded for is long gone */
 .deck-tile:hover, .combo-tile:hover { background: var(--bg-hover); border-color: transparent; }
 .deck-tile.active, .combo-tile.active,
 .deck-tile.active:hover, .combo-tile.active:hover { background: var(--accent-dim); border-color: var(--accent); }
@@ -2303,6 +2306,20 @@ header.app-header { margin-bottom: 24px; }
 .gl-sess-row:hover { background: var(--bg-hover); border-color: var(--border); }
 .gl-sess-name { display: flex; flex-direction: column; min-width: 0; }
 .gl-sess-tech { font-size: 11px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Symmetry pass (2026-08): alignment corrections found by the audit. ── */
+/* App header: center the badge+gear cluster against the two-line title
+   block — baseline alignment floated it ~7px high of the visual middle. */
+header.app-header { align-items: center; }
+
+/* ── Declutter pass (2026-08): secondary actions live behind ⋯ menus; game
+   rows support hold-to-delete, so no per-row chrome. ─────────────────── */
+/* Long-press target: suppress text selection + iOS callout so a hold reads
+   as an intent, not a copy gesture. */
+.gl-game-head { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* The deck header's ⋯ sits at the row end like Format's. */
+.deck-menu-dd { margin-left: auto; }
+.gl-menu-dd { flex-shrink: 0; }
 
 @media (max-width: 640px) {
   /* ── Format tab: phone layout pass. The 220px dropdowns + labels used to

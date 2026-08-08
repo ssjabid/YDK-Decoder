@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   sessionsForDeck, newSession, persistSession, deleteSession,
   logGame, updateGame, removeGame, recordOf, aggregate, knownOpponents,
@@ -75,6 +75,26 @@ export default function GameLog({ deck, oppDecks = [], onEditDeck, dataVersion =
   const games = scope === "all" ? sessions.flatMap((s) => s.games || []) : (session ? session.games || [] : []);
   const agg = useMemo(() => aggregate(games), [games]);
 
+  // Long-press a game row → delete (confirm-gated). The mobile-native
+  // alternative to opening the row and hunting for the ×. Moving the finger
+  // (scrolling) or releasing early cancels; the click that follows a fired
+  // long-press is swallowed so the row doesn't also toggle open.
+  const lp = useRef({ t: null, fired: false, sx: 0, sy: 0 });
+  const lpStart = (g) => (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    lp.current.fired = false; lp.current.sx = e.clientX; lp.current.sy = e.clientY;
+    clearTimeout(lp.current.t);
+    lp.current.t = setTimeout(async () => {
+      lp.current.fired = true;
+      try { if (navigator.vibrate) navigator.vibrate(12); } catch { /* noop */ }
+      if (await confirmModal({ title: "Delete this game?", message: `${g.result} vs ${g.opp || "Unknown deck"} — remove it from the tally.`, confirmText: "Delete game", danger: true })) {
+        removeGame(session, g.gameId); bump();
+      }
+    }, 550);
+  };
+  const lpMove = (e) => { if (Math.abs(e.clientX - lp.current.sx) > 12 || Math.abs(e.clientY - lp.current.sy) > 12) clearTimeout(lp.current.t); };
+  const lpEnd = () => clearTimeout(lp.current.t);
+
   // ── Empty state: no sessions for this deck yet ─────────────────────
   if (!sessions.length) {
     return (
@@ -100,9 +120,15 @@ export default function GameLog({ deck, oppDecks = [], onEditDeck, dataVersion =
           options={sessions.map((s) => { const r = recordOf(s.games); return [s.sessionId, `${s.name} · ${r.w}-${r.l}-${r.d}`]; })}
           onChange={(id) => { setSessionId(id); setScope("session"); setOpenGame(null); }} />
         <button type="button" className="btn-secondary gl-new-btn" onClick={start}>+ New session</button>
-        <button type="button" className="btn-secondary gl-icon-btn" title="Rename session" aria-label="Rename session" onClick={rename}>✎</button>
-        <button type="button" className="btn-secondary gl-icon-btn gl-del-btn" title="Delete session" aria-label="Delete session" onClick={del}>×</button>
-        {onEditDeck ? <button type="button" className="link-btn gl-editdeck" onClick={() => onEditDeck(deck.deckId)}>Edit deck →</button> : null}
+        {/* Session management collapses behind ⋯ — the bar reads picker + new,
+            nothing else shouting. */}
+        <Dropdown className="menu-dd gl-menu-dd" value="" align="right" placeholder="⋯" ariaLabel="Session actions" title="Session actions"
+          options={[
+            ["rename", "Rename session"],
+            ["delete", "Delete session"],
+            ...(onEditDeck ? [["editdeck", "Edit this deck →"]] : []),
+          ]}
+          onChange={(v) => { if (v === "rename") rename(); else if (v === "delete") del(); else if (v === "editdeck") onEditDeck(deck.deckId); }} />
       </div>
 
       {session && (
@@ -136,7 +162,7 @@ export default function GameLog({ deck, oppDecks = [], onEditDeck, dataVersion =
               <button type="button" className="gl-result-btn is-d" onClick={() => log("D")}>– Draw</button>
               <button type="button" className="gl-result-btn is-l" onClick={() => log("L")}>✗ Loss</button>
             </div>
-            <div className="gl-quick-hint">One tap logs it — opponent &amp; turn stay set for the next game. Tap a game below to add notes.</div>
+            <div className="gl-quick-hint">One tap logs it — opponent &amp; turn stay set for the next game. Tap a game below for notes · hold one to delete.</div>
           </div>
 
           <div className="gl-games-lbl">Games — {session ? session.name : "this session"}</div>
@@ -146,7 +172,10 @@ export default function GameLog({ deck, oppDecks = [], onEditDeck, dataVersion =
             <div className="gl-games">
               {session.games.map((g, idx) => (
                 <div key={g.gameId} className={"gl-game" + (openGame === g.gameId ? " is-open" : "")}>
-                  <button type="button" className="gl-game-head" onClick={() => setOpenGame((o) => (o === g.gameId ? null : g.gameId))}>
+                  <button type="button" className="gl-game-head"
+                    onPointerDown={lpStart(g)} onPointerMove={lpMove} onPointerUp={lpEnd} onPointerCancel={lpEnd} onPointerLeave={lpEnd}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onClick={() => { if (lp.current.fired) { lp.current.fired = false; return; } setOpenGame((o) => (o === g.gameId ? null : g.gameId)); }}>
                     <span className="gl-game-n">#{session.games.length - idx}</span>
                     <span className={"gl-chip is-" + g.result.toLowerCase()}>{g.result}</span>
                     <span className="gl-game-opp">{g.opp || "Unknown deck"}</span>

@@ -215,16 +215,21 @@ function DeckPanel({ deck, onChanged }) {
         )}
         <span className={"deck-panel-role " + (isMatchup ? "is-matchup" : "is-mine")}>{isMatchup ? "Matchup" : "My deck"}</span>
         <span className="deck-panel-counts">{(dl.counts?.main ?? (deck.main || []).length)}m · {(dl.counts?.extra ?? (deck.extra || []).length)}e · {(dl.counts?.side ?? (deck.side || []).length)}s</span>
-        <span className="deck-panel-actions">
-          <button type="button" className="deck-mini-btn" title="Re-classify this deck"
-            onClick={async () => { if (await confirmModal({ title: `Convert "${deck.name}"?`, message: `Move it to your ${isMatchup ? "My decks" : "Matchup decks"} list.`, confirmText: "Convert" })) { convertDeckRole(deck); onChanged && onChanged(); } }}>
-            {isMatchup ? "→ My deck" : "→ Matchup"}
-          </button>
-          <button type="button" className="deck-mini-btn is-danger" title="Delete this deck"
-            onClick={async () => { if (await confirmModal({ title: `Delete "${deck.name}"?`, message: "Combos linked to it become unassigned; formats lose it as primary.", confirmText: "Delete deck", danger: true })) { deleteDeck(deck.deckId); onChanged && onChanged(); } }}>
-            × Delete
-          </button>
-        </span>
+        {/* Secondary actions live behind one ⋯ menu — the header stays a clean
+            name + role + counts line (and Rename is discoverable now, not just
+            a hidden click-the-title trick). */}
+        <Dropdown className="menu-dd deck-menu-dd" value="" align="right" placeholder="⋯"
+          ariaLabel="Deck actions" title="Deck actions"
+          options={[
+            ["rename", "Rename deck"],
+            ["convert", isMatchup ? "Move to My decks" : "Move to Matchup decks"],
+            ["delete", "Delete deck"],
+          ]}
+          onChange={async (v) => {
+            if (v === "rename") setRenaming(true);
+            else if (v === "convert") { if (await confirmModal({ title: `Convert "${deck.name}"?`, message: `Move it to your ${isMatchup ? "My decks" : "Matchup decks"} list.`, confirmText: "Convert" })) { convertDeckRole(deck); onChanged && onChanged(); } }
+            else if (v === "delete") { if (await confirmModal({ title: `Delete "${deck.name}"?`, message: "Combos linked to it become unassigned; formats lose it as primary.", confirmText: "Delete deck", danger: true })) { deleteDeck(deck.deckId); onChanged && onChanged(); } }
+          }} />
       </div>
 
       <label className="deck-cover-row">

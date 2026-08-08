@@ -6,6 +6,32 @@ batch-fix during the next pass.
 
 ---
 
+## ✅ Symmetry + declutter revamp (2026-08-08, same day, after batch 2)
+
+Abid: "plenty of unsymmetrical design concepts… so condensed and there is so
+much on the screen". Two-part revamp, audited in 5 measured passes:
+
+- ✅ **Symmetry audit harness** (`window.__sym` pattern): groups every bar's
+  children into visual lines and flags any line whose items' vertical
+  midpoints spread >2.5px, plus asymmetric button padding. Run on every tab
+  at 375px and 1280px until clean. Found + fixed: app header used
+  `align-items: baseline` (gear cluster floated ~7px high — now centered);
+  deck tiles had 14px/11px padding (left-over room for the deleted role
+  stripes — now symmetric). `.bb-bar`'s flag was a false positive (labels
+  float above bottom-aligned controls by design; control bottoms align to
+  0.2px).
+- ✅ **Declutter — secondary actions behind ⋯ menus** (shared `.menu-dd`
+  spec): Decks panel header ("→ Matchup"/"× Delete" glyph buttons — the
+  baseline-glyph misalignment Abid screenshotted — replaced by ⋯ with
+  Rename / Move / Delete, making rename discoverable too); Combos detail
+  bar (Edit stays, Rename/Duplicate/Delete fold in); game-log session bar
+  (✎/×/Edit-deck fold in → picker + New + ⋯, all 32px).
+- ✅ **Hold-to-delete on game rows** (550ms, confirm-gated, movement cancels,
+  haptic tick, the follow-up click is swallowed) — the mobile-native pattern
+  Abid asked for; hint line teaches it.
+
+---
+
 ## ✅ Phone bug batch 2 — Abid's real-device reports (fixed + verified 2026-08-08)
 
 - ✅ **Card preview ✕ didn't close on touch.** `CardsView` keeps split
