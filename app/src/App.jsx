@@ -47,8 +47,9 @@ export default function App() {
   const [deckJump, setDeckJump] = useState(null); // { deckId, n } — cross-tab "Edit in Decks"
   const reload = () => setDataVersion((v) => v + 1);
 
-  // Jump to a deck in the Decks tab (used by Format's "Edit in Decks →").
-  const goToDeck = (deckId) => { if (!deckId) return; setDeckJump((p) => ({ deckId, n: (p?.n || 0) + 1 })); setTab("decks"); };
+  // Jump to a deck in the Decks tab (used by Format's "Edit in Decks →" and
+  // Testing's "Edit deck →"). With no deckId it just opens the Decks tab.
+  const goToDeck = (deckId) => { if (deckId) setDeckJump((p) => ({ deckId, n: (p?.n || 0) + 1 })); setTab("decks"); };
 
   // Per-tab scroll memory — switching tabs remounts <main key={tab}>, which
   // used to drop you back at the top (or mid-scroll on a shorter tab). Save
@@ -124,7 +125,7 @@ export default function App() {
           {tab === "decks" && <DecksTab dataVersion={dataVersion} reload={reload} jump={deckJump} />}
           {tab === "format" && <FormatTab dataVersion={dataVersion} onEditDeck={goToDeck} />}
           {tab === "combos" && <CombosTab dataVersion={dataVersion} reload={reload} />}
-          {tab === "testing" && <TestingTab dataVersion={dataVersion} />}
+          {tab === "testing" && <TestingTab dataVersion={dataVersion} onEditDeck={goToDeck} />}
           {tab === "settings" && <SettingsTab reload={reload} />}
         </TabErrorBoundary>
       </main>

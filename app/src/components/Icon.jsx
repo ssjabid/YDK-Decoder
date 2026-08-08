@@ -42,6 +42,13 @@ const PATHS = {
       <circle cx="8" cy="17" r="2.1" fill="var(--bg-elevated)" />
     </>
   ),
+  // Tally marks — Testing's game log (four strokes + the diagonal fifth).
+  tally: (
+    <>
+      <path d="M5 5.5 V18.5" /><path d="M9.3 5.5 V18.5" /><path d="M13.6 5.5 V18.5" /><path d="M17.9 5.5 V18.5" />
+      <path d="M3.2 16.5 L19.8 7.5" />
+    </>
+  ),
   // Die — shuffle / draw.
   die: (
     <>

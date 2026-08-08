@@ -59,7 +59,7 @@ function parseBackup(json) {
 // Never overwrites existing data. Returns { decks, combos, formats, cards }.
 export function restoreMerge(json) {
   const inc = parseBackup(json);
-  const added = { decks: 0, combos: 0, formats: 0, cards: 0 };
+  const added = { decks: 0, combos: 0, formats: 0, cards: 0, sessions: 0 };
 
   if (Array.isArray(inc.decks)) {
     const local = loadDecks(); const ids = new Set(local.map((d) => d.deckId));
@@ -75,6 +75,11 @@ export function restoreMerge(json) {
     const local = loadFormats(); const ids = new Set(local.map((f) => f.formatId));
     for (const f of inc.formats) { if (!f || !f.formatId || ids.has(f.formatId)) continue; local.push(f); ids.add(f.formatId); added.formats++; }
     saveFormats(local);
+  }
+  if (Array.isArray(inc.testSessions)) {
+    const local = readLs(KEYS.testSessions) || []; const ids = new Set(local.map((s) => s && s.sessionId));
+    for (const s of inc.testSessions) { if (!s || !s.sessionId || ids.has(s.sessionId)) continue; local.push(s); ids.add(s.sessionId); added.sessions++; }
+    writeLs(KEYS.testSessions, local);
   }
   if (inc.cardCache && typeof inc.cardCache === "object") {
     const cache = loadCardCache(); let n = 0;

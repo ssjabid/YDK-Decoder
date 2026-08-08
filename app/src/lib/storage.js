@@ -23,6 +23,7 @@ export const KEYS = {
   activeFormatId:   "ydk_active_format_id",
   decksSchemaVer:   "ydk_decks_schema_version",
   bbStreak:         "ydk_bb_streak",
+  testSessions:     "ydk_test_sessions",
   theme:            "ydk_theme",
   lastBackup:       "ydk_last_backup",
   backupNudgeSnooze:"ydk_backup_nudge_snooze",

@@ -1,7 +1,7 @@
 # HANDOFF — YDK Decoder
 
 Snapshot of the project state for whoever picks this up next (including future-me).
-Last updated: **2026-06-13**.
+Last updated: **2026-08-08**.
 
 ---
 
@@ -30,8 +30,14 @@ app (`app/src/lib/storage.js`), so data carries across. Run: `cd app && npm run 
   cards, live simulated board, **"plays through" handtrap tags** `beatsTraps[]`),
   manual builder, paste/import JSON, extension ingestion.
 - **Testing** — **Going first** (goldfish → role-tagged hand → playable lines matched
-  from saved combos, handtrap badges, **"if they have <handtrap>" filter**) and
-  **Going second** (board breaker with Game-1 / sided Game-2 hands).
+  from saved combos, handtrap badges, **"if they have <handtrap>" filter**),
+  **Going second** (board breaker with Game-1 / sided Game-2 hands), and
+  **Log games** (2026-08: sessions of self-recorded REAL games — one-tap W/L/D
+  with opponent + went-first, per-game notes + impactful/underperformed cards,
+  tally: record, win %, 1st/2nd split, per-opponent frequency table, MVP card
+  tallies, and cross-session comparison of tech configurations.
+  `app/src/components/GameLog.jsx` + `app/src/lib/sessions.js`, key
+  `ydk_test_sessions`, included in backup merge/replace).
 - **Settings** (gear) — data overview, **backup/restore** (same JSON as legacy),
   theme, danger zone.
 
@@ -47,10 +53,21 @@ matchup cheat sheet, drill mastery, DuelingBook↔official card-name aliases.
 Functional machinery verified live on the real `abid_doomz_1.ydk` (import,
 roles, odds, combo CRUD, backup/restore, draw-a-hand) — see `docs/READY_CHECK.md`.
 
+**2026-08 — direction pivot + mobile.** The app is a PWA (installable, offline
+service worker, launch splash) deployed to **GitHub Pages via Actions** on every
+push; the extension hands off to `/react/` and derives combo names from the
+starter. Strategic pivot per Abid: **de-emphasize automated DuelingBook replay
+analysis** — instead, players record their OWN testing in Testing → Log games
+(above) and the app aggregates the analysis. The extension/replay pipeline still
+works and stays, but new investment goes to self-logging. **Next up: account +
+login sync (M2 in `docs/MOBILE_PLAN.md`, Supabase)** so decks/combos/sessions
+follow the user across devices; until then export/import moves data.
+
 **The only untested-by-machine items left** are the 5 in **`docs/READY_CHECK.md`**
 — they need Abid's machine + the Chrome extension + his eyes on his own cards
 (serve at `localhost:8000/react/`, the extension→Combos handoff, his deck's
 cards all resolving, one real backup). That is the live to-do.
+The full current-capability inventory lives in **`docs/CAPABILITIES.md`**.
 
 Docs: `app/README.md` (React app), `docs/READY_CHECK.md` (the live checklist),
 `docs/UI_OVERHAUL_PLAN.md` (design system + P1–P6), `docs/FABLE5_REVIEW_PROMPT.md`.

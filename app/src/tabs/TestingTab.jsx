@@ -16,14 +16,16 @@ import { getSidePlans, applyPlan, planMissing } from "../lib/sidePlans.js";
 import CardPreview from "../components/CardPreview.jsx";
 import EndBoardView from "../components/EndBoardView.jsx";
 import Dropdown from "../components/Dropdown.jsx";
+import GameLog from "../components/GameLog.jsx";
 import Icon from "../components/Icon.jsx";
 
 // ════════════════════════════════════════════════════════════════════
 // TESTING TAB — Going first (goldfish: openers + which lines are live, with
-// a walk-through) and Going second (board breaker: pick the opponent's end
-// board, draw a Game-1 or sided Game-2 hand, judge if you can break it).
+// a walk-through), Going second (board breaker: pick the opponent's end
+// board, draw a Game-1 or sided Game-2 hand, judge if you can break it),
+// and Log games (record your REAL testing games — W/L/D tally + notes).
 // ════════════════════════════════════════════════════════════════════
-export default function TestingTab({ dataVersion = 0 }) {
+export default function TestingTab({ dataVersion = 0, onEditDeck }) {
   const [mode, setMode] = useState("first");
   const decks = useMemo(() => loadDecks(), [dataVersion]);
   const [deckId, setDeckId] = useState(() => getActiveDeckId() || (decks.find((d) => (d.role || "primary") !== "matchup") || decks[0] || {}).deckId || null);
@@ -48,6 +50,9 @@ export default function TestingTab({ dataVersion = 0 }) {
         <button type="button" className={"testing-mode-btn" + (mode === "second" ? " active" : "")} onClick={() => setMode("second")}>
           <Icon name="swords" size={15} /> Going second — break boards
         </button>
+        <button type="button" className={"testing-mode-btn" + (mode === "log" ? " active" : "")} onClick={() => setMode("log")}>
+          <Icon name="tally" size={15} /> Log games — track results
+        </button>
         <label className="testing-deck-field">
           <span className="testing-deck-label">Test with</span>
           <Dropdown className="testing-deck-dd" value={deckId || ""} placeholder="— pick a deck —" align="right"
@@ -57,12 +62,15 @@ export default function TestingTab({ dataVersion = 0 }) {
 
       {!myDeck ? (
         <div className="placeholder">
-          <strong>No deck to test.</strong> Import one in <strong>Decks</strong>, then pick it above.
+          <strong>No deck to test.</strong> Import one in <strong>Decks</strong>, then pick it above.<br />
+          {onEditDeck ? <button type="button" className="btn-secondary testing-godecks" onClick={() => onEditDeck(null)}>Open Decks →</button> : null}
         </div>
       ) : mode === "first" ? (
         <Goldfish deck={myDeck} oppDecks={oppDecks} />
-      ) : (
+      ) : mode === "second" ? (
         <BoardBreaker myDeck={myDeck} dataVersion={dataVersion} />
+      ) : (
+        <GameLog deck={myDeck} oppDecks={oppDecks} onEditDeck={onEditDeck} dataVersion={dataVersion} />
       )}
     </div>
   );

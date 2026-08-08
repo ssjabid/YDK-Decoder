@@ -1,5 +1,20 @@
 # ROADMAP
 
+> **⚡ 2026-08-08 — Testing pivot + game log shipped; login/sync is next.**
+> Direction change per Abid: **automated DuelingBook game/replay analysis is
+> de-emphasized**. Instead, players record their OWN testing in the new
+> **Testing → Log games** mode — sessions per deck (each labelled with the tech
+> configuration under test), one-tap W/L/D logging with opponent + went-first,
+> per-game notes + impactful/underperformed card tags, and a tally/frequency
+> readout (record, win %, 1st/2nd split, per-opponent spread, MVP cards,
+> cross-session config comparison). Verified end-to-end; full inventory in
+> `docs/CAPABILITIES.md`. The replay→combo extraction pipeline stays supported.
+> **Next up: M2 — account + login sync** (`docs/MOBILE_PLAN.md`, Supabase) so
+> decks/combos/formats/**sessions** follow the user across devices. Also
+> already shipped by 2026-08: PWA + GitHub Pages auto-deploy + the mobile
+> layout pass (M1), extension handoff to `/react/`, deck cover cards, tiered
+> Format dashboard, ⋯ menu.
+
 > **⚡ 2026-06 — development moved to the React app in `app/`.** This roadmap was
 > written for the legacy `decoder/ydk_decoder.html`. Its shipped/backlog items are
 > still useful context, but the active product is now the React + Vite build (see
