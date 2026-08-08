@@ -563,14 +563,7 @@
   background: var(--bg); border: 1px solid var(--accent); border-radius: var(--radius-sm);
   color: var(--text); padding: 3px 8px;
 }
-.deck-panel-actions { display: flex; gap: 6px; margin-left: auto; }
-.deck-mini-btn {
-  background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  color: var(--text-dim); font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
-  padding: 5px 10px; transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
-}
-.deck-mini-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--text); }
-.deck-mini-btn.is-danger:hover { border-color: var(--role-stopper); color: var(--role-stopper); }
+/* (deck header action buttons replaced by the ⋯ menu — 2026-08 declutter) */
 
 /* Collapsible panel sections */
 .panel-section {
@@ -793,7 +786,6 @@
 }
 
 /* Deck panel — equal-size Convert / Delete */
-.deck-panel-actions .deck-mini-btn { min-width: 124px; justify-content: center; }
 
 /* ════════════════════════════════════════════════════════════════════
    FORMAT TAB — editable matchup planning + tournament journal
@@ -884,13 +876,6 @@
   background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
   color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 10px; max-width: 230px;
 }
-.format-act {
-  background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  color: var(--text-dim); cursor: pointer; font-family: inherit; font-size: 12px; padding: 6px 10px;
-  transition: border-color var(--motion-fast), color var(--motion-fast);
-}
-.format-act:hover { border-color: var(--accent); color: var(--text); }
-.format-act.is-danger:hover { border-color: var(--role-stopper); color: var(--role-stopper); }
 .format-primary { display: flex; align-items: center; gap: 8px; }
 .format-primary > span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; }
 
@@ -1611,9 +1596,7 @@
 .app-header-right { display: flex; align-items: center; gap: 12px; }
 
 /* backup nudge — amber, dismissable, sits between tabs and content */
-.backup-nudge { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 0; padding: 10px 14px; background: rgba(229,169,60,0.08); border: 1px solid rgba(229,169,60,0.35); border-radius: var(--radius-md); }
-.backup-nudge-text { font-size: 12.5px; color: var(--text); flex: 1; min-width: 200px; }
-.backup-nudge-btn { white-space: nowrap; }
+/* (backup nudge banner removed 2026-08 — export/import + account sync cover it) */
 
 /* tab error boundary — contained render failure, never a blank app */
 .error-boundary { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -1764,7 +1747,7 @@
 }
 
 /* exceptions: btn-secondary used INSIDE content rows is md, not lg */
-.combo-grade-btn, .backup-nudge-btn { height: var(--ctl-md); font-size: 12.5px; }
+.combo-grade-btn { height: var(--ctl-md); font-size: 12.5px; }
 
 /* ── S4 · radius discipline: interactive controls = radius-md ─────────── */
 .dd-trigger, .fmt-add-btn, .fmt-add-input, .combo-search-input, .jnf-name,
@@ -1884,17 +1867,7 @@ header.app-header { margin-bottom: 24px; }
 .matchup-full-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .deck-rename-input { font-size: 19px; }
 
-/* header action buttons join the md solid family */
-.deck-mini-btn, .format-act {
-  height: var(--ctl-md); padding-top: 0; padding-bottom: 0;
-  display: inline-flex; align-items: center;
-  font-size: 12.5px; font-weight: 600;
-  background: var(--bg-elevated); border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md); color: var(--text-dim);
-}
-.deck-mini-btn:hover, .format-act:hover { border-color: var(--accent); color: var(--text); }
-.deck-mini-btn.is-danger, .format-act.is-danger { color: var(--role-stopper); }
-.deck-mini-btn.is-danger:hover, .format-act.is-danger:hover { border-color: var(--role-stopper); color: var(--role-stopper); background: rgba(196,95,95,0.1); }
+/* (deck-mini-btn / format-act md-family rules removed with the ⋯ declutter) */
 
 /* C1 — toolbars: context/summary left, actions right (Decks summary used
    to float right of the buttons; now it leads and the actions trail). */
@@ -2189,9 +2162,7 @@ header.app-header { margin-bottom: 24px; }
 /* Session management is secondary chrome — md scale, matching the dropdown
    beside it (the lg primaries of this surface are the W/D/L log buttons). */
 .gl-sessionbar .btn-secondary { height: var(--ctl-md); }
-.gl-icon-btn { width: var(--ctl-md); padding: 0; justify-content: center; flex-shrink: 0; }
-.gl-del-btn:hover { border-color: #e06c6c; color: #e06c6c; }
-.gl-editdeck { margin-left: auto; }
+/* (session ✎/×/edit-deck buttons folded into the ⋯ menu) */
 
 .gl-tech { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
 .gl-tech-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 600; white-space: nowrap; padding-top: 9px; }
@@ -2410,7 +2381,6 @@ header.app-header { align-items: center; }
   .gl-session-dd { flex-basis: 100%; }
   .gl-session-dd .dd-trigger { width: 100%; max-width: 100%; }
   .gl-new-btn { flex: 1; min-width: 0; white-space: nowrap; }
-  .gl-editdeck { margin-left: 0; }
   .gl-opp-row, .gl-sess-row { grid-template-columns: minmax(0, 1fr) auto 40px 56px; gap: 8px; }
   .gl-bar.gl-bar-sm { width: 56px; }
 }

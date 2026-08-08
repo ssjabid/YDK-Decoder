@@ -464,7 +464,6 @@ function KeyCardsSection({ deck, save, cardMap, force }) {
 }
 
 function KeyCardBucket({ deck, category, save, force, cardFor, onHover, onPick }) {
-  const [adding, setAdding] = useState(false);
   const cards = (deck.keyCards || []).filter((kc) => kc && kc.category === category)
     .sort((a, b) => {
       const rank = (p) => (p === "high" ? 0 : p === "medium" ? 1 : 2);
@@ -479,7 +478,7 @@ function KeyCardBucket({ deck, category, save, force, cardFor, onHover, onPick }
       const found = lookupCardByName(n);
       deck.keyCards.push({ name: found?.name || n, cardId: found?.id ? String(found.id) : "", category, stopPriority: "none", stopWith: "", notes: "", auto: false, priority: (deck.keyCards.length) });
     }
-    save(); setAdding(false);
+    save();
   };
   return (
     <div className="key-cards-bucket" data-cat={category}>

@@ -106,7 +106,7 @@ export function downloadDecklist(deck, dl) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  const safe = (s) => String(s || "").replace(/[^a-z0-9_\-]+/gi, "_");
+  const safe = (s) => String(s || "").replace(/[^a-z0-9_-]+/gi, "_");
   a.download = `${safe(deck.name) || "deck"}_${safe(dl.name) || "build"}.ydk`;
   document.body.appendChild(a);
   a.click();

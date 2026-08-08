@@ -76,10 +76,6 @@ export default function TestingTab({ dataVersion = 0, onEditDeck }) {
   );
 }
 
-const roleColor = (card) => {
-  const r = card ? pickPrimaryRole(classify(card).roles || []) : null;
-  return r ? ROLE_COLORS[r] || null : null;
-};
 const roleLabel = (card) => (card ? pickPrimaryRole(classify(card).roles || []) : null);
 
 // ── Shared: a face-up card with image + name + role/util tag ─────────
@@ -259,7 +255,7 @@ function Goldfish({ deck, oppDecks = [] }) {
   );
 }
 
-function ComboLine({ r, handNames, vsTraps, onHover, onPick }) {
+function ComboLine({ r, handNames, vsTraps }) {
   const [open, setOpen] = useState(false);
   const c = r.combo;
   const icon = r.status === "possible" ? "✓" : r.status === "likely" ? "≈" : r.status === "partial" ? "⚠" : "✗";

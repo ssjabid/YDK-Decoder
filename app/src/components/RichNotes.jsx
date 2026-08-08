@@ -36,7 +36,7 @@ export default function RichNotes({ value, onSave, placeholder, minHeight = 58 }
   const saveTimer = useRef(null);
   const [mention, setMention] = useState(null); // { items, activeIdx, query, rect }
   const mentionRef = useRef(null);
-  mentionRef.current = mention;
+  useEffect(() => { mentionRef.current = mention; }, [mention]); // mirror for DOM-event handlers
   const [preview, setPreview] = useState(null); // { card, rect, pinned }
   const [expanded, setExpanded] = useState(false);
 
@@ -128,7 +128,7 @@ export default function RichNotes({ value, onSave, placeholder, minHeight = 58 }
     try { document.execCommand(cmd, false, arg == null ? null : arg); } catch (_) { /* noop */ }
     fireSave();
   };
-  const insertAt = () => { ref.current?.focus(); try { document.execCommand("insertText", false, "@"); } catch (_) {} detectMention(); };
+  const insertAt = () => { ref.current?.focus(); try { document.execCommand("insertText", false, "@"); } catch (_) { /* execCommand unsupported — typing @ still works */ } detectMention(); };
 
   const onKeyDown = (e) => {
     e.stopPropagation(); // keep app-level key handlers out of the editor

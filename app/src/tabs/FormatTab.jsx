@@ -269,7 +269,8 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
   const upd = useMatchupUpdate(update, m.matchupId);
   const [, forceRev] = useReducer((x) => x + 1, 0);
   // Esc backs out to the matchup list (after any pinned preview is dismissed).
-  const onBackRef = useRef(onBack); onBackRef.current = onBack;
+  const onBackRef = useRef(onBack);
+  useEffect(() => { onBackRef.current = onBack; }, [onBack]);
   useEffect(() => registerEsc(() => onBackRef.current()), []);
   const name = (opponentDeck && opponentDeck.name) || deckNames[m.opponentDeckId] || "Unknown deck";
   const meth = (opponentDeck && opponentDeck.methodology) || {};

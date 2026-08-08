@@ -234,7 +234,7 @@ function ComboTile({ c, active, deckName, onClick }) {
 }
 
 // ── Detail / line view ───────────────────────────────────────────────
-function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick, onDuplicate }) {
+function ComboDetail({ c, idx, decks, onChange, onHover, onPick, onDuplicate }) {
   const [, forceRev] = useReducer((x) => x + 1, 0);
   const [view, setView] = useState("full");
   const [mode, setMode] = useState("line");
@@ -250,7 +250,7 @@ function ComboDetail({ c, idx, decks, deckNames, onChange, onHover, onPick, onDu
     let alive = true;
     (async () => {
       const deck = decks.find((d) => d.deckId === c.deckId);
-      if (deck) { try { await fetchCards([...(deck.main || []), ...(deck.extra || []), ...(deck.side || [])]); } catch (_) {} }
+      if (deck) { try { await fetchCards([...(deck.main || []), ...(deck.extra || []), ...(deck.side || [])]); } catch (_) { /* offline — the missing-data flag below covers it */ } }
       const missing = comboAllCards(c).filter((n) => n && !lookupCardByName(n));
       let got = false;
       // resolveCardName memoises failures, so unknown names cost one API call

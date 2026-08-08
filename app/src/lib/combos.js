@@ -212,6 +212,7 @@ export function duplicateCombo(idx) {
     copy.manual = true;
     copy.extractedAt = null;
     delete copy.sortIndex;
+    delete copy._syncId; // account-sync identity must not be inherited by a copy
     all.push(copy);
     key = comboKey(copy, all.length - 1);
   });

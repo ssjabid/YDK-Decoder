@@ -22,7 +22,7 @@
 // Triggers: app open (signed in), any synced-key write (debounced 2.5 s),
 // tab going hidden (flush), and the Settings "Sync now" button.
 // ───────────────────────────────────────────────────────────────────
-import { KEYS, SYNCED_KEYS, readLs, writeLs, syncGuard } from "./storage.js";
+import { KEYS, readLs, writeLs, syncGuard } from "./storage.js";
 import { fb } from "./firebase.js";
 
 const AREAS = {
@@ -34,12 +34,14 @@ const AREAS = {
 const PREF_FIELDS = ["activeDeckId", "activeFormatId", "theme", "cardsView", "comboViewMode", "comboDeckFilter", "practiceStreak", "practiceGoing", "bbStreak", "drillMastery"];
 
 // Combos have no single id field — derive one from the same key backup dedup
-// uses; stamp a generated one onto keyless (hand-built) combos.
+// uses. The NATURAL key comes first on purpose: every real combo has a
+// replayId (manual + duplicated ones get "manual_<rid>"), and a deep-copied
+// combo inheriting a stale _syncId must not collide with its source.
 function comboSyncId(c) {
   if (!c) return null;
-  if (c._syncId) return c._syncId;
   const k = c.replayId || c.replayUrl || c.comboName;
   if (k) return "k_" + hash(String(k));
+  if (c._syncId) return c._syncId;
   c._syncId = "g_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   return c._syncId;
 }
@@ -97,7 +99,7 @@ export async function signInGoogle() {
   } catch (e) {
     state.status = readLs(KEYS.syncOn) ? "error" : "off";
     state.error = friendlyAuthError(e); emit();
-    throw new Error(state.error);
+    throw new Error(state.error, { cause: e });
   }
 }
 

@@ -84,7 +84,7 @@ export default function App() {
   // re-arms the guard. Only when there is nothing left to close does a Back
   // actually leave the app.
   const tabRef = useRef(tab);
-  tabRef.current = tab;
+  useEffect(() => { tabRef.current = tab; }, [tab]); // mirror for the async popstate handler
   useEffect(() => {
     try { history.replaceState({ ydkRoot: true }, ""); history.pushState({ ydkGuard: true }, ""); } catch { return; }
     const rearm = () => { try { history.pushState({ ydkGuard: true }, ""); } catch { /* noop */ } };
