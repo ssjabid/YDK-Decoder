@@ -134,8 +134,11 @@ export default function GameLog({ deck, oppDecks = [], onEditDeck, dataVersion =
       {session && (
         <label className="gl-tech">
           <span className="gl-tech-lbl">Testing</span>
-          <input key={session.sessionId} className="gl-tech-input" defaultValue={session.tech}
-            placeholder='What this session is testing — e.g. "3× Droll side, no Bystials"'
+          {/* A real textarea — people write PARAGRAPHS about what a session is
+              testing, not one line. Grows on its own as you type. */}
+          <textarea key={session.sessionId} className="gl-tech-input" defaultValue={session.tech} rows={2}
+            placeholder={'What this session is testing — tech choices, ratios, what you want to learn.\ne.g. "3× Droll side vs Branded/Maliss · no Bystials · testing 41 vs 42 cards"'}
+            onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }}
             onBlur={(e) => { if (e.target.value !== session.tech) { session.tech = e.target.value; persistSession(session); bump(); } }} />
         </label>
       )}

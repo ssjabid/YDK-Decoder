@@ -34,7 +34,10 @@ export default function Splash() {
         <span className="splash-card splash-card-back" />
         <span className="splash-card splash-card-front" />
       </div>
-      <div className="splash-word">YDK Decoder</div>
+      <div className="splash-word">
+        <span className="splash-word-ydk">YDK</span>
+        <span className="splash-word-decoder">Decoder</span>
+      </div>
     </div>
   );
 }

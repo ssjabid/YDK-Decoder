@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
-  loadDecks, getActiveDeckId, setActiveDeckId, loadSavedCombos,
+  loadDecks, saveDecks, getActiveDeckId, setActiveDeckId, loadSavedCombos,
 } from "../lib/storage.js";
 import { loadMetaPack } from "../lib/metaPack.js";
 import { importDeckFromYdk } from "../lib/deckImport.js";
@@ -222,11 +222,24 @@ function DeckPanel({ deck, onChanged }) {
           ariaLabel="Deck actions" title="Deck actions"
           options={[
             ["rename", "Rename deck"],
+            ["copy", isMatchup ? "Copy to My decks" : "Copy as matchup deck"],
             ["convert", isMatchup ? "Move to My decks" : "Move to Matchup decks"],
             ["delete", "Delete deck"],
           ]}
           onChange={async (v) => {
             if (v === "rename") setRenaming(true);
+            else if (v === "copy") {
+              // Copy, don't move — the original stays put (e.g. keep playing
+              // your deck AND study it as an opponent's matchup deck).
+              const clone = JSON.parse(JSON.stringify(deck));
+              clone.deckId = "deck_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+              clone.role = isMatchup ? "primary" : "matchup";
+              clone.name = deck.name + (isMatchup ? " (mine)" : " (matchup)");
+              clone.createdAt = clone.updatedAt = new Date().toISOString();
+              delete clone._contentHash; // content-dedup key must stay unique to the original
+              const all = loadDecks(); all.push(clone); saveDecks(all);
+              onChanged && onChanged();
+            }
             else if (v === "convert") { if (await confirmModal({ title: `Convert "${deck.name}"?`, message: `Move it to your ${isMatchup ? "My decks" : "Matchup decks"} list.`, confirmText: "Convert" })) { convertDeckRole(deck); onChanged && onChanged(); } }
             else if (v === "delete") { if (await confirmModal({ title: `Delete "${deck.name}"?`, message: "Combos linked to it become unassigned; formats lose it as primary.", confirmText: "Delete deck", danger: true })) { deleteDeck(deck.deckId); onChanged && onChanged(); } }
           }} />

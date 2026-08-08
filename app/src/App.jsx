@@ -136,7 +136,17 @@ export default function App() {
     <div className="container">
       <header className="app-header">
         <div>
-          <h1>YDK <span className="accent">Decoder</span></h1>
+          <h1>
+            {/* the mark — matches logo.svg / the app icon */}
+            <svg className="app-logo-mark" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
+              <rect x="7.6" y="8.8" width="12.6" height="17.6" rx="2.1" transform="rotate(-12 13.9 17.6)" fill="#8c3820" />
+              <g transform="rotate(6 17.8 15.6)">
+                <rect x="11.5" y="6.8" width="12.6" height="17.6" rx="2.1" fill="#e55b3c" />
+                <path d="M17.8 10.6 L18.9 14.5 L22.8 15.6 L18.9 16.7 L17.8 20.6 L16.7 16.7 L12.8 15.6 L16.7 14.5 Z" fill="#ffecdb" />
+              </g>
+            </svg>
+            YDK <span className="accent">Decoder</span>
+          </h1>
           <div className="subtitle">Strip cards to function. Learn decks faster.</div>
         </div>
         <div className="app-header-right">
