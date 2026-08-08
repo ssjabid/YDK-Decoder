@@ -6,6 +6,37 @@ batch-fix during the next pass.
 
 ---
 
+## ✅ Screenshot round 3 — mobile bar redesign + brand pass (2026-08-08, evening)
+
+Abid sent 6 screenshots. Every one addressed, verified at 375px + 1280px:
+
+- ✅ **Testing modes wrapped ugly** ("Log games" orphaned on row 2, TEST WITH
+  floating far-left) → three EQUAL segments on one row; deck picker is a
+  stacked labeled field (tiny caption above a full-width control — the one
+  labeled-field pattern now used app-wide on mobile).
+- ✅ **Gallery arrows** (lone "↓" floating between panels) → hidden ≤600px;
+  the Starting hand / End board labels carry the story.
+- ✅ **Step list giant ACTIVATE/SET pills** — the ≤720px rule collapsed the
+  4-col step grid to ONE column, stretching the action chip full-width →
+  now [time · chip · text] on one line, cards below; chips are ~46px.
+- ✅ **List|Gallery toggle dead space** → segments fill the row equally.
+- ✅ **Combo detail clutter** — the LIST toolbar (filter/search/toggle/new/
+  import) stayed visible above an open combo → hidden while a detail pane
+  is open (Decks too: toolbar + summary). Detail bar = title row, then
+  [replay · Edit · ⋯] (a 58% max-width cap was silently shrinking the
+  title's full-width row).
+- ✅ **Format head redundancy** — the format name appeared twice (picker +
+  title) → duplicate title hidden on mobile; "Your deck" is a stacked field.
+- ✅ **Launch "square box saying YDK Decoder"** — that was Android's auto
+  splash showing the wordmark-baked icon. Icons regenerated GLYPH-ONLY
+  (two stacked cards, true --accent #e55b3c) via `scripts/make_icons.mjs`
+  (pure-Node PNG encoder, no deps); favicon.svg matched; manifest icons now
+  `any maskable`. Splash cards re-colored to the accent family and the
+  wordmark is a gradient-filled heavy serif (Yu-Gi-Oh-logo energy, system
+  fonts only). Re-add the home-screen shortcut to see the new icon.
+
+---
+
 ## ✅ Symmetry + declutter revamp (2026-08-08, same day, after batch 2)
 
 Abid: "plenty of unsymmetrical design concepts… so condensed and there is so

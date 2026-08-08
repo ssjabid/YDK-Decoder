@@ -101,7 +101,7 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
   };
 
   return (
-    <div className="decks-tab">
+    <div className={"decks-tab" + (mobileDetail ? " mobile-detail" : " mobile-list")}>
       <input ref={fileRef} type="file" accept=".ydk" hidden onChange={onImportFile} />
 
       <div className="decks-toolbar">

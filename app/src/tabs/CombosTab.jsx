@@ -129,7 +129,7 @@ export default function CombosTab({ dataVersion = 0, reload }) {
   ];
 
   return (
-    <div className="combos-tab" onMouseLeave={clearHover}>
+    <div className={"combos-tab" + (mobileDetail ? " mobile-detail" : " mobile-list")} onMouseLeave={clearHover}>
       <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={onImportFile} />
 
       <div className="combos-toolbar">
