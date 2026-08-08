@@ -8,7 +8,10 @@
 
     <!-- PWA — installable, offline-capable. Relative hrefs so it works whether
          served from the domain root or a subpath (e.g. GitHub Pages). -->
-    <link rel="manifest" href="manifest.webmanifest" />
+    <!-- ?v= busts the browser's OWN http-cache of the manifest — Chrome only
+         rebuilds the home-screen icon from a manifest it re-fetched. Bump it
+         together with the icon filenames on any icon redesign. -->
+    <link rel="manifest" href="manifest.webmanifest?v=3" />
     <meta name="theme-color" content="#08080a" />
     <link rel="apple-touch-icon" href="apple-touch-icon-v2.png" />
     <meta name="mobile-web-app-capable" content="yes" />

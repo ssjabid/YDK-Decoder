@@ -1,12 +1,14 @@
 // YDK Decoder — service worker. Gives the installed app offline support
 // WITHOUT ever serving a stale build:
-//   • Vite fingerprints asset filenames, so cached JS/CSS can never go stale
-//     (a new build has new names) → cache-first is safe for them.
-//   • HTML navigations are network-first, so a fresh deploy is always picked
-//     up when you're online; the cached shell is only used offline.
+//   • ONLY Vite's fingerprinted /assets/ files are cache-first — their names
+//     change every build, so they can never go stale.
+//   • EVERYTHING else same-origin (HTML, manifest, icons, logo) is
+//     network-first with cache fallback. v1 cached the manifest + icons
+//     cache-first, which froze the app icon forever: when Chrome rebuilt the
+//     home-screen shortcut it was handed the months-old cached manifest.
 //   • Cross-origin requests (the YGOPRODeck card API/images) are left alone.
 // Bump CACHE to force-drop old caches on the next activate.
-const CACHE = "ydk-cache-v1";
+const CACHE = "ydk-cache-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -42,10 +44,28 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Fingerprinted static assets: cache-first, fill the cache in the background.
+  // Fingerprinted /assets/ files: cache-first (immutable by construction).
+  if (url.pathname.includes("/assets/")) {
+    event.respondWith((async () => {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      try {
+        const fresh = await fetch(req);
+        if (fresh.ok) {
+          const cache = await caches.open(CACHE);
+          cache.put(req, fresh.clone());
+        }
+        return fresh;
+      } catch {
+        return Response.error();
+      }
+    })());
+    return;
+  }
+
+  // Everything else same-origin (manifest, icons, logo, …): network-first so
+  // updates always land; the cache only answers when offline.
   event.respondWith((async () => {
-    const cached = await caches.match(req);
-    if (cached) return cached;
     try {
       const fresh = await fetch(req);
       if (fresh.ok) {
@@ -54,7 +74,7 @@ self.addEventListener("fetch", (event) => {
       }
       return fresh;
     } catch {
-      return cached || Response.error();
+      return (await caches.match(req)) || Response.error();
     }
   })());
 });
