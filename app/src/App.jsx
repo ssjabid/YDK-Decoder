@@ -1,6 +1,7 @@
 import { Component, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getStoredTheme, KEYS, readLs, writeLs } from "./lib/storage.js";
 import { popEscLayer } from "./lib/escStack.js";
+import { initSync } from "./lib/sync.js";
 import { ensureMetaFresh, backfillPlaybookFromMatchups } from "./lib/metaPack.js";
 import { ingestComboFromUrl } from "./lib/combos.js";
 import { slimCardCache } from "./lib/ydk.js";
@@ -115,6 +116,19 @@ export default function App() {
     try { if (ingestComboFromUrl() > 0) reload(); } catch (_) { /* noop */ }
     ensureMetaFresh().then((r) => { if (alive && r && r.updated) reload(); });
     return () => { alive = false; };
+  }, []);
+
+  // Account sync (M2): dormant unless this device has signed in before.
+  // When a sync APPLIES remote changes, refresh the UI + the theme attribute
+  // (another device may have flipped it).
+  useEffect(() => {
+    initSync();
+    const onApplied = () => {
+      document.documentElement.setAttribute("data-theme", getStoredTheme() === "light" ? "light" : "dark");
+      reload();
+    };
+    window.addEventListener("ydk:sync-applied", onApplied);
+    return () => window.removeEventListener("ydk:sync-applied", onApplied);
   }, []);
 
   useEffect(() => {

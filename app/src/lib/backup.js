@@ -13,9 +13,14 @@ import {
 export const APP_BUILD = "react-preview";
 const comboKey = (c) => (c && (c.replayId || c.replayUrl || c.comboName)) || null;
 
+// Device-local sync bookkeeping — meaningless (and actively wrong) on another
+// device, so it never travels in a backup.
+const BACKUP_EXCLUDE = new Set(["syncOn", "syncShadow", "lastSync"]);
+
 export function buildBackup() {
   const data = {};
   for (const [field, key] of Object.entries(KEYS)) {
+    if (BACKUP_EXCLUDE.has(field)) continue;
     const v = readLs(key);
     if (v != null) data[field] = v;
   }

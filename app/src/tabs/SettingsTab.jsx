@@ -1,5 +1,6 @@
-import { useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { getStoredTheme, setStoredTheme, loadDecks, loadFormats, loadSavedCombos, loadCardCache } from "../lib/storage.js";
+import { getSyncState, onSyncState, signInGoogle, signOutSync, syncNow } from "../lib/sync.js";
 import { loadMetaPack } from "../lib/metaPack.js";
 import { downloadBackup, restoreMerge, restoreReplace, hasSafetySnapshot, undoReplace, storageStats, clearCardCache, clearAllData, lastBackupAt } from "../lib/backup.js";
 import { confirmModal, alertModal, promptModal } from "../lib/modal.js";
@@ -10,6 +11,65 @@ const fmtWhen = (iso) => {
   if (!iso) return "never";
   try { const d = new Date(iso); return d.toISOString().slice(0, 10) + " " + d.toTimeString().slice(0, 5); } catch { return "unknown"; }
 };
+
+// ── Account & sync (M2) — Firebase login keeps devices in step. The app
+// works fully signed out; signing in just turns the courier on. ──────
+function AccountSection({ reload }) {
+  const [sync, setSync] = useState(getSyncState());
+  const [busy, setBusy] = useState(false);
+  useEffect(() => onSyncState(setSync), []);
+  const when = (iso) => (iso ? fmtWhen(iso) : "never");
+
+  const doSignIn = async () => {
+    setBusy(true);
+    try { await signInGoogle(); reload && reload(); }
+    catch (_) { /* error already surfaced via sync state */ }
+    finally { setBusy(false); }
+  };
+  const doSignOut = async () => {
+    if (!(await confirmModal({ title: "Sign out?", message: "Your data STAYS on this device — signing out only stops syncing.", confirmText: "Sign out" }))) return;
+    setBusy(true);
+    try { await signOutSync(); } finally { setBusy(false); }
+  };
+  const doSync = async () => {
+    setBusy(true);
+    try { await syncNow(); reload && reload(); } catch (_) { /* surfaced via state */ }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <section className="settings-section">
+      <h2 className="settings-section-title">Account &amp; sync</h2>
+      {!sync.user ? (
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Sync across your devices</div>
+            <div className="settings-hint">Sign in and your decks, combos, formats + testing sessions follow you — phone and PC. Everything still works offline; no account needed to use the app.</div>
+          </div>
+          <button type="button" className="btn-primary" onClick={doSignIn} disabled={busy || sync.status === "connecting"}>
+            {busy || sync.status === "connecting" ? "Connecting…" : "Continue with Google"}
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="settings-row">
+            <div>
+              <div className="settings-label">{sync.user.email}</div>
+              <div className="settings-hint">
+                {sync.status === "syncing" ? "Syncing…" : <>Last synced: <strong>{when(sync.lastSyncAt)}</strong>. Syncs on open + after changes.</>}
+              </div>
+            </div>
+            <span className="account-actions">
+              <button type="button" className="btn-secondary" onClick={doSync} disabled={busy || sync.status === "syncing"}>Sync now</button>
+              <button type="button" className="btn-secondary" onClick={doSignOut} disabled={busy}>Sign out</button>
+            </span>
+          </div>
+        </>
+      )}
+      {sync.error && <div className="settings-status is-err">{sync.error}</div>}
+    </section>
+  );
+}
 
 export default function SettingsTab({ reload }) {
   const [theme, setTheme] = useState(getStoredTheme());
@@ -87,6 +147,8 @@ export default function SettingsTab({ reload }) {
   return (
     <div className="settings">
       <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={onRestoreFile} />
+
+      <AccountSection reload={reload} />
 
       <section className="settings-section">
         <h2 className="settings-section-title">Appearance</h2>

@@ -9,4 +9,8 @@ export default defineConfig({
   plugins: [react()],
   base: "./",
   server: { port: 5174, strictPort: true },
+  // Firebase is loaded via dynamic import (lazy) — pre-bundle it up front so
+  // the dev server doesn't split @firebase/app across two module copies
+  // ("Service firestore is not available"). Prod builds are unaffected.
+  optimizeDeps: { include: ["firebase/app", "firebase/auth", "firebase/firestore"] },
 });

@@ -2348,6 +2348,9 @@ header.app-header { margin-bottom: 24px; }
 .gl-sess-name { display: flex; flex-direction: column; min-width: 0; }
 .gl-sess-tech { font-size: 11px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ── Account & sync (M2) ── */
+.account-actions { display: inline-flex; gap: 8px; flex-shrink: 0; }
+
 /* ── Brand mark in the header — sits on the title's optical line. ── */
 .app-logo-mark { vertical-align: -0.32em; margin-right: 7px; }
 

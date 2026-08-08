@@ -1,5 +1,20 @@
 # Mobile plan — taking YDK Decoder cross-platform
 
+> **⚡ 2026-08-08 — M2 BUILT, on Firebase (not Supabase).** Abid already had a
+> Firebase account, so the sync backend switched from the Supabase plan below
+> to **Firebase Auth (Google sign-in) + Firestore** — same architecture
+> otherwise (offline-first, localStorage is the source of truth, account is
+> the courier). Implementation: `app/src/lib/firebase.js` (lazy SDK — signed
+> -out users load none of it), `app/src/lib/sync.js` (per-item Firestore docs
+> under `users/{uid}/{decks|combos|formats|sessions}` + a `meta/prefs` doc;
+> 3-way merge against a local shadow, tombstoned deletes, local-wins
+> conflicts; syncs on open / after changes (2.5 s debounce) / on tab-hide /
+> manual), Settings → **Account & sync** panel, `firestore.rules` at repo
+> root. Remaining Abid-side setup: publish the rules, enable the Identity
+> Toolkit API if the console errors persist, and add `ssjabid.github.io` to
+> Authentication → Authorized domains. Read the Supabase sections below as
+> architecture rationale only.
+
 Written 2026-06-21. Goal (Abid's words): a **mobile app** that **cross-functions
 with the web app** — analyse on either, same concept and actions, **linked by an
 account** so your decks/combos/matchups follow you across devices.

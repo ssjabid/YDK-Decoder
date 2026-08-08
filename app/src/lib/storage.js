@@ -29,7 +29,24 @@ export const KEYS = {
   theme:            "ydk_theme",
   lastBackup:       "ydk_last_backup",
   backupNudgeSnooze:"ydk_backup_nudge_snooze",
+  // ── Account sync (M2, Firebase) — device-local bookkeeping, never backed up
+  syncOn:           "ydk_sync_on",     // "1" once signed in → sync auto-starts on launch
+  syncShadow:       "ydk_sync_shadow", // what the server knew at last sync (3-way merge base)
+  lastSync:         "ydk_last_sync",   // ISO of last successful sync (UI only)
 };
+
+// Keys whose changes should wake the sync engine (everything a second device
+// cares about — NOT the card cache, not device-local bookkeeping).
+export const SYNCED_KEYS = new Set([
+  KEYS.decks, KEYS.savedCombos, KEYS.formats, KEYS.testSessions,
+  KEYS.activeDeckId, KEYS.activeFormatId, KEYS.theme, KEYS.cardsView,
+  KEYS.comboViewMode, KEYS.comboDeckFilter, KEYS.practiceStreak,
+  KEYS.practiceGoing, KEYS.bbStreak, KEYS.drillMastery,
+]);
+
+// While the sync engine is APPLYING remote data it writes through writeLs too;
+// this guard stops those writes from re-waking the engine (an infinite loop).
+export const syncGuard = { applying: false };
 
 // Mirror of the original readLs/writeLs: JSON-parse with string fallback.
 export function readLs(key) {
@@ -55,6 +72,11 @@ export function writeLs(key, value) {
   } catch (e) { console.warn("[YDK] writeLs failed for", key, e); return; }
   try {
     localStorage.setItem(key, s);
+    // Wake the sync engine on meaningful writes (no-op when sync is off —
+    // nothing listens). Guarded so applying REMOTE data can't loop.
+    if (!syncGuard.applying && SYNCED_KEYS.has(key)) {
+      try { window.dispatchEvent(new CustomEvent("ydk:local-write", { detail: key })); } catch (_) { /* non-browser */ }
+    }
   } catch (e) {
     if (key === KEYS.cardCache) { console.warn("[YDK] card-cache write skipped (storage full)"); return; } // cache is best-effort
     if (isQuotaErr(e)) {
