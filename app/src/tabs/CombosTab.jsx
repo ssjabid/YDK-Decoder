@@ -12,6 +12,7 @@ import { loadMastery, bumpMastery, masteryLabel } from "../lib/practice.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { lookupCardByName, resolveCardName } from "../lib/cardSearch.js";
 import { confirmModal, promptModal, alertModal } from "../lib/modal.js";
+import { registerEsc } from "../lib/escStack.js";
 import CardPreview from "../components/CardPreview.jsx";
 import EndBoardView from "../components/EndBoardView.jsx";
 import Dropdown from "../components/Dropdown.jsx";
@@ -48,6 +49,12 @@ export default function CombosTab({ dataVersion = 0, reload }) {
   const [mobileDetail, setMobileDetail] = useState(false);
   const fileRef = useRef(null);
   const searchRef = useRef(null);
+  // While the detail pane is up it's a back-out layer: Esc / the phone's
+  // hardware back button peels it off (after any pinned preview) to the list.
+  useEffect(() => {
+    if (!mobileDetail) return;
+    return registerEsc(() => setMobileDetail(false));
+  }, [mobileDetail]);
 
   // "/" jumps to the combo search — the one quick way to find a line by name
   // or card. Ignored while typing in a field or with a modal open.

@@ -33,8 +33,15 @@ export default function CardsView({ deck }) {
   const sideGroups = useMemo(() => groupByFrame(countCopies(ids.side), cards), [ids, cards]);
 
   // Click toggles a sticky preview; clicking the same card again unpins.
-  const onPick = (card, rect) =>
+  // Clear `hover` on both pin and close: on touch screens the tap that pins
+  // also fires a synthesized mouseenter (and NO mouseleave ever follows), so
+  // a stale hover would keep the preview visible after ✕ un-pinned it — the
+  // "close button doesn't work" phone bug.
+  const onPick = (card, rect) => {
+    setHover(null);
     setPinned((p) => (p && p.card.id === card.id ? null : { card, rect }));
+  };
+  const closePreview = () => { setPinned(null); setHover(null); };
   const shown = pinned || hover;
 
   return (
@@ -43,7 +50,7 @@ export default function CardsView({ deck }) {
       <GroupedSection title="Main Deck" total={ids.main.length} groups={mainGroups} onHover={setHover} onPick={onPick} />
       <GroupedSection title="Extra Deck" total={ids.extra.length} groups={extraGroups} onHover={setHover} onPick={onPick} />
       <GroupedSection title="Side Deck" total={ids.side.length} groups={sideGroups} onHover={setHover} onPick={onPick} />
-      {shown && <CardPreview card={shown.card} rect={shown.rect} pinned={!!pinned} onClose={() => setPinned(null)} />}
+      {shown && <CardPreview card={shown.card} rect={shown.rect} pinned={!!pinned} onClose={closePreview} />}
     </div>
   );
 }

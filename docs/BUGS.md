@@ -1,8 +1,43 @@
 # Known Bugs
 
-Status as of **2026-05-30**. ✅ = fixed and verified. 🚧 = open / partial.
+Status as of **2026-08-08**. ✅ = fixed and verified. 🚧 = open / partial.
 "Polish punch list" at the bottom is for small UI niggles to gather and
 batch-fix during the next pass.
+
+---
+
+## ✅ Phone bug batch 2 — Abid's real-device reports (fixed + verified 2026-08-08)
+
+- ✅ **Card preview ✕ didn't close on touch.** `CardsView` keeps split
+  `hover`/`pinned` state and showed `pinned || hover`; a phone tap fires a
+  synthesized `mouseenter` (sets hover) and **no mouseleave ever follows**, so
+  ✕ cleared the pin and the preview fell back to the stale hover. Fixed:
+  pin and close both clear hover. Proven with the exact synthesized-touch
+  sequence that failed. (Only CardsView had the pattern — the other 7
+  `CardPreview` consumers share a single preview object.)
+- ✅ **Opening-odds panel clipped off the right edge on phones.** The grid was
+  5 columns (label + 4 metrics). Transposed: metrics down the side, Going
+  1st/2nd as the two value columns — fits at 375px with room to spare, same
+  numbers (90.5/59.6/80/9.5 · 94.4/71.3/86/5.6 verified).
+- ✅ **Board Breaker forced a 167px sideways page scroll.** `.bb-col` is a grid
+  item (default `min-width: auto`), so the 470px playmat blew the column out
+  instead of scrolling inside `.eb`. Fixed with `minmax(0,1fr)` + `min-width:0`.
+- ✅ **Hardware Back exited (and "restarted") the app.** Now a history guard
+  makes Back close ONE layer at a time — open modal → pinned preview / matchup
+  breakdown / mobile detail pane (Esc stack) → step home to Decks — and only
+  then exit. The app also reopens on the last tab (`ydk_last_tab`), and the
+  launch splash only replays after 3+ min away, so quick app-switches no
+  longer look like a restart. (Data was never at risk — every action saves to
+  localStorage instantly.)
+- ✅ **Format tab mobile layout.** Header is now stacked full-width rows
+  (format picker + ⋯ / your-deck picker), the add-matchup actions are one row
+  of equal 32px controls, and the matchup breakdown bar is three clean rows
+  (back / name + tier picker / cheat-sheet + remove, redundant tier chip
+  hidden). Section "✎ Edit in Decks" hints drop the deck name on phones.
+- ✅ **Testing mode bar felt cramped on phones.** The "— your openers"-style
+  suffixes hide below 640px; the three modes read as short segments.
+- ✅ **Game-log session bar height mismatch** (40px btn-secondary next to 32px
+  dropdown) — pinned to md scale.
 
 ---
 

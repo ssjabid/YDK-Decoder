@@ -45,13 +45,13 @@ export default function TestingTab({ dataVersion = 0, onEditDeck }) {
     <div className="testing-tab">
       <div className="testing-modebar">
         <button type="button" className={"testing-mode-btn" + (mode === "first" ? " active" : "")} onClick={() => setMode("first")}>
-          <Icon name="cards" size={15} /> Going first — your openers
+          <Icon name="cards" size={15} /> Going first<span className="testing-mode-sub"> — your openers</span>
         </button>
         <button type="button" className={"testing-mode-btn" + (mode === "second" ? " active" : "")} onClick={() => setMode("second")}>
-          <Icon name="swords" size={15} /> Going second — break boards
+          <Icon name="swords" size={15} /> Going second<span className="testing-mode-sub"> — break boards</span>
         </button>
         <button type="button" className={"testing-mode-btn" + (mode === "log" ? " active" : "")} onClick={() => setMode("log")}>
-          <Icon name="tally" size={15} /> Log games — track results
+          <Icon name="tally" size={15} /> Log games<span className="testing-mode-sub"> — track results</span>
         </button>
         <label className="testing-deck-field">
           <span className="testing-deck-label">Test with</span>

@@ -452,8 +452,11 @@
 .bb-sideplan-label { color: var(--text-faint); font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.06em; }
 .bb-in { color: var(--role-engine); }
 .bb-out { color: var(--role-stopper); }
-.bb-puzzle { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
-@media (max-width: 880px) { .bb-puzzle { grid-template-columns: 1fr; } }
+.bb-puzzle { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+@media (max-width: 880px) { .bb-puzzle { grid-template-columns: minmax(0, 1fr); } }
+/* min-width:0 so the 470px playmat scrolls INSIDE .eb instead of blowing the
+   column (grid items default to min-width:auto = content width). */
+.bb-col { min-width: 0; }
 .bb-col {
   display: flex; flex-direction: column;
   background: var(--bg-elevated); border: 1px solid var(--border);
@@ -1517,7 +1520,8 @@
 .odds-counts strong { color: var(--text); }
 .odds-unknown { color: var(--warning); }
 .odds-hint { color: var(--text-faint); }
-.odds-grid { display: grid; grid-template-columns: auto repeat(4, 1fr); gap: 6px 12px; align-items: baseline; max-width: 640px; }
+.odds-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 22px; align-items: baseline; max-width: 420px; }
+.odds-grid .odds-cell, .odds-grid .odds-head { text-align: right; }
 .odds-head { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 700; }
 .odds-row-label { font-size: 12.5px; color: var(--text); font-weight: 600; white-space: nowrap; }
 .odds-k { color: var(--text-faint); font-weight: 400; }
@@ -2301,6 +2305,42 @@ header.app-header { margin-bottom: 24px; }
 .gl-sess-tech { font-size: 11px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 640px) {
+  /* ── Format tab: phone layout pass. The 220px dropdowns + labels used to
+     wrap at random points — now the header is stacked full-width rows and
+     the add-matchup actions form one row of equal, same-height controls. */
+  .format-bar { flex-direction: column; align-items: stretch; }
+  .format-bar-left { flex-wrap: nowrap; }
+  .format-bar .format-picker-dd { flex: 1; min-width: 0; }
+  .format-bar .format-picker-dd .dd-trigger { width: 100%; min-width: 0; }
+  .format-primary > span { flex-shrink: 0; }
+  .format-primary .format-picker-dd { flex: 1; }
+  .format-listhead { row-gap: 10px; }
+  .format-listhead .format-title { flex-basis: 100%; margin-bottom: -6px; }
+  .format-listhead .format-sub { flex-basis: 100%; }
+  .format-lib-dd { margin-left: 0; flex: 1; min-width: 0; }
+  .format-lib-dd .dd-trigger { width: 100%; min-width: 0; }
+  .format-listhead .format-addbtn { height: var(--ctl-md); }
+  /* Matchup breakdown bar → three clean rows: back button / deck name with
+     the tier picker / the two actions as an equal pair. The static tier chip
+     hides — it duplicates what the tier dropdown already says. */
+  .matchup-full-bar { gap: 8px; }
+  .matchup-full-bar > .back-btn:first-child { flex-basis: 100%; }
+  .matchup-full-bar .matchup-tier { display: none; }
+  .matchup-full-title { flex: 1 1 200px; font-size: 17px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .matchup-full-bar .tier-dd { flex: 0 0 auto; }
+  .matchup-full-bar .back-btn:not(:first-child) { flex: 1 1 calc(50% - 4px); }
+  .matchup-full-bar .back-btn { text-align: center; justify-content: center; }
+
+  /* ── Testing mode bar: the "— your openers"-style suffixes are desktop
+     flavour; on a phone the three modes read as clean short segments. */
+  .testing-mode-sub { display: none; }
+
+  /* Section-header "✎ Edit in Decks → <name>" hints: drop the deck name on
+     a phone so the hint stays one line in every header (it repeats per
+     section — the name added noise and wrapped it to two lines). */
+  .panel-edit-hint-name { display: none; }
+  .panel-edit-hint { white-space: nowrap; }
+
   /* Game log on a phone: session picker full-width; icon buttons share the
      second row; stat rows tighten (shorter bars, no wasted columns). */
   .gl-session-dd { flex-basis: 100%; }

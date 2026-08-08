@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   loadDecks, getActiveDeckId, setActiveDeckId, loadSavedCombos,
 } from "../lib/storage.js";
@@ -14,6 +14,7 @@ import { pAtLeast, pct } from "../lib/deckMath.js";
 import { fetchCards, getImageUrls } from "../lib/ydk.js";
 import { lookupCardByName } from "../lib/cardSearch.js";
 import { confirmModal, alertModal } from "../lib/modal.js";
+import { registerEsc } from "../lib/escStack.js";
 import CardsView from "../components/CardsView.jsx";
 import CardPreview from "../components/CardPreview.jsx";
 import PanelSection from "../components/PanelSection.jsx";
@@ -38,6 +39,12 @@ export default function DecksTab({ dataVersion = 0, reload, jump }) {
   // only acts on it below 640px). Starts on the list so you see it first.
   const [mobileDetail, setMobileDetail] = useState(false);
   const fileRef = useRef(null);
+  // While the detail pane is up it's a back-out layer: Esc / the phone's
+  // hardware back button peels it off (after any pinned preview) to the list.
+  useEffect(() => {
+    if (!mobileDetail) return;
+    return registerEsc(() => setMobileDetail(false));
+  }, [mobileDetail]);
 
   const decks = useMemo(() => loadDecks(), [dataVersion, localRev]);
   const counts = useMemo(() => ({
@@ -284,13 +291,21 @@ function OddsSection({ deck, cardMap }) {
     else if (cat === "Handtrap") handtraps++;
   }
   if (!N) return <div className="read-field is-empty">— no main deck yet</div>;
-  const rows = [["Going 1st", 5], ["Going 2nd", 6]].map(([lbl, k]) => ({
+  // Transposed: metrics down the side, Going 1st / 2nd as the two value
+  // columns. Three columns fit a phone; the old 5-column layout clipped.
+  const going = [["Going 1st", 5], ["Going 2nd", 6]].map(([lbl, k]) => ({
     lbl, k,
     s1: pAtLeast(N, starters, k, 1),
     s2: pAtLeast(N, starters, k, 2),
     t1: pAtLeast(N, handtraps, k, 1),
     brick: 1 - pAtLeast(N, starters, k, 1),
   }));
+  const metrics = [
+    { lbl: "≥1 starter", get: (g) => g.s1, cls: () => " is-good" },
+    { lbl: "≥2 starters", get: (g) => g.s2, cls: () => "" },
+    { lbl: "≥1 handtrap", get: (g) => g.t1, cls: () => "" },
+    { lbl: "Brick (0 starters)", get: (g) => g.brick, cls: (g) => (g.brick > 0.15 ? " is-bad" : "") },
+  ];
   return (
     <div className="odds">
       <div className="odds-counts">
@@ -299,23 +314,16 @@ function OddsSection({ deck, cardMap }) {
         <span className="odds-hint"> — mis-tagged? Fix it in Key cards.</span>
       </div>
       <div className="odds-grid">
-        <div className="odds-head"></div><div className="odds-head">≥1 starter</div><div className="odds-head">≥2 starters</div><div className="odds-head">≥1 handtrap</div><div className="odds-head">brick (0 starters)</div>
-        {rows.map((r) => (
-          <FragmentRow key={r.lbl} r={r} />
+        <div className="odds-head"></div>
+        {going.map((g) => <div key={g.lbl} className="odds-head">{g.lbl} <span className="odds-k">({g.k})</span></div>)}
+        {metrics.map((m) => (
+          <Fragment key={m.lbl}>
+            <div className="odds-row-label">{m.lbl}</div>
+            {going.map((g) => <div key={g.lbl} className={"odds-cell" + m.cls(g)}>{pct(m.get(g))}</div>)}
+          </Fragment>
         ))}
       </div>
     </div>
-  );
-}
-function FragmentRow({ r }) {
-  return (
-    <>
-      <div className="odds-row-label">{r.lbl} <span className="odds-k">({r.k})</span></div>
-      <div className="odds-cell is-good">{pct(r.s1)}</div>
-      <div className="odds-cell">{pct(r.s2)}</div>
-      <div className="odds-cell">{pct(r.t1)}</div>
-      <div className={"odds-cell" + (r.brick > 0.15 ? " is-bad" : "")}>{pct(r.brick)}</div>
-    </>
   );
 }
 

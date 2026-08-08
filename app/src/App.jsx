@@ -1,5 +1,6 @@
 import { Component, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { getStoredTheme } from "./lib/storage.js";
+import { getStoredTheme, KEYS, readLs, writeLs } from "./lib/storage.js";
+import { popEscLayer } from "./lib/escStack.js";
 import { ensureMetaFresh, backfillPlaybookFromMatchups } from "./lib/metaPack.js";
 import { ingestComboFromUrl } from "./lib/combos.js";
 import { slimCardCache } from "./lib/ydk.js";
@@ -41,8 +42,16 @@ class TabErrorBoundary extends Component {
   }
 }
 
+const TAB_IDS = ["decks", "format", "combos", "testing", "settings"];
+
 export default function App() {
-  const [tab, setTab] = useState("decks");
+  // Reopen where you left off — closing the app (or the phone killing it)
+  // used to always dump you back on Decks, which read as "lost my progress".
+  // All DATA is saved to localStorage on every action; this restores the UI.
+  const [tab, setTab] = useState(() => {
+    const t = readLs(KEYS.lastTab);
+    return TAB_IDS.includes(t) ? t : "decks";
+  });
   const [dataVersion, setDataVersion] = useState(0);
   const [deckJump, setDeckJump] = useState(null); // { deckId, n } — cross-tab "Edit in Decks"
   const reload = () => setDataVersion((v) => v + 1);
@@ -64,7 +73,35 @@ export default function App() {
   useEffect(() => {
     const label = (TABS.find((t) => t.id === tab) || {}).label || "Settings";
     document.title = `${label} · YDK Decoder`;
+    writeLs(KEYS.lastTab, tab);
   }, [tab]);
+
+  // Hardware/browser Back = in-app back, not "kill the app". One guard entry
+  // sits on the history stack; each Back press closes ONE layer — an open
+  // modal, then whatever the Esc stack holds (pinned preview, matchup drill,
+  // a mobile detail pane), then a non-Decks tab steps home to Decks — and
+  // re-arms the guard. Only when there is nothing left to close does a Back
+  // actually leave the app.
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
+  useEffect(() => {
+    try { history.replaceState({ ydkRoot: true }, ""); history.pushState({ ydkGuard: true }, ""); } catch { return; }
+    const rearm = () => { try { history.pushState({ ydkGuard: true }, ""); } catch { /* noop */ } };
+    const onPop = () => {
+      const overlay = document.querySelector(".modal-overlay");
+      if (overlay) {
+        const btn = overlay.querySelector(".modal-btn"); // cancel when present, OK on alerts
+        if (btn) btn.click();
+        rearm();
+        return;
+      }
+      if (popEscLayer()) { rearm(); return; }
+      if (tabRef.current !== "decks") { setTab("decks"); rearm(); return; }
+      try { history.back(); } catch { /* noop */ } // nothing left to close — leave
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   useEffect(() => {
     const t = getStoredTheme();

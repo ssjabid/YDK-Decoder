@@ -29,6 +29,17 @@ function onKeyDown(e) {
   top();
 }
 
+// Programmatic "back out one layer" — the phone's hardware back button and
+// Esc share one peel-off order (App.jsx popstate wiring). Returns true if a
+// layer consumed it. Unlike the keydown path this doesn't check focus or
+// modals — the caller decides those (a modal owns Back just like it owns Esc).
+export function popEscLayer() {
+  const top = stack[stack.length - 1];
+  if (!top) return false;
+  top();
+  return true;
+}
+
 // Register an Esc handler; returns an unregister fn (call it on cleanup).
 export function registerEsc(handler) {
   if (typeof handler !== "function") return () => {};

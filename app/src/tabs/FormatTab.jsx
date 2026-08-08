@@ -288,7 +288,7 @@ function MatchupBreakdown({ m, format, primaryDeck, deckNames, opponentDeck, upd
   const editHint = (
     <button type="button" className="panel-edit-hint is-link" title="Open this deck in the Decks tab to edit"
       onClick={() => opponentDeck && onEditDeck && onEditDeck(opponentDeck.deckId)}>
-      ✎ Edit in Decks → {name}
+      ✎ Edit in Decks<span className="panel-edit-hint-name"> → {name}</span>
     </button>
   );
   const remove = async () => {

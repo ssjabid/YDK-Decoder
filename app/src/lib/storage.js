@@ -24,6 +24,8 @@ export const KEYS = {
   decksSchemaVer:   "ydk_decks_schema_version",
   bbStreak:         "ydk_bb_streak",
   testSessions:     "ydk_test_sessions",
+  lastTab:          "ydk_last_tab",
+  splashAt:         "ydk_splash_at",
   theme:            "ydk_theme",
   lastBackup:       "ydk_last_backup",
   backupNudgeSnooze:"ydk_backup_nudge_snooze",
